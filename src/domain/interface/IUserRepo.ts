@@ -5,7 +5,7 @@ export interface IUserRepo{
     findByEmail(email : string) : Promise<User | null>
     findById(id:string) : Promise<User | null>
     updatePassword(id : string , hashedPassword : string) : Promise<void>
-    setResetPasswordToken(token : string) : Promise<User | null>
+    setResetPasswordToken(email : string , token : string , expires : Date) : Promise<void>
     findByResetToken(token : string) : Promise<User | null>
     verifyEmail(id : string) : Promise<void>
     updateProfile(id : string , data : Partial<User>) : Promise<User>
