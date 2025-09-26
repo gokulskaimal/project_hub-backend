@@ -1,15 +1,27 @@
-import {Request , Response , NextFunction} from 'express'
+// c:\Users\gokul\Documents\BroToType\Project Hub\server\src\middleware\AuthMiddleware.ts
+import { Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import { AuthenticatedRequest } from './types/AuthenticatedRequest'
+import { AuthenticatedUser } from './types/AuthenticatedUser'
 
-export function authMiddleware(req : Request , res : Response , next : NextFunction){
-    const token = req.header('Authorization')?.replace('Bearer ', '')
-    if(!token) return res.status(401).json({error : 'Missing Token'})
+export function authMiddleware(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  const authHeader = req.headers.authorization
+  const token = authHeader?.split(' ')[1]
 
-    try{
-        const payload = jwt.verify(token , process.env.JWT_SECRET)
-        req.user = payload
-        next()
-    }catch(err){
-        res.status(401).json({error : 'Invalid token'})
-    }
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as AuthenticatedUser
+    req.user = payload
+    next()
+  } catch (error: any) {
+    res.status(401).json({ error: error.message })
+  }
 }
