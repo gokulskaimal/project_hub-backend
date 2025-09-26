@@ -21,7 +21,7 @@ export class AuthController{
             const tokens = await this.authUseCase.login(email,password)
             res.cookie('refreshToken' , tokens.refreshToken , {
                 httpOnly : true,
-                secure : process.env.NODE_ENv === 'production',
+                secure : process.env.NODE_ENV === 'production',
                 maxAge : 7 * 24 * 3600 * 1000
             })
             res.json({accessToken : tokens.accessToken})

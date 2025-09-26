@@ -1,4 +1,3 @@
-// c:\Users\gokul\Documents\BroToType\Project Hub\server\src\middleware\RoleMiddleware.ts
 import { Response, NextFunction } from 'express'
 import { UserRole } from '../domain/enums/UserRole'
 import { AuthenticatedRequest } from './types/AuthenticatedRequest'

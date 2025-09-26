@@ -9,6 +9,7 @@ import { VerifyOtpUseCase } from '../../application/useCase/VerifyOtpUseCase'
 import { InviteMemberUseCase } from '../../application/useCase/InviteMemberUseCase'
 import { AcceptUseCase } from '../../application/useCase/AcceptUseCase'
 import { AuthUseCases } from '../../application/useCase/AuthUseCase'
+import { authMiddleware } from '../../middleware/AuthMiddleware'
 
 const userRepo = new UserRepo()
 const otpService = new OTPService()
@@ -29,7 +30,7 @@ router.post('/login' , (req , res) => authController.login(req,res))
 router.post('/refresh-token' , (req,res) => authController.refreshToken(req,res))
 router.post('/reset-password-request' , (req,res) => authController.resetPasswordReq(req,res))
 router.post('/reset-password',(req,res) => authController.resetPassword(req,res))
-router.post('/verfiy-email' ,  (req,res) => authController.verifyEmail(req,res))
+router.post('/verify-email', authMiddleware, (req, res) => authController.verifyEmail(req, res))
 
 router.post('/register-manager', (req, res) => authController.registerManager(req, res))
 router.post('/verify-otp', (req, res) => authController.verifyOtp(req, res))

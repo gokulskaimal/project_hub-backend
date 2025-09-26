@@ -1,4 +1,3 @@
-// c:\Users\gokul\Documents\BroToType\Project Hub\server\src\middleware\AuthMiddleware.ts
 import { Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { AuthenticatedRequest } from './types/AuthenticatedRequest'
