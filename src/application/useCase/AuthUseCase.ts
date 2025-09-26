@@ -35,15 +35,17 @@ export class AuthUseCases {
         const token = generateToken()
         const expires = new Date(Date.now() + 3600000)
         await this.userRepo.setResetPasswordToken(email, token, expires)
-        return {token , expires}
+        return { token, expires }
     }
 
-    async resetPassword(token : string , newPassword : string){
+    async resetPassword(token: string, newPassword: string) {
         const user = await this.userRepo.findByResetToken(token)
-        if(!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) throw new Error('Token expired')
+        if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) throw new Error('Token expired')
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+        await this.userRepo.updatePassword(user.id, hashedPassword)
     }
 
-    async verifyEmail(userId : string){
+    async verifyEmail(userId: string) {
         await this.userRepo.verifyEmail(userId)
     }
 }
