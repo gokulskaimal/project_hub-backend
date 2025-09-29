@@ -1,18 +1,22 @@
 import {Request , Response} from 'express'
 import {RegisterManagerUseCase} from '../../application/useCase/RegisterManagerUseCase'
+import {SendOtpUseCase} from '../../application/useCase/SendOtpUseCase'
 import {VerifyOtpUseCase} from '../../application/useCase/VerifyOtpUseCase'
 import {InviteMemberUseCase} from '../../application/useCase/InviteMemberUseCase'
 import {AcceptUseCase} from '../../application/useCase/AcceptUseCase'
 import { AuthUseCases } from '../../application/useCase/AuthUseCase'
 import { AuthenticatedRequest } from '../../middleware/types/AuthenticatedRequest'
+import { CompleteSignupUseCase } from '../../application/useCase/CompleteSignupUseCase'
 
 export class AuthController{
     constructor(
         private registerManagerUC : RegisterManagerUseCase,
+        private sendOtpUC : SendOtpUseCase,
         private verifyOtpUC : VerifyOtpUseCase,
         private inviteMemberUC : InviteMemberUseCase,
         private acceptUC : AcceptUseCase,
-        private authUseCase : AuthUseCases
+        private authUseCase : AuthUseCases,
+        private completeSignupUC : CompleteSignupUseCase
     ){}
 
     async login(req : Request , res : Response){
@@ -76,6 +80,16 @@ export class AuthController{
         res.json(result)
     }
 
+    async sendOtp(req : Request , res : Response){
+        try{
+            const {email} = req.body
+            await this.sendOtpUC.execute(email)
+            res.json({message : 'OTP sent to email'})
+        }catch(err : any){
+            res.status(400).json({error : err.message})
+        }
+    }
+
     async verifyOtp(req : Request , res : Response){
 
         const {email , otp} = req.body
@@ -83,6 +97,16 @@ export class AuthController{
         try{
             const user = await this.verifyOtpUC.execute(email , otp)
             res.json({message : 'OTP verified' , user})
+        }catch(err : any){
+            res.status(400).json({error : err.message})
+        }
+    }
+
+    async completeSignup(req : Request , res : Response){
+        try{
+            const {email , name , password} = req.body
+            const user = await this.completeSignupUC.execute(email , name , password)
+            res.json({message : 'Signup completed' , user})
         }catch(err : any){
             res.status(400).json({error : err.message})
         }

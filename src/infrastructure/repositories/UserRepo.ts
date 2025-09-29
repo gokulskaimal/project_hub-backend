@@ -1,6 +1,7 @@
 import { IUserRepo } from "../../domain/interface/IUserRepo"
 import { User } from "../../domain/entities/User"
 import UserModel, { IUserDoc } from "../models/UserModel"
+import { UserRole } from "../../domain/enums/UserRole"
 
 export class UserRepo implements IUserRepo {
     private toDomainUser(userDoc: IUserDoc): User {
@@ -9,6 +10,7 @@ export class UserRepo implements IUserRepo {
         return {
             id: userDoc.id,
             email: plain.email,
+            name : plain.name,
             password: plain.password,
             role: plain.role,
             orgId: plain.orgId ? plain.orgId.toString() : undefined,
@@ -22,6 +24,36 @@ export class UserRepo implements IUserRepo {
 
     async create(user: Partial<User>): Promise<User> {
         const created = await UserModel.create(user)
+        return this.toDomainUser(created)
+    }
+
+    async ensureUserWithOtp(email: string, otp: string, expiry: Date): Promise<User> {
+        const existing = await UserModel.findOne({ email })
+
+        const update = {
+            otp,
+            otpExpiry: expiry,
+            emailVerified: false,
+        }
+
+        if (existing) {
+            const updated = await UserModel.findOneAndUpdate(
+                { email },
+                update,
+                { new: true }
+            )
+
+            if (!updated) throw new Error('Unable to update OTP')
+            return this.toDomainUser(updated)
+        }
+
+        const created = await UserModel.create({
+            email,
+            role: UserRole.ORG_MANAGER,
+            password: '',
+            ...update,
+        })
+
         return this.toDomainUser(created)
     }
 

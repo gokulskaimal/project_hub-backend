@@ -1,5 +1,5 @@
 import { IInviteRepo } from "../../domain/interface/IInviteRepo";
-import { Invite } from "../../domain/entities/invite";
+import { Invite } from "../../domain/entities/Invite";
 
 const invites : Invite[] = []
 

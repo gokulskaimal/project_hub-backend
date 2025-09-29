@@ -1,4 +1,4 @@
-import { Invite } from "../entities/invite";
+import { Invite } from "../entities/Invite";
 
 
 export interface IInviteRepo {
