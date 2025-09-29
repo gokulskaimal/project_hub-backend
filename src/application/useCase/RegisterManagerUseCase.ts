@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt'
 import { IUserRepo } from "../../domain/interface/IUserRepo";
 import { IOtpService } from "../../domain/interface/IOtpService";
-import { IEmailService } from "../../domain/interface/IEmailService";
 import { UserRole } from "../../domain/enums/UserRole";
+import { EmailService } from '../../infrastructure/sevices/EmailService';
 
 
 export class RegisterManagerUseCase {
@@ -10,27 +10,31 @@ export class RegisterManagerUseCase {
     constructor(
         private userRepo: IUserRepo,
         private otpService: IOtpService,
-        private emailService: IEmailService
+        private emailService: EmailService
     ) { }
 
     async execute(email: string, orgId: string) {
 
+        const user = await this.userRepo.findByEmail(email)
+        if(user && user.emailVerified){
+            throw new Error('User already exists')
+        }
+
         const otp = this.otpService.generateOtp()
         const expiry = this.otpService.generateExpiry()
-
-        const temporaryPassword = await bcrypt.hash(Math.random().toString(36).slice(2), 10)
 
         await this.userRepo.create({
             email,
             orgId,
             role: UserRole.ORG_MANAGER,
-            password: temporaryPassword,
+            password: '',
             otp,
             otpExpiry: expiry,
             emailVerified: false
         })
-        await this.emailService.send(email, 'Your OTP', `OTP: ${otp}`)
-
+        const subject = 'Your OTP for registration'
+        const text = `Your OTP is ${otp}`
+        await this.emailService.sendEmail({to : email ,subject,text})
         return { message: 'OTP sent to email' }
     }
 }

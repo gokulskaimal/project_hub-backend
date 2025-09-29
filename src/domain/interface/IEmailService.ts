@@ -1,3 +1,10 @@
+export interface EmailPayload {
+    to: string
+    subject: string
+    text: string
+    html?: string
+}
+
 export interface IEmailService{
-    send(email : string , subject : string , body : string) : Promise<void>
+    sendEmail(payload: EmailPayload): Promise<void>
 }

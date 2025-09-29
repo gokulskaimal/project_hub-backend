@@ -8,4 +8,4 @@ export class OTPService implements IOtpService{
     generateExpiry(): Date {
         return new Date(Date.now() + 5 * 60000)
     }
-}
+}  

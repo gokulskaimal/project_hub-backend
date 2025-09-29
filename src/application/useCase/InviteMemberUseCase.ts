@@ -1,4 +1,4 @@
-import { IEmailService } from "../../domain/interface/IEmailService";
+import { EmailPayload, IEmailService } from "../../domain/interface/IEmailService";
 import { IInviteRepo } from "../../domain/interface/IInviteRepo";
 
 
@@ -21,6 +21,13 @@ export class InviteMemberUseCase{
             status : 'PENDING' , 
             expiry
         })
+
+        const inviteEmailPayload: EmailPayload = {
+            to: email,
+            subject: 'You are invited to join Project Hub',
+            text: `You have been invited to join the organization. Use the token ${token} to accept the invite.`
+        }
+        await this.emailService.sendEmail(inviteEmailPayload)
 
         return {message : 'Invite sent'}
     }

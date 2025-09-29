@@ -11,7 +11,7 @@ export class VerifyOtpUseCase{
         const user = await this.userRepo.verifyOtp(email , otp)
 
         if(!user) throw new Error('Invalid OTP')
-         
+        await this.userRepo.verifyEmail(user.id)
         return user
     }
 }

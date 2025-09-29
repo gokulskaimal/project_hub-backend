@@ -11,4 +11,5 @@ export interface IUserRepo{
     updateProfile(id : string , data : Partial<User>) : Promise<User>
     saveOtp(email : string , otp : string , expiry : Date) : Promise<void>
     verifyOtp(email : string , otp : string) : Promise<User | null>
+    ensureUserWithOtp(email: string, otp: string, expiry: Date): Promise<User>
 }
