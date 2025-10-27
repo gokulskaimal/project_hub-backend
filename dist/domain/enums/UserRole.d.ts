@@ -1,0 +1,6 @@
+export declare enum UserRole {
+    SUPER_ADMIN = "SUPER ADMIN",
+    ORG_MANAGER = "ORG MANAGER",
+    TEAM_MEMBER = "TEAM MEMBER"
+}
+//# sourceMappingURL=UserRole.d.ts.map

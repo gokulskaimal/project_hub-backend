@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify Your Email</title>
+  <link rel="stylesheet" href="./styles/email-verification.css">
+</head>
+<body>
+  <h1>Verify Your Email Address</h1>
+  <p>Hi {{NAME}},</p>
+  <p>Please verify your email address to complete your account setup.</p>
+
+  <div class="verify-button">
+    <a href="{{VERIFY_URL}}">Verify Email</a>
+  </div>
+
+  <p>Or use this verification code:</p>
+
+  <div class="verification-code-box">
+    <p>{{VERIFICATION_CODE}}</p>
+  </div>
+
+  <p>If the button doesn't work, copy and paste this link:</p>
+  <p class="long-link">{{VERIFY_URL}}</p>
+</body>
+</html>

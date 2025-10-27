@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Project Hub</title>
+    <link rel="stylesheet" href="./styles/welcome.css">
+</head>
+<body >
+    <h1 >Welcome to Project Hub! 🎉</h1>
+    <p>Hi {{NAME}},</p>
+    <p>Welcome to Project Hub! We're excited to have you on board.</p>
+    {{#if VERIFICATION_CODE}}
+    <div >
+        <h3>Your Verification Code:</h3>
+        <p >{{VERIFICATION_CODE}}</p>
+    </div>
+    {{/if}}
+    <p>Best regards,<br>The Project Hub Team</p>
+</body>
+</html>
