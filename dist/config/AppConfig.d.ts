@@ -19,7 +19,7 @@ export interface AppConfig {
     session: {
         maxAge: number;
         cookieSecure: boolean;
-        sameSite: 'strict' | 'lax' | 'none';
+        sameSite: "strict" | "lax" | "none";
     };
     email: {
         host: string;

@@ -1,5 +1,5 @@
-import { IJwtProvider } from '../../../domain/interfaces/services/IJwtProvider';
-import { JwtPayload, JwtOptions } from '../../../domain/types/jwt.types';
+import { IJwtProvider } from "../../../domain/interfaces/services/IJwtProvider";
+import { JwtPayload, JwtOptions } from "../../../domain/types/jwt.types";
 /**
  * Default JWT Provider implementation using jsonwebtoken library
  * Implements the IJwtProvider interface

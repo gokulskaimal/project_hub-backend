@@ -14,13 +14,13 @@ export interface Organization {
     logo?: string;
     website?: string;
     planId?: string;
-    subscriptionStatus?: 'ACTIVE' | 'INACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELLED';
+    subscriptionStatus?: "ACTIVE" | "INACTIVE" | "TRIAL" | "EXPIRED" | "CANCELLED";
     status: OrganizationStatus;
     maxManagers?: number;
     maxUsers?: number;
     currentUserCount?: number;
     industry?: string;
-    size?: 'STARTUP' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+    size?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE";
     address?: {
         street?: string;
         city?: string;
@@ -69,7 +69,7 @@ export interface Organization {
     deletionReason?: string;
     customFields?: Record<string, any>;
     tags?: string[];
-    priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
     onboardingStatus?: {
         completed: boolean;
         currentStep?: number;

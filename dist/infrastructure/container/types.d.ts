@@ -5,6 +5,7 @@ export declare const TYPES: {
     readonly IJwtProvider: symbol;
     readonly IEmailService: symbol;
     readonly IOtpService: symbol;
+    readonly ICacheService: symbol;
     readonly IUserRepo: symbol;
     readonly IOrgRepo: symbol;
     readonly IInviteRepo: symbol;
@@ -17,6 +18,7 @@ export declare const TYPES: {
     readonly IInviteMemberUseCase: symbol;
     readonly IResetPasswordUseCase: symbol;
     readonly IUserProfileUseCase: symbol;
+    readonly IOrganizationManagementUseCase: symbol;
     readonly AuthController: symbol;
     readonly AdminController: symbol;
     readonly ManagerController: symbol;

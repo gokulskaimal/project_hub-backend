@@ -1,13 +1,4 @@
-import { User } from '../../domain/entities/User';
-/**
- * User Data Transfer Object (DTO)
- * Represents user data for API responses without sensitive information
- *
- * ✅ SECURITY PRINCIPLES:
- * - Excludes sensitive fields (password, resetTokens, etc.)
- * - Clean separation between domain entities and API contracts
- * - Type-safe transformation from User entity
- */
+import { User } from "../../domain/entities/User";
 export interface UserDTO {
     id: string;
     email: string;
@@ -15,14 +6,14 @@ export interface UserDTO {
     firstName?: string;
     lastName?: string;
     role: string;
-    orgId?: string;
+    orgId?: string | null;
     emailVerified: boolean;
-    emailVerifiedAt?: Date;
+    emailVerifiedAt?: string;
     status: string;
-    createdAt: Date;
-    updatedAt?: Date;
-    lastLoginAt?: Date;
-    joinedAt?: Date;
+    createdAt: string;
+    updatedAt?: string;
+    lastLoginAt?: string;
+    joinedAt?: string;
     avatar?: string;
     phone?: string;
     phoneVerified?: boolean;
@@ -31,14 +22,12 @@ export interface UserDTO {
     title?: string;
     department?: string;
     bio?: string;
-    dateOfBirth?: Date;
+    dateOfBirth?: string;
     profileComplete?: boolean;
     hasPassword?: boolean;
 }
 /**
- * Convert User entity to UserDTO (safe for API responses)
- * @param user - User domain entity
- * @returns UserDTO without sensitive data
+ * Convert domain User entity to UserDTO (safe for API responses)
  */
 export declare function toUserDTO(user: User): UserDTO;
 /**
@@ -172,8 +161,8 @@ export interface UserSearchDTO {
     emailVerified?: boolean;
     limit?: number;
     offset?: number;
-    sortBy?: 'createdAt' | 'name' | 'lastLoginAt' | 'email';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "createdAt" | "name" | "lastLoginAt" | "email";
+    sortOrder?: "asc" | "desc";
 }
 /**
  * Paginated Users Response DTO

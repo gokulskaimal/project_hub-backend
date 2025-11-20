@@ -148,6 +148,76 @@ export class AdminController {
 
       const updatedOrg = await this.orgRepo.update(id, updateData);
 
+      // If status is being changed, apply cascading effects to all users
+      if (updateData.status) {
+        try {
+          const usersInOrg = await this.userRepo.findByOrg(id);
+          if (usersInOrg && usersInOrg.length > 0) {
+            if (updateData.status === OrganizationStatus.SUSPENDED) {
+              // Suspend all users in the organization
+              for (const user of usersInOrg) {
+                try {
+                  await this.userRepo.updateStatus(user.id, "SUSPENDED");
+                  this.logger.info(
+                    "User suspended due to organization suspension",
+                    {
+                      userId: user.id,
+                      orgId: id,
+                      userEmail: user.email,
+                    },
+                  );
+                } catch (userErr) {
+                  this.logger.error(
+                    "Failed to suspend user during org suspension",
+                    userErr as Error,
+                    {
+                      userId: user.id,
+                      orgId: id,
+                    },
+                  );
+                  // Continue suspending other users even if one fails
+                }
+              }
+            } else if (updateData.status === OrganizationStatus.ACTIVE) {
+              // Reactivate suspended users in the organization
+              for (const user of usersInOrg) {
+                if (user.status === "SUSPENDED") {
+                  try {
+                    await this.userRepo.updateStatus(user.id, "ACTIVE");
+                    this.logger.info(
+                      "User reactivated due to organization activation",
+                      {
+                        userId: user.id,
+                        orgId: id,
+                        userEmail: user.email,
+                      },
+                    );
+                  } catch (userErr) {
+                    this.logger.error(
+                      "Failed to reactivate user during org activation",
+                      userErr as Error,
+                      {
+                        userId: user.id,
+                        orgId: id,
+                      },
+                    );
+                  }
+                }
+              }
+            }
+          }
+        } catch (cascadeErr) {
+          this.logger.error(
+            "Error applying cascading user status updates",
+            cascadeErr as Error,
+            {
+              orgId: id,
+              newOrgStatus: updateData.status,
+            },
+          );
+        }
+      }
+
       res.status(StatusCodes.OK).json({
         success: true,
         message: COMMON_MESSAGES.UPDATED,
@@ -171,6 +241,26 @@ export class AdminController {
   async deleteOrganization(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Cascade: delete all users that belong to this organization first
+      const usersInOrg = await this.userRepo.findByOrg(id);
+      if (usersInOrg && usersInOrg.length > 0) {
+        for (const user of usersInOrg) {
+          try {
+            await this.userRepo.delete(user.id);
+            this.logger.info("User deleted due to organization deletion", {
+              userId: user.id,
+              orgId: id,
+              email: user.email,
+            });
+          } catch (userDelErr) {
+            this.logger.error(
+              "Failed to delete user during organization deletion",
+              userDelErr as Error,
+            );
+          }
+        }
+      }
 
       await this.orgRepo.delete(id);
 
@@ -275,7 +365,6 @@ export class AdminController {
       const { id } = req.params;
       const updateData = req.body;
 
-      // Remove sensitive fields that shouldn't be updated directly
       const {
         password,
         otp,

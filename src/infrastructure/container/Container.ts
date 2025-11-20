@@ -10,7 +10,7 @@ import { IJwtService } from "../../domain/interfaces/services/IJwtService";
 import { IEmailService } from "../../domain/interfaces/services/IEmailService";
 import { IOtpService } from "../../domain/interfaces/services/IOtpService";
 import { ICacheService } from "../../domain/interfaces/services/ICacheService";
-
+import { IGoogleAuthService } from "../../domain/interfaces/services/IGoogleAuthService ";
 // Domain Interfaces - Repositories
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
@@ -26,11 +26,13 @@ import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase"
 import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
 import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
 import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
+import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases/IOrganizationManagementUseCase";
 
 // Infrastructure Implementations - Services
 import { Logger } from "../services/Logger";
 import { HashService } from "../services/HashService";
 import { JwtService } from "../services/JwtService";
+import { GoogleAuthService } from "../services/GoogleAuthService";
 import { EmailService } from "../services/EmailService";
 import { OtpService } from "../services/OTPService";
 import { JsonWebTokenProvider } from "../services/providers/JsonWebTokenProvider";
@@ -55,6 +57,7 @@ import { AcceptUseCase } from "../../application/useCase/AcceptUseCase";
 import { InviteMemberUseCase } from "../../application/useCase/InviteMemberUseCase";
 import { ResetPasswordUseCase } from "../../application/useCase/ResetPasswordUseCase";
 import { UserProfileUseCase } from "../../application/useCase/UserProfileUseCase";
+import { OrganizationManagementUseCase } from "../../application/useCase/OrganizationManagementUseCase";
 
 // Presentation Controllers
 import { AuthController } from "../../presentation/controllers/AuthController";
@@ -62,8 +65,34 @@ import { AdminController } from "../../presentation/controllers/AdminController"
 import { UserController } from "../../presentation/controllers/UserController";
 import { ManagerController } from "../../presentation/controllers/ManagerController";
 
+/**
+ * Service interface for async initialization/cleanup
+ * Used to safely check for optional connect/init/disconnect/close methods
+ */
+interface IAsyncInitializable {
+  connect?(): Promise<void>;
+  init?(): Promise<void>;
+  disconnect?(): Promise<void>;
+  close?(): Promise<void>;
+}
+
+/**
+ * Logger-like interface for fallback logging
+ */
+interface ILoggerLike {
+  warn?(message: string, error?: unknown): void;
+}
+
+/**
+ * DIContainer
+ *
+ * - Binds services, repositories, use-cases, and controllers.
+ * - Provides an async init() method to initialize async services (e.g., Redis).
+ * - Provides dispose() for tests/graceful shutdown.
+ */
 class DIContainer {
   private readonly _container: Container;
+  private _initialized = false;
 
   constructor() {
     this._container = new Container();
@@ -71,7 +100,7 @@ class DIContainer {
   }
 
   /**
-   * Services -> Repositories -> Use Cases -> Controllers
+   * Bindings (unchanged)
    */
   private _configureBindings(): void {
     this._bindServices();
@@ -102,6 +131,11 @@ class DIContainer {
       .bind<IOtpService>(TYPES.IOtpService)
       .to(OtpService)
       .inSingletonScope();
+    this._container
+      .bind<IGoogleAuthService>(TYPES.IGoogleAuthService)
+      .to(GoogleAuthService)
+      .inSingletonScope();
+
     const useRedis =
       String(process.env.USE_REDIS || "").toLowerCase() === "true";
     if (useRedis) {
@@ -169,6 +203,12 @@ class DIContainer {
       .bind<IUserProfileUseCase>(TYPES.IUserProfileUseCase)
       .to(UserProfileUseCase)
       .inTransientScope();
+    this._container
+      .bind<IOrganizationManagementUseCase>(
+        TYPES.IOrganizationManagementUseCase,
+      )
+      .to(OrganizationManagementUseCase)
+      .inTransientScope();
   }
 
   private _bindControllers(): void {
@@ -188,6 +228,61 @@ class DIContainer {
       .bind<ManagerController>(TYPES.ManagerController)
       .to(ManagerController)
       .inSingletonScope();
+  }
+
+  /**
+   * Initialize async services if required.
+   * - Ensures initialization runs only once.
+   * - Looks for services that expose an async `connect()` or `init()` method and invokes it.
+   */
+  public async init(): Promise<void> {
+    if (this._initialized) return;
+    this._initialized = true;
+
+    // Try to initialize cache service if it has async startup
+    try {
+      if (this._container.isBound(TYPES.ICacheService)) {
+        const cache = this._container.get<ICacheService>(
+          TYPES.ICacheService,
+        ) as IAsyncInitializable;
+        if (cache && typeof cache.connect === "function") {
+          // If RedisCacheService provides an async connect(), await it.
+          await cache.connect();
+        } else if (cache && typeof cache.init === "function") {
+          await cache.init();
+        }
+      }
+    } catch (err) {
+      // If init fails, rethrow so caller can decide to fail-fast or continue.
+      const logger = this._container.isBound(TYPES.ILogger)
+        ? (this._container.get<ILogger>(TYPES.ILogger) as ILoggerLike)
+        : console;
+      logger?.warn?.("Cache service initialization failed", err);
+      throw err;
+    }
+  }
+
+  /**
+   * Dispose / cleanup helpers (useful in tests or graceful shutdown)
+   */
+  public async dispose(): Promise<void> {
+    try {
+      // Try to close cache connections if present
+      if (this._container.isBound(TYPES.ICacheService)) {
+        const cache = this._container.get<ICacheService>(
+          TYPES.ICacheService,
+        ) as IAsyncInitializable;
+        if (cache && typeof cache.disconnect === "function")
+          await cache.disconnect();
+        if (cache && typeof cache.close === "function") await cache.close();
+      }
+    } catch (err) {
+      // best-effort
+      const logger = this._container.isBound(TYPES.ILogger)
+        ? (this._container.get<ILogger>(TYPES.ILogger) as ILoggerLike)
+        : console;
+      logger?.warn?.("Error during container dispose", err);
+    }
   }
 
   public get container(): Container {
@@ -211,6 +306,6 @@ class DIContainer {
   }
 }
 
-// Export singleton container instance
+// Export container instance (constructed eagerly but init() must be called before use of async deps)
 export const diContainer = new DIContainer();
 export const container = diContainer.container;

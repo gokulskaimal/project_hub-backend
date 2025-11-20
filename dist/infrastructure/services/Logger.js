@@ -43,11 +43,13 @@ let Logger = class Logger {
     error(message, error, meta) {
         const logData = {
             ...meta,
-            error: error ? {
-                message: error.message,
-                stack: error.stack,
-                name: error.name
-            } : undefined
+            error: error
+                ? {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name,
+                }
+                : undefined,
         };
         this._logger.error(message, logData);
     }
@@ -72,25 +74,25 @@ let Logger = class Logger {
      * @returns Configured Winston logger
      */
     _createLogger() {
-        const logDir = path_1.default.join(__dirname, '../../logs');
+        const logDir = path_1.default.join(__dirname, "../../logs");
         const logFormat = winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.json(), winston_1.default.format.errors({ stack: true }));
         const logger = winston_1.default.createLogger({
-            level: process.env.LOG_LEVEL || 'info',
+            level: process.env.LOG_LEVEL || "info",
             format: logFormat,
             transports: [
                 new winston_1.default.transports.File({
-                    filename: path_1.default.join(logDir, 'error.log'),
-                    level: 'error'
+                    filename: path_1.default.join(logDir, "error.log"),
+                    level: "error",
                 }),
                 new winston_1.default.transports.File({
-                    filename: path_1.default.join(logDir, 'combined.log')
-                })
-            ]
+                    filename: path_1.default.join(logDir, "combined.log"),
+                }),
+            ],
         });
         // Add console transport for non-production environments
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
             logger.add(new winston_1.default.transports.Console({
-                format: winston_1.default.format.combine(winston_1.default.format.colorize(), winston_1.default.format.simple())
+                format: winston_1.default.format.combine(winston_1.default.format.colorize(), winston_1.default.format.simple()),
             }));
         }
         return logger;

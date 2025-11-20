@@ -11,7 +11,7 @@ function loadConfig() {
     const parseBoolean = (value, defaultValue) => {
         if (value === undefined)
             return defaultValue;
-        return value.toLowerCase() === 'true';
+        return value.toLowerCase() === "true";
     };
     // Helper function to parse number environment variables
     const parseNumber = (value, defaultValue) => {
@@ -24,44 +24,47 @@ function loadConfig() {
     const parseArray = (value, defaultValue) => {
         if (value === undefined)
             return defaultValue;
-        return value.split(',').map(item => item.trim());
+        return value.split(",").map((item) => item.trim());
     };
     const config = {
         // Server Configuration
         port: parseNumber(process.env.PORT, 4000),
-        nodeEnv: process.env.NODE_ENV || 'development',
-        apiPrefix: process.env.API_PREFIX || '/api',
+        nodeEnv: process.env.NODE_ENV || "development",
+        apiPrefix: process.env.API_PREFIX || "/api",
         // Database Configuration
-        mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/project-hub',
-        dbName: process.env.DB_NAME || 'project-hub',
+        mongoUri: process.env.MONGO_URI || "mongodb://localhost:27017/project-hub",
+        dbName: process.env.DB_NAME || "project-hub",
         dbPoolSize: parseNumber(process.env.DB_POOL_SIZE, 10),
         dbTimeout: parseNumber(process.env.DB_TIMEOUT, 5000),
         // JWT Configuration
         jwt: {
-            accessSecret: process.env.JWT_ACCESS_SECRET || 'your-access-secret-key-change-in-production',
-            refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production',
-            resetSecret: process.env.JWT_RESET_SECRET || 'your-reset-secret-key-change-in-production',
-            accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
-            refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
-            resetTokenExpiry: process.env.JWT_RESET_EXPIRY || '1h',
-            issuer: process.env.JWT_ISSUER || 'project-hub',
-            audience: process.env.JWT_AUDIENCE || 'project-hub-users'
+            accessSecret: process.env.JWT_ACCESS_SECRET ||
+                "your-access-secret-key-change-in-production",
+            refreshSecret: process.env.JWT_REFRESH_SECRET ||
+                "your-refresh-secret-key-change-in-production",
+            resetSecret: process.env.JWT_RESET_SECRET ||
+                "your-reset-secret-key-change-in-production",
+            accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || "15m",
+            refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || "7d",
+            resetTokenExpiry: process.env.JWT_RESET_EXPIRY || "1h",
+            issuer: process.env.JWT_ISSUER || "project-hub",
+            audience: process.env.JWT_AUDIENCE || "project-hub-users",
         },
         // Session Configuration
         session: {
             maxAge: parseNumber(process.env.SESSION_MAX_AGE, 24 * 60 * 60 * 1000), // 24 hours in milliseconds
-            cookieSecure: parseBoolean(process.env.COOKIE_SECURE, process.env.NODE_ENV === 'production'),
-            sameSite: process.env.COOKIE_SAME_SITE || 'strict'
+            cookieSecure: parseBoolean(process.env.COOKIE_SECURE, process.env.NODE_ENV === "production"),
+            sameSite: process.env.COOKIE_SAME_SITE || "strict",
         },
         // Email Configuration
         email: {
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+            host: process.env.EMAIL_HOST || "smtp.gmail.com",
             port: parseNumber(process.env.EMAIL_PORT, 587),
             secure: parseBoolean(process.env.EMAIL_SECURE, false),
-            user: process.env.EMAIL_USER || '',
-            password: process.env.EMAIL_PASSWORD || '',
-            from: process.env.EMAIL_FROM || 'noreply@project-hub.com',
-            maxRetries: parseNumber(process.env.EMAIL_MAX_RETRIES, 3)
+            user: process.env.EMAIL_USER || "",
+            password: process.env.EMAIL_PASSWORD || "",
+            from: process.env.EMAIL_FROM || "noreply@project-hub.com",
+            maxRetries: parseNumber(process.env.EMAIL_MAX_RETRIES, 3),
         },
         // Security Configuration
         security: {
@@ -69,74 +72,79 @@ function loadConfig() {
             rateLimitWindow: parseNumber(process.env.RATE_LIMIT_WINDOW, 15 * 60 * 1000), // 15 minutes
             rateLimitMax: parseNumber(process.env.RATE_LIMIT_MAX, 100),
             corsOrigin: process.env.CORS_ORIGIN
-                ? parseArray(process.env.CORS_ORIGIN, ['http://localhost:3000'])
-                : ['http://localhost:3000'],
-            cookieSecret: process.env.COOKIE_SECRET || 'your-cookie-secret-change-in-production'
+                ? parseArray(process.env.CORS_ORIGIN, ["http://localhost:3000"])
+                : ["http://localhost:3000"],
+            cookieSecret: process.env.COOKIE_SECRET || "your-cookie-secret-change-in-production",
         },
         // File Upload Configuration
         upload: {
             maxFileSize: parseNumber(process.env.UPLOAD_MAX_FILE_SIZE, 5 * 1024 * 1024), // 5MB
-            allowedTypes: parseArray(process.env.UPLOAD_ALLOWED_TYPES, ['image/jpeg', 'image/png', 'image/gif', 'application/pdf']),
-            uploadPath: process.env.UPLOAD_PATH || './uploads'
+            allowedTypes: parseArray(process.env.UPLOAD_ALLOWED_TYPES, [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "application/pdf",
+            ]),
+            uploadPath: process.env.UPLOAD_PATH || "./uploads",
         },
         // Logging Configuration
         logging: {
-            level: process.env.LOG_LEVEL || 'info',
+            level: process.env.LOG_LEVEL || "info",
             maxFiles: parseNumber(process.env.LOG_MAX_FILES, 10),
-            maxSize: process.env.LOG_MAX_SIZE || '10m'
+            maxSize: process.env.LOG_MAX_SIZE || "10m",
         },
         // OTP Configuration
         otp: {
             expiryMinutes: parseNumber(process.env.OTP_EXPIRY_MINUTES, 10),
             length: parseNumber(process.env.OTP_LENGTH, 6),
-            maxAttempts: parseNumber(process.env.OTP_MAX_ATTEMPTS, 3)
+            maxAttempts: parseNumber(process.env.OTP_MAX_ATTEMPTS, 3),
         },
         // Frontend Configuration
         frontend: {
-            url: process.env.FRONTEND_URL || 'http://localhost:3000',
-            resetPasswordPath: process.env.RESET_PASSWORD_PATH || '/auth/reset-password',
-            verifyEmailPath: process.env.VERIFY_EMAIL_PATH || '/auth/verify-email',
-            acceptInvitePath: process.env.ACCEPT_INVITE_PATH || '/auth/accept-invite'
+            url: process.env.FRONTEND_URL || "http://localhost:3000",
+            resetPasswordPath: process.env.RESET_PASSWORD_PATH || "/auth/reset-password",
+            verifyEmailPath: process.env.VERIFY_EMAIL_PATH || "/auth/verify-email",
+            acceptInvitePath: process.env.ACCEPT_INVITE_PATH || "/auth/accept-invite",
         },
         // Feature Flags
         features: {
             emailVerificationRequired: parseBoolean(process.env.FEATURE_EMAIL_VERIFICATION_REQUIRED, true),
             invitationRequired: parseBoolean(process.env.FEATURE_INVITATION_REQUIRED, false),
             passwordResetEnabled: parseBoolean(process.env.FEATURE_PASSWORD_RESET_ENABLED, true),
-            multiOrgSupport: parseBoolean(process.env.FEATURE_MULTI_ORG_SUPPORT, true)
-        }
+            multiOrgSupport: parseBoolean(process.env.FEATURE_MULTI_ORG_SUPPORT, true),
+        },
     };
     // Validate critical configuration in production
-    if (config.nodeEnv === 'production') {
+    if (config.nodeEnv === "production") {
         const requiredEnvVars = [
-            'MONGO_URI',
-            'JWT_ACCESS_SECRET',
-            'JWT_REFRESH_SECRET',
-            'JWT_RESET_SECRET',
-            'EMAIL_HOST',
-            'EMAIL_USER',
-            'EMAIL_PASSWORD',
-            'COOKIE_SECRET'
+            "MONGO_URI",
+            "JWT_ACCESS_SECRET",
+            "JWT_REFRESH_SECRET",
+            "JWT_RESET_SECRET",
+            "EMAIL_HOST",
+            "EMAIL_USER",
+            "EMAIL_PASSWORD",
+            "COOKIE_SECRET",
         ];
-        const missing = requiredEnvVars.filter(envVar => !process.env[envVar]);
+        const missing = requiredEnvVars.filter((envVar) => !process.env[envVar]);
         if (missing.length > 0) {
-            throw new Error(`Missing required environment variables in production: ${missing.join(', ')}`);
+            throw new Error(`Missing required environment variables in production: ${missing.join(", ")}`);
         }
         // Validate JWT secrets are not default values
         const defaultSecrets = [
-            'your-access-secret-key-change-in-production',
-            'your-refresh-secret-key-change-in-production',
-            'your-reset-secret-key-change-in-production',
-            'your-cookie-secret-change-in-production'
+            "your-access-secret-key-change-in-production",
+            "your-refresh-secret-key-change-in-production",
+            "your-reset-secret-key-change-in-production",
+            "your-cookie-secret-change-in-production",
         ];
         const usingDefaultSecrets = [
             config.jwt.accessSecret,
             config.jwt.refreshSecret,
             config.jwt.resetSecret,
-            config.security.cookieSecret
-        ].some(secret => defaultSecrets.includes(secret));
+            config.security.cookieSecret,
+        ].some((secret) => defaultSecrets.includes(secret));
         if (usingDefaultSecrets) {
-            throw new Error('Default secrets detected in production. Please set proper JWT and cookie secrets.');
+            throw new Error("Default secrets detected in production. Please set proper JWT and cookie secrets.");
         }
     }
     return config;
@@ -229,23 +237,24 @@ function validateConfig(config) {
     }
     // Validate email configuration
     if (config.email.port < 1 || config.email.port > 65535) {
-        errors.push('EMAIL_PORT must be between 1 and 65535');
+        errors.push("EMAIL_PORT must be between 1 and 65535");
     }
     // Validate session max age
-    if (config.session.maxAge < 60000) { // Minimum 1 minute
-        errors.push('SESSION_MAX_AGE must be at least 60000 milliseconds (1 minute)');
+    if (config.session.maxAge < 60000) {
+        // Minimum 1 minute
+        errors.push("SESSION_MAX_AGE must be at least 60000 milliseconds (1 minute)");
     }
     if (errors.length > 0) {
-        throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
+        throw new Error(`Configuration validation failed:\n${errors.join("\n")}`);
     }
 }
 // Validate configuration on load
 try {
     validateConfig(exports.config);
-    console.log('✅ Configuration loaded and validated successfully');
+    console.log("✅ Configuration loaded and validated successfully");
 }
 catch (error) {
-    console.error('❌ Configuration validation failed:', error);
+    console.error("❌ Configuration validation failed:", error);
     process.exit(1);
 }
 //# sourceMappingURL=AppConfig.js.map

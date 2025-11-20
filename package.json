@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch src --exec ts-node src/presentation/server.ts",
+    "dev": "ts-node-dev --transpile-only --respawn src/presentation/server.ts",
     "build": "tsc",
     "start": "node dist/presentation/server.js",
     "test": "echo \"No tests specified\" && exit 0",
@@ -25,6 +25,7 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-rate-limit": "^7.4.1",
+    "google-auth-library": "^10.5.0",
     "helmet": "^8.0.0",
     "inversify": "^6.0.2",
     "ioredis": "^5.8.2",

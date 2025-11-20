@@ -1,8 +1,8 @@
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { ICompleteSignupUseCase } from '../../domain/interfaces/useCases/ICompleteSignupUseCase';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
-import { IHashService } from '../../domain/interfaces/services/IHashService';
-import { IJwtService } from '../../domain/interfaces/services/IJwtService';
+import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/ICompleteSignupUseCase";
+import { IHashService } from "../../domain/interfaces/services/IHashService";
+import { IJwtService } from "../../domain/interfaces/services/IJwtService";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
 export declare class CompleteSignupUseCase implements ICompleteSignupUseCase {
     private readonly _userRepo;
     private readonly _logger;

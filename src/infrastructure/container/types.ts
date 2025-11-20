@@ -1,4 +1,3 @@
-// Service Types
 export const TYPES = {
   // ===== SERVICES =====
   ILogger: Symbol.for("ILogger"),
@@ -8,6 +7,7 @@ export const TYPES = {
   IEmailService: Symbol.for("IEmailService"),
   IOtpService: Symbol.for("IOtpService"),
   ICacheService: Symbol.for("ICacheService"),
+  IGoogleAuthService: Symbol.for("IGoogleAuthService"),
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
@@ -24,6 +24,7 @@ export const TYPES = {
   IInviteMemberUseCase: Symbol.for("IInviteMemberUseCase"),
   IResetPasswordUseCase: Symbol.for("IResetPasswordUseCase"),
   IUserProfileUseCase: Symbol.for("IUserProfileUseCase"),
+  IOrganizationManagementUseCase: Symbol.for("IOrganizationManagementUseCase"),
 
   // ===== CONTROLLERS =====
   AuthController: Symbol.for("AuthController"),

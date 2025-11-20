@@ -35,10 +35,10 @@ let InviteSignupUseCase = class InviteSignupUseCase {
         this._hashService = hashService;
     }
     execute(inviteToken, userData) {
-        throw new Error('Method not implemented.');
+        throw new Error("Method not implemented.");
     }
     getInvitationDetails(token) {
-        throw new Error('Method not implemented.');
+        throw new Error("Method not implemented.");
     }
     /**
      * Sign up user through invitation
@@ -49,29 +49,32 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      * @returns Created user data
      */
     async signup(email, password, orgId, role) {
-        this._logger.info('Invite signup attempt', { email, orgId, role });
+        this._logger.info("Invite signup attempt", { email, orgId, role });
         try {
             // Business Rule: Validate input
             this._validateInput(email, password, orgId, role);
             // Business Rule: Check if user already exists
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser) {
-                this._logger.warn('User already exists for invite signup', { email });
-                throw new Error('User already exists with this email address');
+                this._logger.warn("User already exists for invite signup", { email });
+                throw new Error("User already exists with this email address");
             }
             // Business Rule: Verify organization exists
             const organization = await this._orgRepo.findById(orgId);
             if (!organization) {
-                this._logger.warn('Organization not found for invite signup', { orgId });
-                throw new Error('Organization not found');
+                this._logger.warn("Organization not found for invite signup", {
+                    orgId,
+                });
+                throw new Error("Organization not found");
             }
             // Business Rule: Check organization status
-            if (organization.status === 'INACTIVE' || organization.status === 'SUSPENDED') {
-                this._logger.warn('Signup attempted for inactive organization', {
+            if (organization.status === "INACTIVE" ||
+                organization.status === "SUSPENDED") {
+                this._logger.warn("Signup attempted for inactive organization", {
                     orgId,
-                    status: organization.status
+                    status: organization.status,
                 });
-                throw new Error('Organization is not currently accepting new members');
+                throw new Error("Organization is not currently accepting new members");
             }
             // Business Rule: Validate role permissions
             this._validateRolePermissions(role, organization);
@@ -84,25 +87,25 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 orgId,
                 role,
                 emailVerified: false, // Will need to verify via email
-                status: 'PENDING_VERIFICATION',
-                createdAt: new Date()
+                status: "PENDING_VERIFICATION",
+                createdAt: new Date(),
             });
-            this._logger.info('Invite signup completed successfully', {
+            this._logger.info("Invite signup completed successfully", {
                 userId: newUser.id,
                 email,
                 orgId,
                 orgName: organization.name,
-                role
+                role,
             });
             // Return safe user data (exclude sensitive fields)
             const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = newUser;
             return safeUserData;
         }
         catch (error) {
-            this._logger.error('Invite signup failed', error, {
+            this._logger.error("Invite signup failed", error, {
                 email,
                 orgId,
-                role
+                role,
             });
             throw error;
         }
@@ -117,21 +120,30 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      * @returns Created user data
      */
     async signupWithVerifiedEmail(email, password, name, orgId, role) {
-        this._logger.info('Verified invite signup attempt', { email, orgId, role, name });
+        this._logger.info("Verified invite signup attempt", {
+            email,
+            orgId,
+            role,
+            name,
+        });
         try {
             // Business Rule: Validate input
             this._validateInputWithName(email, password, name, orgId, role);
             // Business Rule: Check if user already exists
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser) {
-                this._logger.warn('User already exists for verified invite signup', { email });
-                throw new Error('User already exists with this email address');
+                this._logger.warn("User already exists for verified invite signup", {
+                    email,
+                });
+                throw new Error("User already exists with this email address");
             }
             // Business Rule: Verify organization exists
             const organization = await this._orgRepo.findById(orgId);
             if (!organization) {
-                this._logger.warn('Organization not found for verified invite signup', { orgId });
-                throw new Error('Organization not found');
+                this._logger.warn("Organization not found for verified invite signup", {
+                    orgId,
+                });
+                throw new Error("Organization not found");
             }
             // Business Rule: Hash password
             const hashedPassword = await this._hashService.hash(password);
@@ -143,27 +155,27 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 orgId,
                 role,
                 emailVerified: true, // Pre-verified through invitation
-                status: 'ACTIVE',
-                createdAt: new Date()
+                status: "ACTIVE",
+                createdAt: new Date(),
             });
-            this._logger.info('Verified invite signup completed successfully', {
+            this._logger.info("Verified invite signup completed successfully", {
                 userId: newUser.id,
                 email,
                 name,
                 orgId,
                 orgName: organization.name,
-                role
+                role,
             });
             // Return safe user data
             const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = newUser;
             return safeUserData;
         }
         catch (error) {
-            this._logger.error('Verified invite signup failed', error, {
+            this._logger.error("Verified invite signup failed", error, {
                 email,
                 name,
                 orgId,
-                role
+                role,
             });
             throw error;
         }
@@ -176,22 +188,22 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      * @param role - Role to validate
      */
     _validateInput(email, password, orgId, role) {
-        if (!email || typeof email !== 'string') {
-            throw new Error('Email is required');
+        if (!email || typeof email !== "string") {
+            throw new Error("Email is required");
         }
-        if (!password || typeof password !== 'string') {
-            throw new Error('Password is required');
+        if (!password || typeof password !== "string") {
+            throw new Error("Password is required");
         }
-        if (!orgId || typeof orgId !== 'string') {
-            throw new Error('Organization ID is required');
+        if (!orgId || typeof orgId !== "string") {
+            throw new Error("Organization ID is required");
         }
         if (!role || !Object.values(UserRole_1.UserRole).includes(role)) {
-            throw new Error('Valid role is required');
+            throw new Error("Valid role is required");
         }
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error('Invalid email format');
+            throw new Error("Invalid email format");
         }
         // Validate password strength
         this._validatePassword(password);
@@ -206,14 +218,14 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      */
     _validateInputWithName(email, password, name, orgId, role) {
         this._validateInput(email, password, orgId, role);
-        if (!name || typeof name !== 'string') {
-            throw new Error('Name is required');
+        if (!name || typeof name !== "string") {
+            throw new Error("Name is required");
         }
         if (name.trim().length < 2) {
-            throw new Error('Name must be at least 2 characters long');
+            throw new Error("Name must be at least 2 characters long");
         }
         if (name.trim().length > 100) {
-            throw new Error('Name must be less than 100 characters long');
+            throw new Error("Name must be less than 100 characters long");
         }
     }
     /**
@@ -222,22 +234,22 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      */
     _validatePassword(password) {
         if (password.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
+            throw new Error("Password must be at least 8 characters long");
         }
         if (password.length > 128) {
-            throw new Error('Password must be less than 128 characters long');
+            throw new Error("Password must be less than 128 characters long");
         }
         // Check for at least one lowercase letter
         if (!/[a-z]/.test(password)) {
-            throw new Error('Password must contain at least one lowercase letter');
+            throw new Error("Password must contain at least one lowercase letter");
         }
         // Check for at least one uppercase letter
         if (!/[A-Z]/.test(password)) {
-            throw new Error('Password must contain at least one uppercase letter');
+            throw new Error("Password must contain at least one uppercase letter");
         }
         // Check for at least one number
         if (!/\d/.test(password)) {
-            throw new Error('Password must contain at least one number');
+            throw new Error("Password must contain at least one number");
         }
     }
     /**
@@ -254,9 +266,9 @@ let InviteSignupUseCase = class InviteSignupUseCase {
         // Business Rule: Check organization-specific role limits (if applicable)
         if (role === UserRole_1.UserRole.ORG_MANAGER && organization.maxManagers) {
             // Could implement manager limit check here
-            this._logger.info('Manager role assignment', {
+            this._logger.info("Manager role assignment", {
                 orgId: organization.id,
-                maxManagers: organization.maxManagers
+                maxManagers: organization.maxManagers,
             });
         }
     }

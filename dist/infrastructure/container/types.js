@@ -4,46 +4,47 @@ exports.TYPES = void 0;
 exports.isValidType = isValidType;
 exports.getAllTypes = getAllTypes;
 exports.getTypeByName = getTypeByName;
-// Service Types
 exports.TYPES = {
     // ===== SERVICES =====
-    ILogger: Symbol.for('ILogger'),
-    IHashService: Symbol.for('IHashService'),
-    IJwtService: Symbol.for('IJwtService'),
-    IJwtProvider: Symbol.for('IJwtProvider'),
-    IEmailService: Symbol.for('IEmailService'),
-    IOtpService: Symbol.for('IOtpService'),
+    ILogger: Symbol.for("ILogger"),
+    IHashService: Symbol.for("IHashService"),
+    IJwtService: Symbol.for("IJwtService"),
+    IJwtProvider: Symbol.for("IJwtProvider"),
+    IEmailService: Symbol.for("IEmailService"),
+    IOtpService: Symbol.for("IOtpService"),
+    ICacheService: Symbol.for("ICacheService"),
     // ===== REPOSITORIES =====
-    IUserRepo: Symbol.for('IUserRepo'),
-    IOrgRepo: Symbol.for('IOrgRepo'),
-    IInviteRepo: Symbol.for('IInviteRepo'),
+    IUserRepo: Symbol.for("IUserRepo"),
+    IOrgRepo: Symbol.for("IOrgRepo"),
+    IInviteRepo: Symbol.for("IInviteRepo"),
     // ===== USE CASES =====
-    IAuthUseCases: Symbol.for('IAuthUseCases'),
-    IRegisterManagerUseCase: Symbol.for('IRegisterManagerUseCase'),
-    ISendOtpUseCase: Symbol.for('ISendOtpUseCase'),
-    IVerifyOtpUseCase: Symbol.for('IVerifyOtpUseCase'),
-    ICompleteSignupUseCase: Symbol.for('ICompleteSignupUseCase'),
-    IAcceptUseCase: Symbol.for('IAcceptUseCase'),
-    IInviteMemberUseCase: Symbol.for('IInviteMemberUseCase'),
-    IResetPasswordUseCase: Symbol.for('IResetPasswordUseCase'),
-    IUserProfileUseCase: Symbol.for('IUserProfileUseCase'),
+    IAuthUseCases: Symbol.for("IAuthUseCases"),
+    IRegisterManagerUseCase: Symbol.for("IRegisterManagerUseCase"),
+    ISendOtpUseCase: Symbol.for("ISendOtpUseCase"),
+    IVerifyOtpUseCase: Symbol.for("IVerifyOtpUseCase"),
+    ICompleteSignupUseCase: Symbol.for("ICompleteSignupUseCase"),
+    IAcceptUseCase: Symbol.for("IAcceptUseCase"),
+    IInviteMemberUseCase: Symbol.for("IInviteMemberUseCase"),
+    IResetPasswordUseCase: Symbol.for("IResetPasswordUseCase"),
+    IUserProfileUseCase: Symbol.for("IUserProfileUseCase"),
+    IOrganizationManagementUseCase: Symbol.for("IOrganizationManagementUseCase"),
     // ===== CONTROLLERS =====
-    AuthController: Symbol.for('AuthController'),
-    AdminController: Symbol.for('AdminController'),
-    ManagerController: Symbol.for('ManagerController'),
-    UserController: Symbol.for('UserController'),
-    ProjectController: Symbol.for('ProjectController'),
+    AuthController: Symbol.for("AuthController"),
+    AdminController: Symbol.for("AdminController"),
+    ManagerController: Symbol.for("ManagerController"),
+    UserController: Symbol.for("UserController"),
+    ProjectController: Symbol.for("ProjectController"),
     // ===== MIDDLEWARES =====
-    AuthMiddleware: Symbol.for('AuthMiddleware'),
-    ValidationMiddleware: Symbol.for('ValidationMiddleware'),
-    ErrorMiddleware: Symbol.for('ErrorMiddleware'),
+    AuthMiddleware: Symbol.for("AuthMiddleware"),
+    ValidationMiddleware: Symbol.for("ValidationMiddleware"),
+    ErrorMiddleware: Symbol.for("ErrorMiddleware"),
     // ===== DATABASE =====
-    DatabaseConnection: Symbol.for('DatabaseConnection'),
+    DatabaseConnection: Symbol.for("DatabaseConnection"),
     // ===== CONFIGURATION =====
-    AppConfig: Symbol.for('AppConfig'),
-    DatabaseConfig: Symbol.for('DatabaseConfig'),
-    JwtConfig: Symbol.for('JwtConfig'),
-    EmailConfig: Symbol.for('EmailConfig')
+    AppConfig: Symbol.for("AppConfig"),
+    DatabaseConfig: Symbol.for("DatabaseConfig"),
+    JwtConfig: Symbol.for("JwtConfig"),
+    EmailConfig: Symbol.for("EmailConfig"),
 };
 /**
  * Type guard to check if a type identifier exists

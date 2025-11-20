@@ -1,14 +1,16 @@
-import { ISendOtpUseCase } from '../../domain/interfaces/useCases/ISendOtpUseCase ';
-import { IUserRepo } from '../../domain/interfaces/IUserRepo';
-import { IOtpService } from '../../domain/interfaces/services/IOtpService ';
-import { IEmailService } from '../../domain/interfaces/services/IEmailService ';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
+import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
+import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IOtpService } from "../../domain/interfaces/services/IOtpService";
+import { IEmailService } from "../../domain/interfaces/services/IEmailService";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { ICacheService } from "../../domain/interfaces/services/ICacheService";
 export declare class SendOtpUseCase implements ISendOtpUseCase {
     private readonly _userRepo;
     private readonly _otpService;
     private readonly _emailService;
     private readonly _logger;
-    constructor(userRepo: IUserRepo, otpService: IOtpService, emailService: IEmailService, logger: ILogger);
+    private readonly _cache;
+    constructor(userRepo: IUserRepo, otpService: IOtpService, emailService: IEmailService, logger: ILogger, cache: ICacheService);
     /**
      * ✅ FIXED: Send OTP with correct return type
      */
@@ -31,11 +33,6 @@ export declare class SendOtpUseCase implements ISendOtpUseCase {
      * @returns Number of attempts remaining
      */
     private _checkRateLimit;
-    /**
-     * Update rate limiting counter
-     * @param email - User email
-     */
-    private _updateRateLimit;
     /**
      * Validate email format
      * @param email - Email to validate

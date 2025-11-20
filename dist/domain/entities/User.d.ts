@@ -16,7 +16,7 @@ export interface User {
     otpExpiry?: Date;
     emailVerified: boolean;
     emailVerifiedAt?: Date;
-    status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'PENDING_APPROVAL';
+    status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION" | "PENDING_APPROVAL";
     avatar?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
@@ -24,7 +24,7 @@ export interface User {
     updatedAt?: Date;
     lastLoginAt?: Date;
     joinedAt?: Date;
-    signupMethod?: 'REGISTRATION' | 'INVITATION' | 'INVITATION_VERIFIED' | 'ADMIN_CREATED';
+    signupMethod?: "REGISTRATION" | "INVITATION" | "INVITATION_VERIFIED" | "ADMIN_CREATED";
     invitedAt?: Date;
     invitedBy?: string;
     phone?: string;
@@ -39,7 +39,7 @@ export interface User {
         emailNotifications?: boolean;
         pushNotifications?: boolean;
         marketingEmails?: boolean;
-        theme?: 'light' | 'dark' | 'auto';
+        theme?: "light" | "dark" | "auto";
         [key: string]: any;
     };
     permissions?: string[];

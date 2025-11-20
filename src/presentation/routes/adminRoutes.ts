@@ -33,33 +33,35 @@ export function createRoutes(container: Container): express.Router {
   // =================================================================
 
   // POST /api/auth/login
-  router.post(API_ROUTES.AUTH.LOGIN, (req, res) =>
-    authController.login(req, res),
+  router.post(API_ROUTES.AUTH.LOGIN, (req, res, next) =>
+    authController.login(req, res, next),
   );
 
   // POST /api/auth/register
-  router.post(API_ROUTES.AUTH.REGISTER, (req, res) =>
-    authController.register(req, res),
+  router.post(API_ROUTES.AUTH.REGISTER, (req, res, next) =>
+    authController.register(req, res, next),
   );
 
   // POST /api/auth/verify-otp
-  router.post(API_ROUTES.AUTH.VERIFY_OTP, (req, res) =>
-    authController.verifyOtp(req, res),
+  router.post(API_ROUTES.AUTH.VERIFY_OTP, (req, res, next) =>
+    authController.verifyOtp(req, res, next),
   );
 
   // POST /api/auth/reset-password
-  router.post(API_ROUTES.AUTH.RESET_PASSWORD, (req, res) =>
-    authController.requestPasswordReset(req, res),
+  router.post(API_ROUTES.AUTH.RESET_PASSWORD, (req, res, next) =>
+    authController.resetPasswordReq(req, res, next),
   );
 
   // POST /api/auth/complete-reset
   router.post(API_ROUTES.AUTH.COMPLETE_RESET, (req, res) =>
-    authController.completeReset(req, res),
+    res.status(501).json({
+      message: "Endpoint not implemented",
+    }),
   );
 
   // POST /api/auth/refresh-token
-  router.post("/auth/refresh-token", (req, res) =>
-    authController.refreshToken(req, res),
+  router.post("/auth/refresh-token", (req, res, next) =>
+    authController.refreshToken(req, res, next),
   );
 
   // =================================================================
@@ -210,23 +212,23 @@ export function createRoutes(container: Container): express.Router {
   // =================================================================
 
   // GET /api/health - Health check endpoint
-  router.get("/health", (req, res) => {
-    res.status(StatusCodes.OK).json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      version: process.env.APP_VERSION || "1.0.0",
-      environment: process.env.NODE_ENV || "development",
-    });
-  });
+  // router.get("/health", (req, res) => {
+  //   res.status(StatusCodes.OK).json({
+  //     status: "healthy",
+  //     timestamp: new Date().toISOString(),
+  //     version: process.env.APP_VERSION || "1.0.0",
+  //     environment: process.env.NODE_ENV || "development",
+  //   });
+  // });
 
   // GET /api/invite/:token - Public invitation acceptance page
-  router.get("/invite/:token", (req, res) =>
-    authController.validateInviteToken(req, res),
+  router.get("/invite/:token", (req, res, next) =>
+    authController.validateInviteToken(req, res, next),
   );
 
   // POST /api/invite/:token/accept - Accept invitation
-  router.post("/invite/:token/accept", (req, res) =>
-    authController.acceptInvite(req, res),
+  router.post("/invite/:token/accept", (req, res, next) =>
+    authController.acceptInvite(req, res, next),
   );
 
   // =================================================================

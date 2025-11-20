@@ -130,7 +130,6 @@ export class AcceptUseCase implements IAcceptUseCase {
         password: hashedPassword,
         emailVerified: true, // Pre-verified through invitation
         status: "ACTIVE",
-        invitedAt: new Date(),
         createdAt: new Date(),
         ...additionalData,
       });
@@ -138,12 +137,14 @@ export class AcceptUseCase implements IAcceptUseCase {
       // Generate authentication tokens
       const accessToken = this._jwtService.generateAccessToken({
         id: newUser.id,
+        email: newUser.email,
         role: newUser.role,
         orgId: newUser.orgId,
       });
 
       const refreshToken = this._jwtService.generateRefreshToken({
         id: newUser.id,
+        email: newUser.email,
       });
 
       // Mark invitation as accepted

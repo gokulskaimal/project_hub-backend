@@ -12,6 +12,8 @@ const JwtService_1 = require("../services/JwtService");
 const EmailService_1 = require("../services/EmailService");
 const OTPService_1 = require("../services/OTPService");
 const JsonWebTokenProvider_1 = require("../services/providers/JsonWebTokenProvider");
+const RedisCacheService_1 = require("../services/RedisCacheService");
+const InMemoryCacheService_1 = require("../services/InMemoryCacheService");
 // Infrastructure Implementations - Repositories
 const UserRepo_1 = require("../repositories/UserRepo");
 const OrgRepo_1 = require("../repositories/OrgRepo");
@@ -25,16 +27,28 @@ const CompleteSignupUseCase_1 = require("../../application/useCase/CompleteSignu
 const AcceptUseCase_1 = require("../../application/useCase/AcceptUseCase");
 const InviteMemberUseCase_1 = require("../../application/useCase/InviteMemberUseCase");
 const ResetPasswordUseCase_1 = require("../../application/useCase/ResetPasswordUseCase");
+const UserProfileUseCase_1 = require("../../application/useCase/UserProfileUseCase");
+const OrganizationManagementUseCase_1 = require("../../application/useCase/OrganizationManagementUseCase");
 // Presentation Controllers
 const AuthController_1 = require("../../presentation/controllers/AuthController");
 const AdminController_1 = require("../../presentation/controllers/AdminController");
+const UserController_1 = require("../../presentation/controllers/UserController");
+const ManagerController_1 = require("../../presentation/controllers/ManagerController");
+/**
+ * DIContainer
+ *
+ * - Binds services, repositories, use-cases, and controllers.
+ * - Provides an async init() method to initialize async services (e.g., Redis).
+ * - Provides dispose() for tests/graceful shutdown.
+ */
 class DIContainer {
     constructor() {
+        this._initialized = false;
         this._container = new inversify_1.Container();
         this._configureBindings();
     }
     /**
-     * Services -> Repositories -> Use Cases -> Controllers
+     * Bindings (unchanged)
      */
     _configureBindings() {
         this._bindServices();
@@ -44,30 +58,166 @@ class DIContainer {
     }
     _bindServices() {
         this._container.bind(types_1.TYPES.ILogger).to(Logger_1.Logger).inSingletonScope();
-        this._container.bind(types_1.TYPES.IHashService).to(HashService_1.HashService).inSingletonScope();
-        this._container.bind(types_1.TYPES.IJwtProvider).to(JsonWebTokenProvider_1.JsonWebTokenProvider).inSingletonScope();
-        this._container.bind(types_1.TYPES.IJwtService).to(JwtService_1.JwtService).inSingletonScope();
-        this._container.bind(types_1.TYPES.IEmailService).to(EmailService_1.EmailService).inSingletonScope();
-        this._container.bind(types_1.TYPES.IOtpService).to(OTPService_1.OtpService).inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IHashService)
+            .to(HashService_1.HashService)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IJwtProvider)
+            .to(JsonWebTokenProvider_1.JsonWebTokenProvider)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IJwtService)
+            .to(JwtService_1.JwtService)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IEmailService)
+            .to(EmailService_1.EmailService)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IOtpService)
+            .to(OTPService_1.OtpService)
+            .inSingletonScope();
+        const useRedis = String(process.env.USE_REDIS || "").toLowerCase() === "true";
+        if (useRedis) {
+            this._container
+                .bind(types_1.TYPES.ICacheService)
+                .to(RedisCacheService_1.RedisCacheService)
+                .inSingletonScope();
+        }
+        else {
+            this._container
+                .bind(types_1.TYPES.ICacheService)
+                .to(InMemoryCacheService_1.InMemoryCacheService)
+                .inSingletonScope();
+        }
     }
     _bindRepositories() {
-        this._container.bind(types_1.TYPES.IUserRepo).to(UserRepo_1.UserRepo).inSingletonScope();
-        this._container.bind(types_1.TYPES.IOrgRepo).to(OrgRepo_1.OrgRepo).inSingletonScope();
-        this._container.bind(types_1.TYPES.IInviteRepo).to(InviteRepo_1.InviteRepo).inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IUserRepo)
+            .to(UserRepo_1.UserRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IOrgRepo)
+            .to(OrgRepo_1.OrgRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IInviteRepo)
+            .to(InviteRepo_1.InviteRepo)
+            .inSingletonScope();
     }
     _bindUseCases() {
-        this._container.bind(types_1.TYPES.IAuthUseCases).to(AuthUseCase_1.AuthUseCases).inTransientScope();
-        this._container.bind(types_1.TYPES.IRegisterManagerUseCase).to(RegisterManagerUseCase_1.RegisterManagerUseCase).inTransientScope();
-        this._container.bind(types_1.TYPES.ISendOtpUseCase).to(SendOtpUseCase_1.SendOtpUseCase).inTransientScope();
-        this._container.bind(types_1.TYPES.IVerifyOtpUseCase).to(VerifyOtpUseCase_1.VerifyOtpUseCase).inTransientScope();
-        this._container.bind(types_1.TYPES.ICompleteSignupUseCase).to(CompleteSignupUseCase_1.CompleteSignupUseCase).inTransientScope();
-        this._container.bind(types_1.TYPES.IAcceptUseCase).to(AcceptUseCase_1.AcceptUseCase).inTransientScope();
-        this._container.bind(types_1.TYPES.IInviteMemberUseCase).to(InviteMemberUseCase_1.InviteMemberUseCase).inTransientScope();
-        this._container.bind(types_1.TYPES.IResetPasswordUseCase).to(ResetPasswordUseCase_1.ResetPasswordUseCase).inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IAuthUseCases)
+            .to(AuthUseCase_1.AuthUseCases)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IRegisterManagerUseCase)
+            .to(RegisterManagerUseCase_1.RegisterManagerUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ISendOtpUseCase)
+            .to(SendOtpUseCase_1.SendOtpUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IVerifyOtpUseCase)
+            .to(VerifyOtpUseCase_1.VerifyOtpUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ICompleteSignupUseCase)
+            .to(CompleteSignupUseCase_1.CompleteSignupUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IAcceptUseCase)
+            .to(AcceptUseCase_1.AcceptUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IInviteMemberUseCase)
+            .to(InviteMemberUseCase_1.InviteMemberUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IResetPasswordUseCase)
+            .to(ResetPasswordUseCase_1.ResetPasswordUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IUserProfileUseCase)
+            .to(UserProfileUseCase_1.UserProfileUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IOrganizationManagementUseCase)
+            .to(OrganizationManagementUseCase_1.OrganizationManagementUseCase)
+            .inTransientScope();
     }
     _bindControllers() {
-        this._container.bind(types_1.TYPES.AuthController).to(AuthController_1.AuthController).inSingletonScope();
-        this._container.bind(types_1.TYPES.AdminController).to(AdminController_1.AdminController).inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.AuthController)
+            .to(AuthController_1.AuthController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.AdminController)
+            .to(AdminController_1.AdminController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.UserController)
+            .to(UserController_1.UserController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ManagerController)
+            .to(ManagerController_1.ManagerController)
+            .inSingletonScope();
+    }
+    /**
+     * Initialize async services if required.
+     * - Ensures initialization runs only once.
+     * - Looks for services that expose an async `connect()` or `init()` method and invokes it.
+     */
+    async init() {
+        if (this._initialized)
+            return;
+        this._initialized = true;
+        // Try to initialize cache service if it has async startup
+        try {
+            if (this._container.isBound(types_1.TYPES.ICacheService)) {
+                const cache = this._container.get(types_1.TYPES.ICacheService);
+                if (cache && typeof cache.connect === "function") {
+                    // If RedisCacheService provides an async connect(), await it.
+                    await cache.connect();
+                }
+                else if (cache && typeof cache.init === "function") {
+                    await cache.init();
+                }
+            }
+        }
+        catch (err) {
+            // If init fails, rethrow so caller can decide to fail-fast or continue.
+            const logger = this._container.isBound(types_1.TYPES.ILogger)
+                ? this._container.get(types_1.TYPES.ILogger)
+                : console;
+            logger?.warn?.("Cache service initialization failed", err);
+            throw err;
+        }
+    }
+    /**
+     * Dispose / cleanup helpers (useful in tests or graceful shutdown)
+     */
+    async dispose() {
+        try {
+            // Try to close cache connections if present
+            if (this._container.isBound(types_1.TYPES.ICacheService)) {
+                const cache = this._container.get(types_1.TYPES.ICacheService);
+                if (cache && typeof cache.disconnect === "function")
+                    await cache.disconnect();
+                if (cache && typeof cache.close === "function")
+                    await cache.close();
+            }
+        }
+        catch (err) {
+            // best-effort
+            const logger = this._container.isBound(types_1.TYPES.ILogger)
+                ? this._container.get(types_1.TYPES.ILogger)
+                : console;
+            logger?.warn?.("Error during container dispose", err);
+        }
     }
     get container() {
         return this._container;
@@ -85,7 +235,7 @@ class DIContainer {
         return this._container.rebind(serviceIdentifier);
     }
 }
-// Export singleton container instance
+// Export container instance (constructed eagerly but init() must be called before use of async deps)
 exports.diContainer = new DIContainer();
 exports.container = exports.diContainer.container;
 //# sourceMappingURL=Container.js.map

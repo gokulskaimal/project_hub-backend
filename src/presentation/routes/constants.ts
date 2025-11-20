@@ -15,6 +15,7 @@ export const API_ROUTES = {
     COMPLETE_SIGNUP: "/auth/complete-signup",
     INVITE_MEMBER: "/auth/invite-member",
     ACCEPT_INVITE: "/auth/accept-invite",
+    GOOGLE_SIGNIN: "/auth/google-signin",
   },
   ADMIN: {
     ORGANIZATIONS: "/admin/organizations",

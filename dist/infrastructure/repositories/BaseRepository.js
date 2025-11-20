@@ -48,7 +48,7 @@ class BaseRepository {
      */
     async findAll(filter = {}) {
         const docs = await this.model.find(filter);
-        return docs.map(d => this.toDomain(d));
+        return docs.map((d) => this.toDomain(d));
     }
     /**
      * Updates a document by its ID
@@ -61,7 +61,7 @@ class BaseRepository {
     async update(id, data) {
         const doc = await this.model.findByIdAndUpdate(id, { ...data, updatedAt: new Date() }, { new: true, runValidators: true });
         if (!doc)
-            throw new Error('Document not found');
+            throw new Error("Document not found");
         return this.toDomain(doc);
     }
     /**

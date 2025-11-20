@@ -3,7 +3,7 @@ export interface Invite {
     email: string;
     orgId: string;
     token: string;
-    status: 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'CANCELLED';
+    status: "PENDING" | "ACCEPTED" | "EXPIRED" | "CANCELLED";
     expiry: Date;
     invitedBy?: string;
     inviterName?: string;

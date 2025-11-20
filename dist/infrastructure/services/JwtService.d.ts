@@ -1,5 +1,5 @@
-import { IJwtService } from '../../domain/interfaces/services/IJwtService ';
-import { IJwtProvider } from '../../domain/interfaces/services/IJwtProvider';
+import { IJwtService, JwtPayload } from "../../domain/interfaces/services/IJwtService";
+import { IJwtProvider } from "../../domain/interfaces/services/IJwtProvider";
 /**
  * JWT Service Implementation
  * Uses dependency injection to receive a JWT provider
@@ -16,6 +16,8 @@ export declare class JwtService implements IJwtService {
     private readonly _resetTokenExpiry;
     private readonly _issuer;
     private readonly _audience;
+    private readonly revokedRefreshedTokens;
+    private readonly revokeForAllUserMap;
     /**
      * Constructor with dependency injection for JWT provider
      * @param jwtProvider Implementation of IJwtProvider interface
@@ -27,26 +29,27 @@ export declare class JwtService implements IJwtService {
      * @param expiresIn Optional override for token expiration
      * @returns Signed JWT access token
      */
-    generateAccessToken(payload: Record<string, any>, expiresIn?: string): string;
+    generateAccessToken(payload: JwtPayload, expiresIn?: string): string;
     /**
      * Generate refresh token (long-lived)
      * @param payload Data to include in the token
      * @param expiresIn Optional override for token expiration
      * @returns Signed JWT refresh token
      */
-    generateRefreshToken(payload: Record<string, any>, expiresIn?: string): string;
+    generateRefreshToken(payload: JwtPayload, expiresIn?: string): string;
     /**
      * Verify access token
      * @param token JWT token to verify
      * @returns Decoded payload or null if invalid
      */
-    verifyAccessToken(token: string): Record<string, any> | null;
+    verifyAccessToken(token: string): JwtPayload | null;
     /**
      * Verify refresh token
      * @param token JWT token to verify
      * @returns Decoded payload or null if invalid
      */
-    verifyRefreshToken(token: string): Record<string, any> | null;
+    verifyRefreshToken(token: string): JwtPayload | null;
+    verifyResetToken(token: string): JwtPayload | null;
     /**
      * Generate password reset token
      * @param payload Data to include in the token
@@ -59,12 +62,13 @@ export declare class JwtService implements IJwtService {
      * @param token JWT token to verify
      * @returns Decoded payload or null if invalid
      */
-    verifyResetToken(token: string): Record<string, any> | null;
     /**
      * Decode a JWT token without verification
      * @param token JWT token to decode
      * @returns Decoded payload or null if invalid format
      */
-    decodeToken(token: string): Record<string, any> | null;
+    decodeToken(token: string): JwtPayload | null;
+    revokeRefreshToken(token: string): Promise<void>;
+    revokeAllForUser(userId: string): Promise<void>;
 }
 //# sourceMappingURL=JwtService.d.ts.map

@@ -1,53 +1,28 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { UserDTO } from "../../../application/dto/UserDTO";
+import { AuthTokens, AuthResult } from "./types";
+
 export interface IAuthUseCases {
-  /**
-   * User login with email and password
-   */
-  login(
-    email: string,
-    password: string,
-  ): Promise<{
-    user: any;
-    tokens: {
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-    };
-  }>;
+  login(email: string, password: string): Promise<AuthResult>;
 
-  /**
-   * Refresh access token using refresh token
-   */
-  refreshToken(refreshToken: string): Promise<{
-    accessToken: string;
-    expiresIn: number;
-  }>;
+  register(email: string, password: string, name?: string): Promise<AuthResult>;
 
-  /**
-   * Logout user (invalidate tokens)
-   */
-  logout(userId: string, refreshToken: string): Promise<void>;
+  googleSignIn(
+    idToken: string,
+    inviteToken?: string,
+  ): Promise<{ user: UserDTO; tokens: AuthTokens }>;
 
-  /**
-   * Validate access token
-   */
-  validateToken(token: string): Promise<any>;
+  refresh(refreshToken: string): Promise<AuthTokens>;
 
-  /**
-   * ✅ ADDED: Request password reset - REQUIRED BY AuthController
-   */
+  logout(userId?: string, refreshToken?: string): Promise<void>;
+
+  validateToken(token: string): Promise<UserDTO>;
+
   resetPasswordReq(email: string): Promise<{ message: string; token?: string }>;
 
-  /**
-   * ✅ ADDED: Reset password with token - REQUIRED BY AuthController
-   */
   resetPassword(
     token: string,
     newPassword: string,
   ): Promise<{ message: string }>;
 
-  /**
-   * ✅ ADDED: Verify email - REQUIRED BY AuthController
-   */
   verifyEmail(token: string): Promise<{ message: string; verified: boolean }>;
 }

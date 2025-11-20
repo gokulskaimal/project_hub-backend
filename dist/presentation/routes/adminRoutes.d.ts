@@ -1,5 +1,5 @@
-import express from 'express';
-import { Container } from 'inversify';
+import express from "express";
+import { Container } from "inversify";
 /**
  * Create all application routes using Dependency Injection
  * @param container - Inversify DI container

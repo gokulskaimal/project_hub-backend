@@ -1,5 +1,5 @@
-import { Document, Model, FilterQuery } from 'mongoose';
-import { IBaseRepository } from '../../domain/interfaces/IBaseRepository';
+import { Document, Model, FilterQuery } from "mongoose";
+import { IBaseRepository } from "../../domain/interfaces/IBaseRepository";
 /**
  * Base Repository Abstract Class
  *

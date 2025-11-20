@@ -24,23 +24,26 @@ let InviteMemberUseCase = class InviteMemberUseCase {
         this._userRepo = userRepo;
     }
     async execute(email, orgId, role) {
-        this._logger.info('Processing member invitation', { email, orgId, role });
+        this._logger.info("Processing member invitation", { email, orgId, role });
         try {
             this._validateInput(email, orgId);
             const organization = await this._orgRepo.findById(orgId);
             if (!organization) {
-                this._logger.warn('Organization not found for invitation', { orgId });
-                throw new Error('Organization not found');
+                this._logger.warn("Organization not found for invitation", { orgId });
+                throw new Error("Organization not found");
             }
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser) {
-                this._logger.warn('User already exists', { email });
-                throw new Error('User with this email already exists');
+                this._logger.warn("User already exists", { email });
+                throw new Error("User with this email already exists");
             }
             const existingInvite = await this._inviteRepo.findPendingByEmail(email, orgId);
             if (existingInvite) {
-                this._logger.warn('Pending invitation already exists', { email, orgId });
-                throw new Error('An invitation to this email is already pending');
+                this._logger.warn("Pending invitation already exists", {
+                    email,
+                    orgId,
+                });
+                throw new Error("An invitation to this email is already pending");
             }
             const token = this._generateInvitationToken();
             const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -49,37 +52,40 @@ let InviteMemberUseCase = class InviteMemberUseCase {
                 email,
                 orgId,
                 token,
-                status: 'PENDING',
+                status: "PENDING",
                 expiry,
-                role: role || 'TEAM_MEMBER',
-                createdAt: new Date()
+                role: role || "TEAM_MEMBER",
+                createdAt: new Date(),
             };
             const invitation = await this._inviteRepo.create(inviteData);
             await this._sendInvitationEmail(email, token, organization.name);
-            this._logger.info('Member invitation sent successfully', {
+            this._logger.info("Member invitation sent successfully", {
                 email,
                 orgId,
                 orgName: organization.name,
                 expiresAt: expiry,
-                invitationId: invitation.id
+                invitationId: invitation.id,
             });
             return {
                 invitationId: invitation.id,
                 token,
                 expiresAt: expiry,
-                message: 'Invitation sent successfully'
+                message: "Invitation sent successfully",
             };
         }
         catch (error) {
-            this._logger.error('Failed to send member invitation', error, { email, orgId });
+            this._logger.error("Failed to send member invitation", error, {
+                email,
+                orgId,
+            });
             throw error;
         }
     }
     async bulkInvite(emails, orgId, role) {
-        this._logger.info('Processing bulk member invitations', {
+        this._logger.info("Processing bulk member invitations", {
             emailCount: emails.length,
             orgId,
-            role
+            role,
         });
         const successful = [];
         const failed = [];
@@ -88,49 +94,52 @@ let InviteMemberUseCase = class InviteMemberUseCase {
                 const result = await this.execute(email, orgId, role);
                 successful.push({
                     email,
-                    invitationId: result.invitationId
+                    invitationId: result.invitationId,
                 });
-                this._logger.info('Bulk invitation successful for email', { email });
+                this._logger.info("Bulk invitation successful for email", { email });
             }
             catch (error) {
-                const errorMessage = (error instanceof Error) ? error.message : 'Unknown error';
+                const errorMessage = error instanceof Error ? error.message : "Unknown error";
                 failed.push({
                     email,
-                    error: errorMessage
+                    error: errorMessage,
                 });
-                this._logger.warn('Bulk invitation failed for email', { email, error: errorMessage });
+                this._logger.warn("Bulk invitation failed for email", {
+                    email,
+                    error: errorMessage,
+                });
             }
         }
         const summary = {
             total: emails.length,
             successful: successful.length,
-            failed: failed.length
+            failed: failed.length,
         };
-        this._logger.info('Bulk invitations completed', summary);
+        this._logger.info("Bulk invitations completed", summary);
         return {
             successful,
             failed,
-            summary
+            summary,
         };
     }
     _validateInput(email, orgId) {
-        if (!email || typeof email !== 'string') {
-            throw new Error('Email is required');
+        if (!email || typeof email !== "string") {
+            throw new Error("Email is required");
         }
-        if (!orgId || typeof orgId !== 'string') {
-            throw new Error('Organization ID is required');
+        if (!orgId || typeof orgId !== "string") {
+            throw new Error("Organization ID is required");
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error('Invalid email format');
+            throw new Error("Invalid email format");
         }
         if (email.length > 254) {
-            throw new Error('Email address is too long');
+            throw new Error("Email address is too long");
         }
     }
     _generateInvitationToken() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let token = '';
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let token = "";
         for (let i = 0; i < 32; i++) {
             token += chars.charAt(Math.floor(Math.random() * chars.length));
         }
@@ -138,12 +147,15 @@ let InviteMemberUseCase = class InviteMemberUseCase {
     }
     async _sendInvitationEmail(email, token, orgName) {
         try {
-            await this._emailService.sendInviteEmail(email, token, orgName, 'Organization Manager');
-            this._logger.info('Invitation email sent', { email, orgName });
+            await this._emailService.sendInviteEmail(email, token, orgName, "Organization Manager");
+            this._logger.info("Invitation email sent", { email, orgName });
         }
         catch (error) {
-            this._logger.error('Failed to send invitation email', error, { email, orgName });
-            throw new Error('Failed to send invitation email');
+            this._logger.error("Failed to send invitation email", error, {
+                email,
+                orgName,
+            });
+            throw new Error("Failed to send invitation email");
         }
     }
 };

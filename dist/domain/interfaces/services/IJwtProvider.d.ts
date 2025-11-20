@@ -3,7 +3,7 @@
  * Defines the contract for different JWT implementations
  * Follows the Open/Closed principle by allowing extension through new providers
  */
-import { JwtPayload, JwtOptions } from '../../types/jwt.types';
+import { JwtPayload, JwtOptions } from "../../types/jwt.types";
 export interface IJwtProvider {
     /**
      * Sign a JWT token with the given payload and options

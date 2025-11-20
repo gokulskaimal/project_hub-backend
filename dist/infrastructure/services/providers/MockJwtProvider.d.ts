@@ -1,5 +1,5 @@
-import { IJwtProvider } from '../../../domain/interfaces/services/IJwtProvider';
-import { JwtPayload, JwtOptions } from '../../../domain/types/jwt.types';
+import { IJwtProvider } from "../../../domain/interfaces/services/IJwtProvider";
+import { JwtPayload, JwtOptions } from "../../../domain/types/jwt.types";
 /**
  * Mock JWT Provider implementation for testing purposes
  * Implements the IJwtProvider interface

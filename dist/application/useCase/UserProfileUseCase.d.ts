@@ -1,7 +1,7 @@
-import { IUserProfileUseCase } from '../../domain/interfaces/useCases/IUserProfileUseCase ';
-import { IUserRepo } from '../../domain/interfaces/IUserRepo';
-import { IHashService } from '../../domain/interfaces/services/IHashService ';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
+import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
+import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IHashService } from "../../domain/interfaces/services/IHashService";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
 export declare class UserProfileUseCase implements IUserProfileUseCase {
     private readonly _userRepo;
     private readonly _hashService;

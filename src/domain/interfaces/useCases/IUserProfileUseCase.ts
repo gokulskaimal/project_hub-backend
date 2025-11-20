@@ -32,21 +32,4 @@ export interface IUserProfileUseCase {
     limit: number,
     offset: number,
   ): Promise<any[]>;
-
-  /**
-   * Upload user avatar
-   */
-  uploadAvatar(
-    userId: string,
-    fileBuffer: Buffer,
-    fileName: string,
-  ): Promise<string>;
-
-  /**
-   * Update user preferences
-   */
-  updatePreferences(
-    userId: string,
-    preferences: Record<string, any>,
-  ): Promise<any>;
 }

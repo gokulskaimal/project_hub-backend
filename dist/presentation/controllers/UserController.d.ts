@@ -1,7 +1,7 @@
-import { Response } from 'express';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
-import { IUserProfileUseCase } from '../../domain/interfaces/useCases/IUserProfileUseCase ';
-import { AuthenticatedRequest } from '../middleware/types/AuthenticatedRequest';
+import { Response } from "express";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
+import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 /**
  * User Controller
  *

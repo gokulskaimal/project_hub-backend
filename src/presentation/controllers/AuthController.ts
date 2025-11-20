@@ -1,619 +1,394 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Request, Response } from "express";
-import { inject, injectable } from "inversify";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import { injectable, inject } from "inversify";
+import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
 import { TYPES } from "../../infrastructure/container/types";
 import { IAuthUseCases } from "../../domain/interfaces/useCases/IAuthUseCases";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { AuthResult, AuthTokens } from "../../domain/interfaces/useCases/types";
+import { UserDTO } from "../../application/dto/UserDTO";
 import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegisterManagerUseCase";
 import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
 import { IVerifyOtpUseCase } from "../../domain/interfaces/useCases/IVerifyOtpUseCase";
 import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/ICompleteSignupUseCase";
-import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
 import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
-import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
-import {
-  loginSchema,
-  sendOtpSchema,
-  verifyOtpSchema,
-  completeSignupSchema,
-  registerSchema,
-} from "../validation/authSchemas";
+import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
+import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
 
-/**
- * Authentication Controller
- *
- * Handles all authentication-related HTTP requests including login, registration,
- * token refresh, OTP verification, and invitation management.
- * Implements the presentation layer of the application architecture.
- */
+import { asyncHandler } from "../../utils/asyncHandler";
+
 @injectable()
 export class AuthController {
-  /**
-   * Creates a new AuthController instance with dependency injection
-   *
-   * @param authUseCases - Core authentication use cases
-   * @param registerManagerUseCase - Manager registration use case
-   * @param sendOtpUseCase - OTP sending use case
-   * @param verifyOtpUseCase - OTP verification use case
-   * @param completeSignupUseCase - Signup completion use case
-   * @param acceptUseCase - Invitation acceptance use case
-   * @param inviteMemberUseCase - Member invitation use case
-   * @param logger - Logging service
-   */
+  // Keep cookie options centralized
+  private readonly refreshCookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
   constructor(
-    @inject(TYPES.IAuthUseCases) private authUseCases: IAuthUseCases,
+    @inject(TYPES.ILogger) private readonly logger: ILogger,
+    @inject(TYPES.IAuthUseCases) private readonly authUseCases: IAuthUseCases,
     @inject(TYPES.IRegisterManagerUseCase)
-    private registerManagerUseCase: IRegisterManagerUseCase,
-    @inject(TYPES.ISendOtpUseCase) private sendOtpUseCase: ISendOtpUseCase,
+    private readonly registerManagerUC: IRegisterManagerUseCase,
+    @inject(TYPES.ISendOtpUseCase) private readonly sendOtpUC: ISendOtpUseCase,
     @inject(TYPES.IVerifyOtpUseCase)
-    private verifyOtpUseCase: IVerifyOtpUseCase,
+    private readonly verifyOtpUC: IVerifyOtpUseCase,
     @inject(TYPES.ICompleteSignupUseCase)
-    private completeSignupUseCase: ICompleteSignupUseCase,
-    @inject(TYPES.IAcceptUseCase) private acceptUseCase: IAcceptUseCase,
+    private readonly completeSignupUC: ICompleteSignupUseCase,
     @inject(TYPES.IInviteMemberUseCase)
-    private inviteMemberUseCase: IInviteMemberUseCase,
-    @inject(TYPES.ILogger) private logger: ILogger,
+    private readonly inviteMemberUC: IInviteMemberUseCase,
+    @inject(TYPES.IAcceptUseCase) private readonly acceptUC: IAcceptUseCase,
+    @inject(TYPES.IResetPasswordUseCase)
+    private resetPasswordUC: IResetPasswordUseCase,
   ) {}
 
-  /**
-   * Authenticates a user with email and password
-   * Sets a refresh token cookie and returns user data with access token
-   *
-   * @param req - Express request object containing email and password
-   * @param res - Express response object
-   */
-  async login(req: Request, res: Response): Promise<void> {
-    try {
-      const parsed = loginSchema.safeParse(req.body);
+  // Schemas
+  private registerSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+    name: z.string().optional(),
+  });
+
+  private loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(1),
+  });
+
+  private registerManagerSchema = z.object({
+    email: z.string().email(),
+    organizationName: z.string().min(2),
+  });
+
+  private sendOtpSchema = z.object({
+    email: z.string().email(),
+  });
+
+  private verifyOtpSchema = z.object({
+    email: z.string().email(),
+    otp: z.string().min(4),
+  });
+
+  private completeSignupSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+  });
+
+  private inviteMemberSchema = z.object({
+    email: z.string().email(),
+    orgId: z.string().min(1),
+    role: z.string().min(1),
+  });
+
+  private acceptInviteSchema = z.object({
+    token: z.string().min(1),
+    password: z.string().min(6),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+  });
+
+  private resetPasswordReqSchema = z.object({
+    email: z.string().email(),
+  });
+
+  private resetPasswordSchema = z.object({
+    token: z.string().min(1),
+    password: z.string().min(6),
+  });
+
+  private googleSignInSchema = z.object({
+    idToken: z.string().min(1),
+    inviteToken: z.string().optional(),
+  });
+
+  // Methods exposed as arrow functions so routing can pass them directly
+  register = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.registerSchema.safeParse(req.body);
       if (!parsed.success) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({
-            success: false,
-            message:
-              parsed.error.errors[0]?.message || COMMON_MESSAGES.INVALID_INPUT,
-          });
-        return;
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
+      }
+
+      const { email, password, name } = parsed.data;
+      const created = await this.authUseCases.register(email, password, name);
+
+      // created should be a DTO with public user fields (no password)
+      return res.status(201).json({ data: created });
+    },
+  );
+
+  login = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.loginSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
       const { email, password } = parsed.data;
 
-      if (!email || !password) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
+      const result: AuthResult = await this.authUseCases.login(email, password);
+      const tokens: AuthTokens = result.tokens;
+      const user: UserDTO = result.user;
+      if (tokens.refreshToken) {
+        res.cookie(
+          "refreshToken",
+          tokens.refreshToken,
+          this.refreshCookieOptions,
+        );
       }
 
-      const result = await this.authUseCases.login(email, password);
+      // Return access token and user info (no sensitive fields)
+      return res.json({ accessToken: tokens.accessToken, user });
+    },
+  );
 
-      res.cookie("refreshToken", result.tokens.refreshToken, {
+  refreshToken = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      // read cookie (ensure cookie-parser middleware is used globally)
+      const refreshToken = req.cookies?.refreshToken as string | undefined;
+      if (!refreshToken) {
+        return res.status(401).json({ error: "Missing refresh token" });
+      }
+
+      // Expect the use-case to return { accessToken, refreshToken } (rotated)
+      const tokens = await this.authUseCases.refresh(refreshToken);
+
+      // rotate cookie
+      if (tokens.refreshToken) {
+        res.cookie(
+          "refreshToken",
+          tokens.refreshToken,
+          this.refreshCookieOptions,
+        );
+      }
+
+      return res.json({ accessToken: tokens.accessToken });
+    },
+  );
+
+  logout = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const refreshToken = req.cookies?.refreshToken as string | undefined;
+      if (refreshToken) {
+        // logout use-case should revoke the provided refresh token
+        try {
+          await this.authUseCases.logout(refreshToken);
+        } catch (err) {
+          // log and continue to clear cookie; revocation failure shouldn't block logout response
+          this.logger?.warn?.(
+            "Failed to revoke refresh token during logout",
+            err as Error,
+          );
+        }
+      }
+
+      // clear cookie
+      res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        sameSite: "lax",
+        path: "/",
       });
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.LOGIN_SUCCESS,
-        data: {
-          user: result.user,
-          role: result.user.role,
-          accessToken: result.tokens.accessToken,
-          expiresIn: result.tokens.expiresIn,
-        },
-      });
-    } catch (error) {
-      this.logger.error("Login failed", error as Error);
-      res.status(StatusCodes.UNAUTHORIZED).json({
-        success: false,
-        message:
-          (error as Error).message || COMMON_MESSAGES.INVALID_CREDENTIALS,
-      });
-    }
-  }
+      return res.json({ ok: true });
+    },
+  );
 
-  /**
-   * Refreshes an authentication token using a refresh token
-   * Accepts refresh token from cookies or request body
-   *
-   * @param req - Express request object containing refresh token
-   * @param res - Express response object
-   */
-  async refreshToken(req: Request, res: Response): Promise<void> {
-    try {
-      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-
-      if (!refreshToken) {
-        res.status(StatusCodes.UNAUTHORIZED).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_TOKEN,
-        });
-        return;
-      }
-
-      const result = await this.authUseCases.refreshToken(refreshToken);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.TOKEN_REFRESHED,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error("Token refresh failed", error as Error);
-      res.status(StatusCodes.UNAUTHORIZED).json({
-        success: false,
-        message: COMMON_MESSAGES.INVALID_TOKEN,
-      });
-    }
-  }
-
-  /**
-   * Registers a new organization manager
-   * Initial step in the organization creation process
-   *
-   * @param req - Express request object containing email and organization name
-   * @param res - Express response object
-   */
-  async register(req: Request, res: Response): Promise<void> {
-    try {
-      const parsed = registerSchema.safeParse(req.body);
+  registerManager = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.registerManagerSchema.safeParse(req.body);
       if (!parsed.success) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({
-            success: false,
-            message:
-              parsed.error.errors[0]?.message || COMMON_MESSAGES.INVALID_INPUT,
-          });
-        return;
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
       const { email, organizationName } = parsed.data;
-
-      if (!email || !organizationName) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
-      }
-
-      const result = await this.registerManagerUseCase.execute(
+      const result = await this.registerManagerUC.execute(
         email,
         organizationName,
       );
+      return res.status(201).json(result);
+    },
+  );
 
-      res.status(StatusCodes.CREATED).json({
-        success: true,
-        message: COMMON_MESSAGES.CREATED,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error("Manager registration failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message || COMMON_MESSAGES.INVALID_INPUT,
-      });
-    }
-  }
-
-  /**
-   * Registers a new organization manager (alias for register method)
-   * Provided for API compatibility
-   *
-   * @param req - Express request object containing registration data
-   * @param res - Express response object
-   */
-  async registerManager(req: Request, res: Response): Promise<void> {
-    return this.register(req, res);
-  }
-
-  /**
-   * Initiates a password reset request
-   *
-   * @param req - Express request object containing email
-   * @param res - Express response object
-   */
-  async requestPasswordReset(req: Request, res: Response): Promise<void> {
-    try {
-      const { email } = req.body;
-
-      if (!email) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
-      }
-
-      const result = await this.authUseCases.resetPasswordReq(email);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.RESET_SENT,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error("Password reset request failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message || COMMON_MESSAGES.INVALID_INPUT,
-      });
-    }
-  }
-
-  /**
-   * Initiates a password reset request (alias for requestPasswordReset method)
-   * Provided for API compatibility
-   *
-   * @param req - Express request object containing email
-   * @param res - Express response object
-   */
-  async resetPasswordReq(req: Request, res: Response): Promise<void> {
-    return this.requestPasswordReset(req, res);
-  }
-
-  /**
-   * Completes the password reset process
-   *
-   * @param req - Express request object containing token and new password
-   * @param res - Express response object
-   */
-  async completeReset(req: Request, res: Response): Promise<void> {
-    try {
-      const { token, password } = req.body;
-
-      if (!token || !password) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
-      }
-
-      await this.authUseCases.resetPassword(token, password);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.RESET_SUCCESS,
-      });
-    } catch (error) {
-      this.logger.error("Password reset completion failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message || COMMON_MESSAGES.INVALID_INPUT,
-      });
-    }
-  }
-
-  /**
-   * Completes the password reset process (alias for completeReset method)
-   * Provided for API compatibility
-   *
-   * @param req - Express request object containing token and new password
-   * @param res - Express response object
-   */
-  async resetPassword(req: Request, res: Response): Promise<void> {
-    return this.completeReset(req, res);
-  }
-
-  /**
-   * Verifies a user's email address using a verification token
-   *
-   * @param req - Express request object containing verification token
-   * @param res - Express response object
-   */
-  async verifyEmail(req: Request, res: Response): Promise<void> {
-    try {
-      const { token } = req.body;
-
-      if (!token) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
-      }
-
-      const result = await this.authUseCases.verifyEmail(token);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.EMAIL_VERIFIED,
-        data: { verified: result.verified },
-      });
-    } catch (error) {
-      this.logger.error("Email verification failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message || COMMON_MESSAGES.INVALID_INPUT,
-      });
-    }
-  }
-
-  async sendOtp(req: Request, res: Response): Promise<void> {
-    try {
-      const parsed = sendOtpSchema.safeParse(req.body);
+  sendOtp = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.sendOtpSchema.safeParse(req.body);
       if (!parsed.success) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({
-            success: false,
-            message: parsed.error.errors[0]?.message || "Email is required",
-          });
-        return;
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
       const { email } = parsed.data;
+      const result = await this.sendOtpUC.execute(email);
+      return res.json(result);
+    },
+  );
 
-      if (!email) {
-        res.status(400).json({
-          success: false,
-          message: "Email is required",
-        });
-        return;
-      }
-
-      const result = await this.sendOtpUseCase.execute(email);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.OTP_SENT,
-        data: {
-          expiresAt: result.expiresAt,
-          attemptsRemaining: result.attemptsRemaining,
-          ...(process.env.NODE_ENV !== "production"
-            ? { otp: "Check server logs for OTP" }
-            : {}),
-        },
-      });
-    } catch (error) {
-      this.logger.error("Send OTP failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message,
-      });
-    }
-  }
-
-  async verifyOtp(req: Request, res: Response): Promise<void> {
-    try {
-      const parsed = verifyOtpSchema.safeParse(req.body);
+  verifyOtp = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.verifyOtpSchema.safeParse(req.body);
       if (!parsed.success) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({
-            success: false,
-            message:
-              parsed.error.errors[0]?.message || "Email and OTP are required",
-          });
-        return;
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
       const { email, otp } = parsed.data;
+      const result = await this.verifyOtpUC.execute(email, otp);
+      return res.json(result);
+    },
+  );
 
-      if (!email || !otp) {
-        res.status(400).json({
-          success: false,
-          message: "Email and OTP are required",
-        });
-        return;
-      }
-
-      const result = await this.verifyOtpUseCase.execute(email, otp);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.OTP_VERIFIED,
-        data: {
-          valid: result.valid,
-          verified: result.verified,
-        },
-      });
-    } catch (error) {
-      this.logger.error("OTP verification failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message,
-      });
-    }
-  }
-
-  /**
-   * Completes the signup process after OTP verification
-   *
-   * @param req - Express request object containing user details
-   * @param res - Express response object
-   */
-  async completeSignup(req: Request, res: Response): Promise<void> {
-    try {
-      const parsed = completeSignupSchema.safeParse(req.body);
+  completeSignup = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.completeSignupSchema.safeParse(req.body);
       if (!parsed.success) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({
-            success: false,
-            message:
-              parsed.error.errors[0]?.message || COMMON_MESSAGES.INVALID_INPUT,
-          });
-        return;
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
-      const { email, password, firstName, lastName, additionalData } =
-        parsed.data;
-
-      if (!email || !password || !firstName || !lastName) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
-      }
-
-      const result = await this.completeSignupUseCase.execute(
+      const { email, password, firstName, lastName } = parsed.data;
+      const result = await this.completeSignupUC.execute(
         email,
         password,
         firstName,
         lastName,
-        additionalData || {},
       );
+      return res.json(result);
+    },
+  );
 
-      res.status(StatusCodes.CREATED).json({
-        success: true,
-        message: COMMON_MESSAGES.SIGNUP_COMPLETE,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error("Complete signup failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message,
-      });
-    }
-  }
-
-  /**
-   * Accepts an invitation to join an organization
-   *
-   * @param req - Express request object containing token and user details
-   * @param res - Express response object
-   */
-  async acceptInvite(req: Request, res: Response): Promise<void> {
-    try {
-      const { token, password, firstName, lastName } = req.body;
-
-      if (!token || !password || !firstName || !lastName) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
+  inviteMember = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.inviteMemberSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
-      const result = await this.acceptUseCase.execute(
+      const { email, orgId, role } = parsed.data;
+      const result = await this.inviteMemberUC.execute(email, orgId, role);
+      return res.status(201).json(result);
+    },
+  );
+
+  acceptInvite = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.acceptInviteSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
+      }
+
+      const { token, password, firstName, lastName } = parsed.data;
+      const result = await this.acceptUC.execute(
         token,
         password,
         firstName,
         lastName,
       );
+      return res.json(result);
+    },
+  );
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.ACCEPTED,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error("Accept invitation failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message,
-      });
-    }
-  }
-
-  /**
-   * Invites a new member to join an organization
-   *
-   * @param req - Express request object containing email, organization ID and role
-   * @param res - Express response object
-   */
-  async inviteMember(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, orgId, role } = req.body;
-
-      if (!email || !orgId) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
-      }
-
-      const result = await this.inviteMemberUseCase.execute(email, orgId, role);
-
-      res.status(StatusCodes.CREATED).json({
-        success: true,
-        message: COMMON_MESSAGES.INVITATION_SENT,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error("Invite member failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message,
-      });
-    }
-  }
-
-  /**
-   * Validates an invitation token
-   *
-   * @param req - Express request object containing token
-   * @param res - Express response object
-   */
-  async validateInviteToken(req: Request, res: Response): Promise<void> {
-    try {
+  validateInviteToken = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
       const { token } = req.params;
+      if (!token) return res.status(400).json({ error: "Missing token" });
 
-      if (!token) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        });
-        return;
+      const result = await this.acceptUC.validateInvitationToken(token);
+      return res.json(result);
+    },
+  );
+
+  // -----------------------
+  // Password reset
+  // -----------------------
+  resetPasswordReq = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.resetPasswordReqSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
-      // In a real implementation, you would validate the invitation token
-      // For now, we'll return a mock response
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.ACCEPTED,
-        data: {
-          valid: true,
-          organizationName: "Sample Organization",
-          inviterEmail: "manager@example.com",
-        },
-      });
-    } catch (error) {
-      this.logger.error("Token validation failed", error as Error);
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: (error as Error).message,
-      });
-    }
-  }
+      const { email } = parsed.data;
+      const result = await this.resetPasswordUC.requestReset(email);
+      return res.json(result);
+    },
+  );
 
-  /**
-   * Logs out a user by invalidating their refresh token
-   *
-   * @param req - Express request object containing user ID and refresh token
-   * @param res - Express response object
-   */
-  async logout(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as any).user?.id;
-      const refreshToken = req.cookies.refreshToken;
-
-      if (userId && refreshToken) {
-        await this.authUseCases.logout(userId, refreshToken);
+  resetPassword = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.resetPasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
       }
 
-      res.clearCookie("refreshToken");
+      const { token, password } = parsed.data;
+      const result = await this.resetPasswordUC.resetWithToken(token, password);
+      return res.json(result);
+    },
+  );
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.LOGOUT_SUCCESS,
+  // -----------------------
+  // Verify email (token may be body or header)
+  // -----------------------
+  verifyEmail = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const token = req.body?.token ?? req.headers["x-verification-token"];
+      if (!token)
+        return res.status(400).json({ error: "Missing verification token" });
+
+      const result = await this.authUseCases.verifyEmail(String(token));
+      return res.json(result);
+    },
+  );
+
+  googleSignIn = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const parsed = this.googleSignInSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Invalid input", details: parsed.error.format() });
+      }
+
+      const { idToken, inviteToken } = parsed.data;
+      const result = await this.authUseCases.googleSignIn(idToken, inviteToken);
+
+      // Set refresh token cookie if available
+      if (result.tokens.refreshToken) {
+        res.cookie(
+          "refreshToken",
+          result.tokens.refreshToken,
+          this.refreshCookieOptions,
+        );
+      }
+
+      return res.json({
+        accessToken: result.tokens.accessToken,
+        user: result.user,
+        expiresIn: result.tokens.expiresIn,
       });
-    } catch (error) {
-      this.logger.error("Logout failed", error as Error);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: COMMON_MESSAGES.SERVER_ERROR,
-      });
-    }
-  }
+    },
+  );
 }

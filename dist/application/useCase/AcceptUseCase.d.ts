@@ -1,9 +1,9 @@
 import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IAcceptUseCase } from '../../domain/interfaces/useCases/IAcceptUseCase';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
-import { IHashService } from '../../domain/interfaces/services/IHashService ';
-import { IJwtService } from '../../domain/interfaces/services/IJwtService ';
+import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IHashService } from "../../domain/interfaces/services/IHashService";
+import { IJwtService } from "../../domain/interfaces/services/IJwtService";
 export declare class AcceptUseCase implements IAcceptUseCase {
     private readonly _inviteRepo;
     private readonly _userRepo;

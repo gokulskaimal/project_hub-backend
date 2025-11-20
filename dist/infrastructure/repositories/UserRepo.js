@@ -85,13 +85,13 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
     }
     async getOtp(email) {
         try {
-            const user = await UserModel_1.default.findOne({ email }).select('otp otpExpiry');
+            const user = await UserModel_1.default.findOne({ email }).select("otp otpExpiry");
             if (!user || !user.otp || !user.otpExpiry) {
                 return null;
             }
             return {
                 otp: user.otp,
-                expiresAt: user.otpExpiry
+                expiresAt: user.otpExpiry,
             };
         }
         catch (error) {
@@ -110,12 +110,11 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
     toDomainUser(userDoc) {
         return this.toDomain(userDoc);
     }
-    // ✅ KEEP ALL YOUR EXISTING METHODS
     async create(user) {
         const created = await UserModel_1.default.create({
             ...user,
             createdAt: new Date(),
-            status: user.status || 'PENDING_VERIFICATION',
+            status: user.status || "PENDING_VERIFICATION",
             emailVerified: user.emailVerified || false,
         });
         return this.toDomainUser(created);
@@ -128,16 +127,18 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             emailVerified: false,
         };
         if (existing) {
-            const updated = await UserModel_1.default.findOneAndUpdate({ email }, update, { new: true });
+            const updated = await UserModel_1.default.findOneAndUpdate({ email }, update, {
+                new: true,
+            });
             if (!updated)
-                throw new Error('Unable to update OTP');
+                throw new Error("Unable to update OTP");
             return this.toDomainUser(updated);
         }
         const created = await UserModel_1.default.create({
             email,
             role: UserRole_1.UserRole.ORG_MANAGER,
-            password: '',
-            status: 'PENDING_VERIFICATION',
+            password: "",
+            status: "PENDING_VERIFICATION",
             createdAt: new Date(),
             ...update,
         });
@@ -178,7 +179,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
         await UserModel_1.default.findByIdAndUpdate(id, {
             emailVerified: true,
             emailVerifiedAt: new Date(),
-            status: 'ACTIVE'
+            status: "ACTIVE",
         });
     }
     async updateProfile(id, data) {
@@ -207,16 +208,15 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
         return users.map((u) => this.toDomainUser(u));
     }
     async delete(id) {
-        await this.delete(id);
+        await UserModel_1.default.findByIdAndDelete(id);
     }
-    // ✅ IMPLEMENT ALL MISSING INTERFACE METHODS
     async findByRole(role) {
         try {
             const users = await UserModel_1.default.find({ role });
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error('Error finding users by role:', error);
+            console.error("Error finding users by role:", error);
             return [];
         }
     }
@@ -226,7 +226,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error('Error finding users by org and role:', error);
+            console.error("Error finding users by org and role:", error);
             return [];
         }
     }
@@ -234,59 +234,61 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
         try {
             const updated = await UserModel_1.default.findByIdAndUpdate(id, { status }, { new: true });
             if (!updated)
-                throw new Error('User not found');
+                throw new Error("User not found");
             return this.toDomainUser(updated);
         }
         catch (error) {
             if (error instanceof Error) {
                 throw new Error(`Failed to update user status: ${error.message}`);
             }
-            throw new Error('Failed to update user status: Unknown error');
+            throw new Error("Failed to update user status: Unknown error");
         }
     }
-    async hardDelete(id) {
-        try {
-            await UserModel_1.default.findByIdAndDelete(id);
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Failed to hard delete user: ${error.message}`);
-            }
-            throw new Error('Failed to hard delete user: Unknown error');
-        }
-    }
+    // async hardDelete(id: string): Promise<void> {
+    //   try {
+    //     await UserModel.findByIdAndDelete(id);
+    //   } catch (error) {
+    //     if (error instanceof Error) {
+    //       throw new Error(`Failed to hard delete user: ${error.message}`);
+    //     }
+    //     throw new Error("Failed to hard delete user: Unknown error");
+    //   }
+    // }
     async removeFromOrg(userId, _orgId) {
         try {
             await UserModel_1.default.findByIdAndUpdate(userId, {
-                orgId: null
+                orgId: null,
             });
         }
         catch (error) {
             if (error instanceof Error) {
                 throw new Error(`Failed to remove user from org: ${error.message}`);
             }
-            throw new Error('Failed to remove user from org: Unknown error');
+            throw new Error("Failed to remove user from org: Unknown error");
         }
     }
     async updateLastLogin(id, loginTime) {
         try {
             await UserModel_1.default.findByIdAndUpdate(id, {
-                lastLoginAt: loginTime
+                lastLoginAt: loginTime,
             });
         }
         catch (error) {
-            console.error('Error updating last login:', error);
+            console.error("Error updating last login:", error);
         }
     }
     async findPaginated(limit, offset, searchTerm, filters) {
         try {
-            const query = {};
+            const query = {
+                // Exclude super admins from listing
+                role: { $ne: UserRole_1.UserRole.SUPER_ADMIN },
+            };
             if (searchTerm) {
                 query.$or = [
-                    { email: { $regex: searchTerm, $options: 'i' } },
-                    { name: { $regex: searchTerm, $options: 'i' } },
-                    { firstName: { $regex: searchTerm, $options: 'i' } },
-                    { lastName: { $regex: searchTerm, $options: 'i' } }
+                    { email: { $regex: searchTerm, $options: "i" } },
+                    { name: { $regex: searchTerm, $options: "i" } },
+                    { firstName: { $regex: searchTerm, $options: "i" } },
+                    { lastName: { $regex: searchTerm, $options: "i" } },
                 ];
             }
             if (filters) {
@@ -300,24 +302,21 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
                     query.emailVerified = filters.emailVerified;
             }
             const [docs, total] = await Promise.all([
-                UserModel_1.default.find(query)
-                    .skip(offset)
-                    .limit(limit)
-                    .sort({ createdAt: -1 }),
-                UserModel_1.default.countDocuments(query)
+                UserModel_1.default.find(query).skip(offset).limit(limit).sort({ createdAt: -1 }),
+                UserModel_1.default.countDocuments(query),
             ]);
             return {
-                users: docs.map(d => this.toDomainUser(d)),
+                users: docs.map((d) => this.toDomainUser(d)),
                 total,
-                hasMore: offset + limit < total
+                hasMore: offset + limit < total,
             };
         }
         catch (error) {
-            console.error('Error finding paginated users:', error);
+            console.error("Error finding paginated users:", error);
             return {
                 users: [],
                 total: 0,
-                hasMore: false
+                hasMore: false,
             };
         }
     }
@@ -326,7 +325,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return await UserModel_1.default.countDocuments({ orgId });
         }
         catch (error) {
-            console.error('Error counting users by org:', error);
+            console.error("Error counting users by org:", error);
             return 0;
         }
     }
@@ -335,7 +334,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return await UserModel_1.default.countDocuments({ role });
         }
         catch (error) {
-            console.error('Error counting users by role:', error);
+            console.error("Error counting users by role:", error);
             return 0;
         }
     }
@@ -344,7 +343,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return await UserModel_1.default.countDocuments();
         }
         catch (error) {
-            console.error('Error counting users:', error);
+            console.error("Error counting users:", error);
             return 0;
         }
     }
@@ -354,7 +353,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error('Error finding users by status:', error);
+            console.error("Error finding users by status:", error);
             return [];
         }
     }
@@ -362,12 +361,12 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
         try {
             const users = await UserModel_1.default.find({
                 otpExpiry: { $lt: new Date() },
-                otp: { $exists: true, $ne: null }
+                otp: { $exists: true, $ne: null },
             });
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error('Error finding users with expired OTP:', error);
+            console.error("Error finding users with expired OTP:", error);
             return [];
         }
     }
@@ -377,7 +376,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return result.modifiedCount;
         }
         catch (error) {
-            console.error('Error cleaning expired OTPs:', error);
+            console.error("Error cleaning expired OTPs:", error);
             return 0;
         }
     }
@@ -391,23 +390,29 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return !!existing;
         }
         catch (error) {
-            console.error('Error checking if email exists:', error);
+            console.error("Error checking if email exists:", error);
             return false;
         }
     }
     async getStats() {
         try {
             const totalCount = await UserModel_1.default.countDocuments();
-            const activeCount = await UserModel_1.default.countDocuments({ status: 'ACTIVE' });
-            const inactiveCount = await UserModel_1.default.countDocuments({ status: 'INACTIVE' });
-            const pendingCount = await UserModel_1.default.countDocuments({ status: 'PENDING_VERIFICATION' });
-            const verifiedCount = await UserModel_1.default.countDocuments({ emailVerified: true });
+            const activeCount = await UserModel_1.default.countDocuments({ status: "ACTIVE" });
+            const inactiveCount = await UserModel_1.default.countDocuments({
+                status: "INACTIVE",
+            });
+            const pendingCount = await UserModel_1.default.countDocuments({
+                status: "PENDING_VERIFICATION",
+            });
+            const verifiedCount = await UserModel_1.default.countDocuments({
+                emailVerified: true,
+            });
             const roleStats = await UserModel_1.default.aggregate([
-                { $group: { _id: '$role', count: { $sum: 1 } } }
+                { $group: { _id: "$role", count: { $sum: 1 } } },
             ]);
             const byRole = {};
-            roleStats.forEach(stat => {
-                byRole[stat._id || 'UNKNOWN'] = stat.count;
+            roleStats.forEach((stat) => {
+                byRole[stat._id || "UNKNOWN"] = stat.count;
             });
             return {
                 total: totalCount,
@@ -416,11 +421,11 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
                 pending: pendingCount,
                 verified: verifiedCount,
                 unverified: totalCount - verifiedCount,
-                byRole
+                byRole,
             };
         }
         catch (error) {
-            console.error('Error getting user stats:', error);
+            console.error("Error getting user stats:", error);
             return {
                 total: 0,
                 active: 0,
@@ -428,17 +433,9 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
                 pending: 0,
                 verified: 0,
                 unverified: 0,
-                byRole: {}
+                byRole: {},
             };
         }
-    }
-    // ✅ OPTIONAL METHODS WITH PROPER SIGNATURES
-    async getActivityHistory(userId, limit, offset) {
-        console.log(`Getting activity history for user ${userId} (limit: ${limit}, offset: ${offset})`);
-        return [];
-    }
-    async logActivity(userId, action, metadata) {
-        console.log(`Logging activity for user ${userId}: ${action}`, metadata);
     }
 };
 exports.UserRepo = UserRepo;

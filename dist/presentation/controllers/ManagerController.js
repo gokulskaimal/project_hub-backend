@@ -16,7 +16,8 @@ exports.ManagerController = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const UserDTO_1 = require("../../application/dto/UserDTO");
-const HttpStatus_1 = require("../../domain/enums/HttpStatus");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const common_constants_1 = require("../../infrastructure/config/common.constants");
 /**
  * Manager Controller
  *
@@ -50,39 +51,39 @@ let ManagerController = class ManagerController {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
             if (!email) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Email is required',
-                    timestamp: new Date().toISOString()
+                    error: "Email is required",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
-            this._logger.info('Manager inviting member', {
+            this._logger.info("Manager inviting member", {
                 managerId,
                 inviteEmail: email,
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
             const result = await this._inviteMemberUC.execute(email, orgId);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Member invitation sent successfully',
+                message: common_constants_1.COMMON_MESSAGES.INVITATION_SENT,
                 data: result,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to invite member';
-            this._logger.error('Failed to invite member', err, {
+            const message = err instanceof Error ? err.message : "Failed to invite member";
+            this._logger.error("Failed to invite member", err, {
                 managerId: req.user?.id,
                 inviteEmail: req.body.email,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }
@@ -98,32 +99,32 @@ let ManagerController = class ManagerController {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
             if (!emails || !Array.isArray(emails) || emails.length === 0) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Emails array is required',
-                    timestamp: new Date().toISOString()
+                    error: "Emails array is required",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
-            this._logger.info('Manager bulk inviting members', {
+            this._logger.info("Manager bulk inviting members", {
                 managerId,
                 emailCount: emails.length,
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
             const results = [];
             const errors = [];
             for (const email of emails) {
                 try {
                     const result = await this._inviteMemberUC.execute(email, orgId);
-                    results.push({ email, status: 'success', result });
+                    results.push({ email, status: "success", result });
                 }
                 catch (error) {
-                    const errorMessage = (error instanceof Error) ? error.message : 'Unknown error';
-                    errors.push({ email, status: 'error', error: errorMessage });
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                    errors.push({ email, status: "error", error: errorMessage });
                 }
             }
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
                 message: `Bulk invite completed. ${results.length} successful, ${errors.length} failed`,
                 data: {
@@ -132,23 +133,23 @@ let ManagerController = class ManagerController {
                     summary: {
                         total: emails.length,
                         successful: results.length,
-                        failed: errors.length
-                    }
+                        failed: errors.length,
+                    },
                 },
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to bulk invite members';
-            this._logger.error('Failed to bulk invite members', err, {
+            const message = err instanceof Error ? err.message : "Failed to bulk invite members";
+            this._logger.error("Failed to bulk invite members", err, {
                 managerId: req.user?.id,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }
@@ -162,31 +163,31 @@ let ManagerController = class ManagerController {
         try {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
-            this._logger.info('Manager listing invitations', {
+            this._logger.info("Manager listing invitations", {
                 managerId,
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            const invitations = await this._inviteRepo.findByOrganization?.(orgId) || [];
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            const invitations = (await this._inviteRepo.findByOrganization?.(orgId)) || [];
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Invitations retrieved successfully',
+                message: common_constants_1.COMMON_MESSAGES.INVITATIONS_RETRIEVED,
                 data: invitations,
                 count: invitations.length,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to retrieve invitations';
-            this._logger.error('Failed to list invitations', err, {
+            const message = err instanceof Error ? err.message : "Failed to retrieve invitations";
+            this._logger.error("Failed to list invitations", err, {
                 managerId: req.user?.id,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }
@@ -202,57 +203,57 @@ let ManagerController = class ManagerController {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
             if (!token) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Invitation token is required',
-                    timestamp: new Date().toISOString()
+                    error: "Invitation token is required",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
-            this._logger.info('Manager cancelling invitation', {
+            this._logger.info("Manager cancelling invitation", {
                 managerId,
-                token: token.substring(0, 10) + '...',
+                token: token.substring(0, 10) + "...",
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
             const invitation = await this._inviteRepo.findByToken(token);
             if (!invitation) {
-                res.status(HttpStatus_1.HttpStatus.NOT_FOUND).json({
+                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: 'Invitation not found',
-                    timestamp: new Date().toISOString()
+                    error: "Invitation not found",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Verify invitation belongs to same organization
             if (invitation.orgId !== orgId) {
-                res.status(HttpStatus_1.HttpStatus.FORBIDDEN).json({
+                res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({
                     success: false,
-                    error: 'Access denied: Invitation does not belong to your organization',
-                    timestamp: new Date().toISOString()
+                    error: "Access denied: Invitation does not belong to your organization",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Cancel the invitation
             await this._inviteRepo.markCancelled?.(token);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Invitation cancelled successfully',
-                timestamp: new Date().toISOString()
+                message: "Invitation cancelled successfully",
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to cancel invitation';
-            this._logger.error('Failed to cancel invitation', err, {
+            const message = err instanceof Error ? err.message : "Failed to cancel invitation";
+            this._logger.error("Failed to cancel invitation", err, {
                 managerId: req.user?.id,
                 token: req.params.token,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }
@@ -266,106 +267,46 @@ let ManagerController = class ManagerController {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
             if (!orgId) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Organization ID not found in user context',
-                    timestamp: new Date().toISOString()
+                    error: "Organization ID not found in user context",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
-            this._logger.info('Manager listing organization members', {
+            this._logger.info("Manager listing organization members", {
                 managerId,
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
             // Use findByOrg method if available, fallback to empty array
-            const users = await this._userRepo.findByOrg?.(orgId) || [];
+            const users = (await this._userRepo.findByOrg?.(orgId)) || [];
+            // Exclude the current manager from the list
+            const filtered = users.filter((u) => u.id !== managerId);
             // Convert to DTOs (hide sensitive data)
-            const memberDTOs = users.map(user => (0, UserDTO_1.toUserDTO)(user));
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            const memberDTOs = filtered.map((user) => (0, UserDTO_1.toUserDTO)(user));
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Organization members retrieved successfully',
+                message: common_constants_1.COMMON_MESSAGES.MEMBERS_RETRIEVED,
                 data: memberDTOs,
                 count: memberDTOs.length,
                 orgId,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to retrieve organization members';
-            this._logger.error('Failed to list organization members', err, {
+            const message = err instanceof Error
+                ? err.message
+                : "Failed to retrieve organization members";
+            this._logger.error("Failed to list organization members", err, {
                 managerId: req.user?.id,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    }
-    /**
-     * Get member by ID - Manager only
-     * @param req - Authenticated request object
-     * @param res - Express response object
-     */
-    async getMemberById(req, res) {
-        try {
-            const { id } = req.params;
-            const orgId = req.user.orgId;
-            const managerId = req.user.id;
-            if (!id) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
-                    success: false,
-                    error: 'Member ID is required',
-                    timestamp: new Date().toISOString()
-                });
-                return;
-            }
-            this._logger.info('Manager getting member by ID', {
-                managerId,
-                targetMemberId: id,
-                orgId,
-                ip: req.ip
-            });
-            const member = await this._userRepo.findById(id);
-            if (!member) {
-                res.status(HttpStatus_1.HttpStatus.NOT_FOUND).json({
-                    success: false,
-                    error: 'Member not found',
-                    timestamp: new Date().toISOString()
-                });
-                return;
-            }
-            // Verify member belongs to same organization
-            if (member.orgId !== orgId) {
-                res.status(HttpStatus_1.HttpStatus.FORBIDDEN).json({
-                    success: false,
-                    error: 'Access denied: Member does not belong to your organization',
-                    timestamp: new Date().toISOString()
-                });
-                return;
-            }
-            res.status(HttpStatus_1.HttpStatus.OK).json({
-                success: true,
-                message: 'Member retrieved successfully',
-                data: (0, UserDTO_1.toUserDTO)(member),
-                timestamp: new Date().toISOString()
-            });
-        }
-        catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to retrieve member';
-            this._logger.error('Failed to get member by ID', err, {
-                managerId: req.user?.id,
-                targetMemberId: req.params.id,
-                orgId: req.user?.orgId,
-                ip: req.ip
-            });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }
@@ -381,59 +322,68 @@ let ManagerController = class ManagerController {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
             if (!id || !status) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Member ID and status are required',
-                    timestamp: new Date().toISOString()
+                    error: "Member ID and status are required",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
-            this._logger.info('Manager updating member status', {
+            // Prevent manager from changing their own status
+            if (id === managerId) {
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "You cannot change your own status",
+                    timestamp: new Date().toISOString(),
+                });
+                return;
+            }
+            this._logger.info("Manager updating member status", {
                 managerId,
                 targetMemberId: id,
                 newStatus: status,
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
             const member = await this._userRepo.findById(id);
             if (!member) {
-                res.status(HttpStatus_1.HttpStatus.NOT_FOUND).json({
+                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: 'Member not found',
-                    timestamp: new Date().toISOString()
+                    error: "Member not found",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Verify member belongs to same organization
             if (member.orgId !== orgId) {
-                res.status(HttpStatus_1.HttpStatus.FORBIDDEN).json({
+                res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({
                     success: false,
-                    error: 'Access denied: Member does not belong to your organization',
-                    timestamp: new Date().toISOString()
+                    error: "Access denied: Member does not belong to your organization",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Update member status through repository
             const updatedMember = await this._userRepo.updateStatus(id, status);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Member status updated successfully',
+                message: "Member status updated successfully",
                 data: (0, UserDTO_1.toUserDTO)(updatedMember),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to update member status';
-            this._logger.error('Failed to update member status', err, {
+            const message = err instanceof Error ? err.message : "Failed to update member status";
+            this._logger.error("Failed to update member status", err, {
                 managerId: req.user?.id,
                 targetMemberId: req.params.id,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }
@@ -448,66 +398,66 @@ let ManagerController = class ManagerController {
             const orgId = req.user.orgId;
             const managerId = req.user.id;
             if (!id) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Member ID is required',
-                    timestamp: new Date().toISOString()
+                    error: "Member ID is required",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Prevent manager from removing themselves
             if (id === managerId) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: 'Cannot remove yourself from the organization',
-                    timestamp: new Date().toISOString()
+                    error: "Cannot remove yourself from the organization",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
-            this._logger.info('Manager removing member', {
+            this._logger.info("Manager removing member", {
                 managerId,
                 targetMemberId: id,
                 orgId,
-                ip: req.ip
+                ip: req.ip,
             });
             const member = await this._userRepo.findById(id);
             if (!member) {
-                res.status(HttpStatus_1.HttpStatus.NOT_FOUND).json({
+                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: 'Member not found',
-                    timestamp: new Date().toISOString()
+                    error: "Member not found",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Verify member belongs to same organization
             if (member.orgId !== orgId) {
-                res.status(HttpStatus_1.HttpStatus.FORBIDDEN).json({
+                res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({
                     success: false,
-                    error: 'Access denied: Member does not belong to your organization',
-                    timestamp: new Date().toISOString()
+                    error: "Access denied: Member does not belong to your organization",
+                    timestamp: new Date().toISOString(),
                 });
                 return;
             }
             // Remove member through repository
             await this._userRepo.removeFromOrg(id, orgId);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Member removed from organization successfully',
-                timestamp: new Date().toISOString()
+                message: "Member removed from organization successfully",
+                timestamp: new Date().toISOString(),
             });
         }
         catch (err) {
-            const message = (err instanceof Error) ? err.message : 'Failed to remove member';
-            this._logger.error('Failed to remove member', err, {
+            const message = err instanceof Error ? err.message : "Failed to remove member";
+            this._logger.error("Failed to remove member", err, {
                 managerId: req.user?.id,
                 targetMemberId: req.params.id,
                 orgId: req.user?.orgId,
-                ip: req.ip
+                ip: req.ip,
             });
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         }
     }

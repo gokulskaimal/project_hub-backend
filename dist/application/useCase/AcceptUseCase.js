@@ -36,47 +36,51 @@ let AcceptUseCase = class AcceptUseCase {
      * @returns User, organization, and tokens
      */
     async execute(token, password, firstName, lastName, additionalData) {
-        this._logger.info('Processing invitation acceptance', {
-            token: token.substring(0, 8) + '...',
+        this._logger.info("Processing invitation acceptance", {
+            token: token.substring(0, 8) + "...",
             firstName,
-            lastName
+            lastName,
         });
         try {
             // Business Rule: Validate input
             if (!token || !password || !firstName || !lastName) {
-                throw new Error('Token, password, first name, and last name are required');
+                throw new Error("Token, password, first name, and last name are required");
             }
             // Business Rule: Find and validate invitation
             const invite = await this._inviteRepo.findByToken(token);
             if (!invite) {
-                this._logger.warn('Invitation not found', { token: token.substring(0, 8) + '...' });
-                throw new Error('Invalid invitation token');
+                this._logger.warn("Invitation not found", {
+                    token: token.substring(0, 8) + "...",
+                });
+                throw new Error("Invalid invitation token");
             }
             // Business Rule: Check invitation status and expiry
             if (invite.expiry < new Date()) {
-                this._logger.warn('Invitation expired', {
-                    token: token.substring(0, 8) + '...',
-                    expiry: invite.expiry
+                this._logger.warn("Invitation expired", {
+                    token: token.substring(0, 8) + "...",
+                    expiry: invite.expiry,
                 });
-                throw new Error('Invitation has expired');
+                throw new Error("Invitation has expired");
             }
-            if (invite.status !== 'PENDING') {
-                this._logger.warn('Invitation already processed', {
-                    token: token.substring(0, 8) + '...',
-                    status: invite.status
+            if (invite.status !== "PENDING") {
+                this._logger.warn("Invitation already processed", {
+                    token: token.substring(0, 8) + "...",
+                    status: invite.status,
                 });
-                throw new Error('Invitation has already been processed');
+                throw new Error("Invitation has already been processed");
             }
             // Business Rule: Check if user already exists
             const existingUser = await this._userRepo.findByEmail(invite.email);
             if (existingUser) {
-                this._logger.warn('User already exists for invitation', { email: invite.email });
-                throw new Error('User already exists with this email');
+                this._logger.warn("User already exists for invitation", {
+                    email: invite.email,
+                });
+                throw new Error("User already exists with this email");
             }
             // Business Rule: Get organization details
             const organization = await this._userRepo.findOrganizationById?.(invite.orgId);
             if (!organization) {
-                throw new Error('Organization not found');
+                throw new Error("Organization not found");
             }
             // Business Rule: Validate password
             this._validatePassword(password);
@@ -92,28 +96,30 @@ let AcceptUseCase = class AcceptUseCase {
                 role: UserRole_1.UserRole.TEAM_MEMBER,
                 password: hashedPassword,
                 emailVerified: true, // Pre-verified through invitation
-                status: 'ACTIVE',
+                status: "ACTIVE",
                 invitedAt: new Date(),
                 createdAt: new Date(),
-                ...additionalData
+                ...additionalData,
             });
             // Generate authentication tokens
             const accessToken = this._jwtService.generateAccessToken({
                 id: newUser.id,
+                email: newUser.email,
                 role: newUser.role,
-                orgId: newUser.orgId
+                orgId: newUser.orgId,
             });
             const refreshToken = this._jwtService.generateRefreshToken({
-                id: newUser.id
+                id: newUser.id,
+                email: newUser.email,
             });
             // Mark invitation as accepted
             await this._inviteRepo.markAccepted(token);
-            this._logger.info('Invitation accepted successfully', {
+            this._logger.info("Invitation accepted successfully", {
                 userId: newUser.id,
                 email: invite.email,
                 orgId: invite.orgId,
                 firstName,
-                lastName
+                lastName,
             });
             // Return safe user data (exclude sensitive fields)
             const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = newUser;
@@ -122,20 +128,20 @@ let AcceptUseCase = class AcceptUseCase {
                 organization: {
                     id: organization.id,
                     name: organization.name,
-                    status: organization.status
+                    status: organization.status,
                 },
                 tokens: {
                     accessToken,
                     refreshToken,
-                    expiresIn: 15 * 60 // 15 minutes
-                }
+                    expiresIn: 15 * 60, // 15 minutes
+                },
             };
         }
         catch (error) {
-            this._logger.error('Failed to accept invitation', error, {
-                token: token.substring(0, 8) + '...',
+            this._logger.error("Failed to accept invitation", error, {
+                token: token.substring(0, 8) + "...",
                 firstName,
-                lastName
+                lastName,
             });
             throw error;
         }
@@ -155,20 +161,20 @@ let AcceptUseCase = class AcceptUseCase {
                 return { valid: false };
             }
             const expired = invite.expiry < new Date();
-            const processed = invite.status !== 'PENDING';
+            const processed = invite.status !== "PENDING";
             return {
                 valid: !expired && !processed,
                 invitation: {
                     email: invite.email,
                     orgId: invite.orgId,
                     createdAt: invite.createdAt,
-                    expiry: invite.expiry
+                    expiry: invite.expiry,
                 },
-                expired
+                expired,
             };
         }
         catch (error) {
-            this._logger.error('Token validation failed', error);
+            this._logger.error("Token validation failed", error);
             return { valid: false };
         }
     }
@@ -177,17 +183,17 @@ let AcceptUseCase = class AcceptUseCase {
      * @param password - Password to validate
      */
     _validatePassword(password) {
-        if (!password || typeof password !== 'string') {
-            throw new Error('Password is required');
+        if (!password || typeof password !== "string") {
+            throw new Error("Password is required");
         }
         if (password.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
+            throw new Error("Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new Error('Password must contain at least one lowercase letter, one uppercase letter, and one number');
+            throw new Error("Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new Error('Password must contain at least one special character');
+            throw new Error("Password must contain at least one special character");
         }
     }
 };

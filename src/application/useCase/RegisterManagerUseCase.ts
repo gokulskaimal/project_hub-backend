@@ -38,6 +38,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
     message: string;
     organizationId: string;
     invitationToken: string;
+    otpExpiresAt: Date;
   }> {
     this._logger.info("Manager registration attempt", {
       email,
@@ -75,7 +76,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
       const invitationToken = this._generateInvitationToken();
 
       const otp = this._otpService.generateOtp(6);
-      const expiry = this._otpService.generateExpiry(10);
+      const expiry = this._otpService.generateExpiry(1);
 
       const userData = {
         email,
@@ -112,6 +113,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
         message: "Organization created and verification email sent",
         organizationId: organization.id,
         invitationToken,
+        otpExpiresAt: expiry,
       };
     } catch (error) {
       this._logger.error("Manager registration failed", error as Error, {

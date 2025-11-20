@@ -16,7 +16,7 @@ let InviteRepo = class InviteRepo {
         const newInvite = {
             ...invite,
             id: Math.random().toString(36).slice(2),
-            status: 'PENDING',
+            status: "PENDING",
             createdAt: new Date(),
             expiry: invite.expiry || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days default
         };
@@ -24,19 +24,19 @@ let InviteRepo = class InviteRepo {
         return newInvite;
     }
     async findByToken(token) {
-        return invites.find(i => i.token === token) || null;
+        return invites.find((i) => i.token === token) || null;
     }
     async markAccepted(token) {
-        const invite = invites.find(i => i.token === token);
+        const invite = invites.find((i) => i.token === token);
         if (invite) {
-            invite.status = 'ACCEPTED';
+            invite.status = "ACCEPTED";
             invite.acceptedAt = new Date();
         }
     }
     async expire(token) {
-        const invite = invites.find(i => i.token === token);
+        const invite = invites.find((i) => i.token === token);
         if (invite) {
-            invite.status = 'EXPIRED';
+            invite.status = "EXPIRED";
             // ✅ NOTE: Using updatedAt since expiredAt doesn't exist in interface
             invite.updatedAt = new Date();
         }
@@ -44,20 +44,20 @@ let InviteRepo = class InviteRepo {
     // ✅ IMPLEMENT MISSING INTERFACE METHODS WITH CORRECT SIGNATURES
     // ✅ FIX: Interface expects (email: string, orgId: string) => Promise<Invite | null>
     async findPendingByEmail(email, orgId) {
-        return invites.find(invite => invite.email === email &&
+        return (invites.find((invite) => invite.email === email &&
             invite.orgId === orgId &&
-            invite.status === 'PENDING') || null;
+            invite.status === "PENDING") || null);
     }
     async findByOrganization(orgId) {
-        return invites.filter(invite => invite.orgId === orgId);
+        return invites.filter((invite) => invite.orgId === orgId);
     }
     async findPendingByOrganization(orgId) {
-        return invites.filter(invite => invite.orgId === orgId && invite.status === 'PENDING');
+        return invites.filter((invite) => invite.orgId === orgId && invite.status === "PENDING");
     }
     async markCancelled(token) {
-        const invite = invites.find(i => i.token === token);
+        const invite = invites.find((i) => i.token === token);
         if (invite) {
-            invite.status = 'CANCELLED';
+            invite.status = "CANCELLED";
             invite.cancelledAt = new Date();
         }
     }
@@ -65,8 +65,8 @@ let InviteRepo = class InviteRepo {
         const now = new Date();
         let expiredCount = 0;
         for (const invite of invites) {
-            if (invite.status === 'PENDING' && invite.expiry && invite.expiry < now) {
-                invite.status = 'EXPIRED';
+            if (invite.status === "PENDING" && invite.expiry && invite.expiry < now) {
+                invite.status = "EXPIRED";
                 invite.updatedAt = new Date();
                 expiredCount++;
             }
@@ -74,15 +74,15 @@ let InviteRepo = class InviteRepo {
         return expiredCount;
     }
     async delete(token) {
-        const index = invites.findIndex(i => i.token === token);
+        const index = invites.findIndex((i) => i.token === token);
         if (index !== -1) {
             invites.splice(index, 1);
         }
     }
     async update(token, updateData) {
-        const invite = invites.find(i => i.token === token);
+        const invite = invites.find((i) => i.token === token);
         if (!invite)
-            throw new Error('Invite not found');
+            throw new Error("Invite not found");
         Object.assign(invite, updateData, { updatedAt: new Date() });
         return invite;
     }
@@ -90,7 +90,7 @@ let InviteRepo = class InviteRepo {
         const invite = await this.findByToken(token);
         if (!invite)
             return false;
-        if (invite.status !== 'PENDING')
+        if (invite.status !== "PENDING")
             return false;
         if (invite.expiry && invite.expiry < new Date()) {
             // Auto-expire if expired
@@ -100,20 +100,20 @@ let InviteRepo = class InviteRepo {
         return true;
     }
     async getInvitationStats(orgId) {
-        const orgInvites = invites.filter(i => i.orgId === orgId);
+        const orgInvites = invites.filter((i) => i.orgId === orgId);
         return {
             total: orgInvites.length,
-            pending: orgInvites.filter(i => i.status === 'PENDING').length,
-            accepted: orgInvites.filter(i => i.status === 'ACCEPTED').length,
-            expired: orgInvites.filter(i => i.status === 'EXPIRED').length,
-            cancelled: orgInvites.filter(i => i.status === 'CANCELLED').length,
+            pending: orgInvites.filter((i) => i.status === "PENDING").length,
+            accepted: orgInvites.filter((i) => i.status === "ACCEPTED").length,
+            expired: orgInvites.filter((i) => i.status === "EXPIRED").length,
+            cancelled: orgInvites.filter((i) => i.status === "CANCELLED").length,
         };
     }
     async findAll() {
         return [...invites]; // Return a copy
     }
     async findById(id) {
-        return invites.find(i => i.id === id) || null;
+        return invites.find((i) => i.id === id) || null;
     }
     async cleanup() {
         return await this.expireOldInvitations();
@@ -122,10 +122,10 @@ let InviteRepo = class InviteRepo {
         return invites.length;
     }
     async findByEmail(email) {
-        return invites.filter(invite => invite.email === email);
+        return invites.filter((invite) => invite.email === email);
     }
     async findByStatus(status) {
-        return invites.filter(invite => invite.status === status);
+        return invites.filter((invite) => invite.status === status);
     }
     async clearAll() {
         invites.length = 0;
@@ -139,22 +139,23 @@ let InviteRepo = class InviteRepo {
     async getStats() {
         const stats = {
             total: invites.length,
-            pending: invites.filter(invite => invite.status === 'PENDING').length,
-            accepted: invites.filter(invite => invite.status === 'ACCEPTED').length,
-            cancelled: invites.filter(invite => invite.status === 'CANCELLED').length,
-            expired: invites.filter(invite => invite.status === 'EXPIRED').length,
+            pending: invites.filter((invite) => invite.status === "PENDING").length,
+            accepted: invites.filter((invite) => invite.status === "ACCEPTED").length,
+            cancelled: invites.filter((invite) => invite.status === "CANCELLED")
+                .length,
+            expired: invites.filter((invite) => invite.status === "EXPIRED").length,
             byOrg: {},
             byStatus: {},
-            lastUpdated: new Date()
+            lastUpdated: new Date(),
         };
         // Count by organization
-        invites.forEach(invite => {
-            const orgId = invite.orgId || 'NO_ORG';
+        invites.forEach((invite) => {
+            const orgId = invite.orgId || "NO_ORG";
             stats.byOrg[orgId] = (stats.byOrg[orgId] || 0) + 1;
         });
         // Count by status
-        invites.forEach(invite => {
-            const status = invite.status || 'UNKNOWN';
+        invites.forEach((invite) => {
+            const status = invite.status || "UNKNOWN";
             stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
         });
         return stats;

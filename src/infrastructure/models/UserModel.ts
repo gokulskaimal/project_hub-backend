@@ -9,6 +9,9 @@ export interface IUserDoc extends Document {
   lastName?: string;
   password?: string;
   role: UserRole;
+  provider?: string;
+  googleId?: string;
+  avatar?: string;
   orgId?: Types.ObjectId;
   emailVerified: boolean;
   emailVerifiedAt?: Date;
@@ -28,6 +31,9 @@ const UserSchema = new mongoose.Schema<IUserDoc>(
     lastName: { type: String },
     password: { type: String },
     role: { type: String, enum: Object.values(UserRole), required: true },
+    provider: { type: String, dafault: "local" },
+    googleId: { type: String, index: true, unique: true },
+    avatar: { type: String },
     orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" },
     emailVerified: { type: Boolean, default: false },
     emailVerifiedAt: { type: Date },

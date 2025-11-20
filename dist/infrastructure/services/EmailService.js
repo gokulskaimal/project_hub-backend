@@ -25,24 +25,26 @@ let EmailService = class EmailService {
     constructor() {
         const host = process.env.SMTP_HOST;
         const port = Number(process.env.SMTP_PORT) || 587;
-        const secure = process.env.SMTP_SECURE?.toLowerCase() === 'true' || port === 465;
+        const secure = process.env.SMTP_SECURE?.toLowerCase() === "true" || port === 465;
         const user = process.env.SMTP_USER;
         const pass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
         if (!host || !user || !pass) {
-            throw new Error('Email service is not configured. Please set SMTP_HOST, SMTP_USER, and SMTP_PASSWORD.');
+            console.warn("Email service is not configured. Falling back to JSON transport for development.");
+            this.transporter = nodemailer_1.default.createTransport({ jsonTransport: true });
+            return;
         }
         this.transporter = nodemailer_1.default.createTransport({
             host,
             port,
             secure,
-            auth: { user, pass }
+            auth: { user, pass },
         });
     }
     renderTemplate(templateName, variables) {
         try {
-            const filePath = path_1.default.join(__dirname, 'templates', templateName);
-            const html = fs_1.default.readFileSync(filePath, 'utf-8');
-            return Object.entries(variables).reduce((acc, [key, value]) => acc.replace(new RegExp(`{{${key}}}`, 'g'), value), html);
+            const filePath = path_1.default.join(__dirname, "templates", templateName);
+            const html = fs_1.default.readFileSync(filePath, "utf-8");
+            return Object.entries(variables).reduce((acc, [key, value]) => acc.replace(new RegExp(`{{${key}}}`, "g"), value), html);
         }
         catch {
             return null;
@@ -57,52 +59,55 @@ let EmailService = class EmailService {
                 text: payload.text,
                 html: payload.html,
             });
-            console.log(`✅ Email sent to ${payload.to}: ${payload.subject}`);
+            console.log(`Email sent to ${payload.to} `);
+            if (process.env.NODE_ENV !== "production" && payload.text) {
+                console.log(payload.text);
+            }
         }
         catch (err) {
-            console.error('❌ Error sending email:', err);
+            console.error("❌ Error sending email:", err);
             throw new Error(`Could not send email: ${err.message}`);
         }
     }
     async sendWelcomeEmail(email, name, verificationCode) {
         const variables = {
             NAME: name,
-            VERIFICATION_CODE: verificationCode || '',
-            BASE_URL: process.env.BASE_URL || 'http://localhost:3000',
+            VERIFICATION_CODE: verificationCode || "",
+            BASE_URL: process.env.BASE_URL || "http://localhost:3000",
         };
-        const html = this.renderTemplate('welcome.html', variables);
+        const html = this.renderTemplate("welcome.html", variables);
         await this.sendEmail({
             to: email,
-            subject: 'Welcome to Project Hub! 🎉',
-            text: `Welcome ${name}! Thank you for joining Project Hub.${verificationCode ? ` Your verification code is: ${verificationCode}` : ''}`,
+            subject: "Welcome to Project Hub! 🎉",
+            text: `Welcome ${name}! Thank you for joining Project Hub.${verificationCode ? ` Your verification code is: ${verificationCode}` : ""}`,
             html: html ?? undefined,
         });
     }
     async sendResetPasswordEmail(email, resetToken) {
-        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+        const resetUrl = `${process.env.BASE_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
         const variables = {
             RESET_URL: resetUrl,
             RESET_TOKEN: resetToken,
-            EXPIRY_TIME: '1 hour',
+            EXPIRY_TIME: "1 hour",
         };
-        const html = this.renderTemplate('reset-password.html', variables);
+        const html = this.renderTemplate("reset-password.html", variables);
         await this.sendEmail({
             to: email,
-            subject: 'Reset Your Password - Project Hub',
+            subject: "Reset Your Password - Project Hub",
             text: `You requested a password reset. Click this link to reset your password: ${resetUrl}\n\nThis link expires in 1 hour.`,
             html: html ?? undefined,
         });
     }
     async sendInviteEmail(email, inviteToken, orgName, inviterName) {
-        const inviteUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/accept-invite?token=${inviteToken}`;
+        const inviteUrl = `${process.env.BASE_URL || "http://localhost:3000"}/accept-invite?token=${inviteToken}`;
         const variables = {
             INVITE_URL: inviteUrl,
             TOKEN: inviteToken,
             ORG_NAME: orgName,
             INVITER_NAME: inviterName,
-            EXPIRY: '7 days',
+            EXPIRY: "7 days",
         };
-        const html = this.renderTemplate('inviteMember.html', variables);
+        const html = this.renderTemplate("inviteMember.html", variables);
         await this.sendEmail({
             to: email,
             subject: `You're invited to join ${orgName} on Project Hub!`,
@@ -110,13 +115,13 @@ let EmailService = class EmailService {
             html: html ?? undefined,
         });
     }
-    async sendOtpEmail(email, otp, purpose = 'verification') {
+    async sendOtpEmail(email, otp, purpose = "verification") {
         const variables = {
             OTP: otp,
             PURPOSE: purpose,
-            EXPIRY_TIME: '10 minutes',
+            EXPIRY_TIME: "10 minutes",
         };
-        const html = this.renderTemplate('otp.html', variables);
+        const html = this.renderTemplate("otp.html", variables);
         await this.sendEmail({
             to: email,
             subject: `Your OTP Code - Project Hub`,
@@ -125,16 +130,16 @@ let EmailService = class EmailService {
         });
     }
     async sendVerificationEmail(email, name, verificationCode) {
-        const verifyUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/verify-email?code=${verificationCode}`;
+        const verifyUrl = `${process.env.BASE_URL || "http://localhost:3000"}/verify-email?code=${verificationCode}`;
         const variables = {
             NAME: name,
             VERIFICATION_CODE: verificationCode,
             VERIFY_URL: verifyUrl,
         };
-        const html = this.renderTemplate('email-verification.html', variables);
+        const html = this.renderTemplate("email-verification.html", variables);
         await this.sendEmail({
             to: email,
-            subject: 'Verify Your Email Address - Project Hub',
+            subject: "Verify Your Email Address - Project Hub",
             text: `Hi ${name},\n\nPlease verify your email address by clicking this link: ${verifyUrl}\n\nOr use this verification code: ${verificationCode}`,
             html: html ?? undefined,
         });

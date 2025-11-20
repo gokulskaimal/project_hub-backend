@@ -4,11 +4,6 @@ import { IOtpService } from "../../domain/interfaces/services/IOtpService";
 /**
  * OTP Service Implementation
  * Provides OTP generation, storage, and verification
- *
- * ✅ DEPENDENCY INVERSION PRINCIPLE:
- * - Implements IOtpService interface
- * - Can be easily swapped for Redis or database implementation
- * - Uses @injectable decorator for DI container
  */
 @injectable()
 export class OtpService implements IOtpService {

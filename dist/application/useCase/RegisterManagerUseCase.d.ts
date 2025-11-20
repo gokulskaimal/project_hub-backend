@@ -1,9 +1,9 @@
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOtpService } from "../../domain/interfaces/services/IOtpService ";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService ";
-import { IRegisterManagerUseCase } from '../../domain/interfaces/useCases/IRegisterManagerUseCase ';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
-import { IOrgRepo } from '../../domain/interfaces/IOrgRepo';
+import { IOtpService } from "../../domain/interfaces/services/IOtpService";
+import { IEmailService } from "../../domain/interfaces/services/IEmailService";
+import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegisterManagerUseCase";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
 export declare class RegisterManagerUseCase implements IRegisterManagerUseCase {
     private readonly _userRepo;
     private readonly _otpService;
@@ -15,6 +15,7 @@ export declare class RegisterManagerUseCase implements IRegisterManagerUseCase {
         message: string;
         organizationId: string;
         invitationToken: string;
+        otpExpiresAt: Date;
     }>;
     validateOrganizationName(name: string): Promise<boolean>;
     private _validateInput;

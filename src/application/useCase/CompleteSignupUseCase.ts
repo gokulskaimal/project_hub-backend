@@ -137,11 +137,13 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
 
       const accessToken = this._jwtService.generateAccessToken({
         id: updatedUser.id,
+        email: updatedUser.email,
         role: updatedUser.role,
         orgId: updatedUser.orgId,
       });
       const refreshToken = this._jwtService.generateRefreshToken({
         id: updatedUser.id,
+        email: updatedUser.email,
       });
 
       return {

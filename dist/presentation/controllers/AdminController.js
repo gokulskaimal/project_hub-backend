@@ -16,8 +16,8 @@ exports.AdminController = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const Organization_1 = require("../../domain/entities/Organization");
-const HttpStatus_1 = require("../../domain/enums/HttpStatus");
-const messages_1 = require("../../domain/constants/messages");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const common_constants_1 = require("../../infrastructure/config/common.constants");
 /**
  * Admin Controller
  *
@@ -49,16 +49,16 @@ let AdminController = class AdminController {
         try {
             const { limit = 50, offset = 0, search } = req.query;
             const result = await this.orgRepo.findPaginated(Number(limit), Number(offset), search);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                data: result
+                data: result,
             });
         }
         catch (error) {
-            this.logger.error('List organizations failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("List organizations failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to fetch organizations'
+                message: "Failed to fetch organizations",
             });
         }
     }
@@ -72,9 +72,9 @@ let AdminController = class AdminController {
         try {
             const { name, description, settings } = req.body;
             if (!name) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: 'Organization name is required'
+                    message: "Organization name is required",
                 });
                 return;
             }
@@ -83,19 +83,19 @@ let AdminController = class AdminController {
                 description,
                 settings,
                 status: Organization_1.OrganizationStatus.ACTIVE,
-                createdAt: new Date()
+                createdAt: new Date(),
             });
-            res.status(HttpStatus_1.HttpStatus.CREATED).json({
+            res.status(statusCodes_enum_1.StatusCodes.CREATED).json({
                 success: true,
-                message: messages_1.MESSAGES.ORGANIZATION.CREATED,
-                data: newOrg
+                message: common_constants_1.COMMON_MESSAGES.CREATED,
+                data: newOrg,
             });
         }
         catch (error) {
-            this.logger.error('Create organization failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Create organization failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to create organization'
+                message: "Failed to create organization",
             });
         }
     }
@@ -110,22 +110,22 @@ let AdminController = class AdminController {
             const { id } = req.params;
             const organization = await this.orgRepo.findById(id);
             if (!organization) {
-                res.status(HttpStatus_1.HttpStatus.NOT_FOUND).json({
+                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: messages_1.MESSAGES.ORGANIZATION.NOT_FOUND
+                    message: common_constants_1.COMMON_MESSAGES.NOT_FOUND,
                 });
                 return;
             }
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                data: organization
+                data: organization,
             });
         }
         catch (error) {
-            this.logger.error('Get organization by ID failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Get organization by ID failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to fetch organization'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -140,17 +140,72 @@ let AdminController = class AdminController {
             const { id } = req.params;
             const updateData = req.body;
             const updatedOrg = await this.orgRepo.update(id, updateData);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            // If status is being changed, apply cascading effects to all users
+            if (updateData.status) {
+                try {
+                    const usersInOrg = await this.userRepo.findByOrg(id);
+                    if (usersInOrg && usersInOrg.length > 0) {
+                        if (updateData.status === Organization_1.OrganizationStatus.SUSPENDED) {
+                            // Suspend all users in the organization
+                            for (const user of usersInOrg) {
+                                try {
+                                    await this.userRepo.updateStatus(user.id, "SUSPENDED");
+                                    this.logger.info("User suspended due to organization suspension", {
+                                        userId: user.id,
+                                        orgId: id,
+                                        userEmail: user.email,
+                                    });
+                                }
+                                catch (userErr) {
+                                    this.logger.error("Failed to suspend user during org suspension", userErr, {
+                                        userId: user.id,
+                                        orgId: id,
+                                    });
+                                    // Continue suspending other users even if one fails
+                                }
+                            }
+                        }
+                        else if (updateData.status === Organization_1.OrganizationStatus.ACTIVE) {
+                            // Reactivate suspended users in the organization
+                            for (const user of usersInOrg) {
+                                if (user.status === "SUSPENDED") {
+                                    try {
+                                        await this.userRepo.updateStatus(user.id, "ACTIVE");
+                                        this.logger.info("User reactivated due to organization activation", {
+                                            userId: user.id,
+                                            orgId: id,
+                                            userEmail: user.email,
+                                        });
+                                    }
+                                    catch (userErr) {
+                                        this.logger.error("Failed to reactivate user during org activation", userErr, {
+                                            userId: user.id,
+                                            orgId: id,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (cascadeErr) {
+                    this.logger.error("Error applying cascading user status updates", cascadeErr, {
+                        orgId: id,
+                        newOrgStatus: updateData.status,
+                    });
+                }
+            }
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: messages_1.MESSAGES.ORGANIZATION.UPDATED,
-                data: updatedOrg
+                message: common_constants_1.COMMON_MESSAGES.UPDATED,
+                data: updatedOrg,
             });
         }
         catch (error) {
-            this.logger.error('Update organization failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Update organization failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to update organization'
+                message: "Failed to update organization",
             });
         }
     }
@@ -163,17 +218,34 @@ let AdminController = class AdminController {
     async deleteOrganization(req, res) {
         try {
             const { id } = req.params;
+            // Cascade: delete all users that belong to this organization first
+            const usersInOrg = await this.userRepo.findByOrg(id);
+            if (usersInOrg && usersInOrg.length > 0) {
+                for (const user of usersInOrg) {
+                    try {
+                        await this.userRepo.delete(user.id);
+                        this.logger.info("User deleted due to organization deletion", {
+                            userId: user.id,
+                            orgId: id,
+                            email: user.email,
+                        });
+                    }
+                    catch (userDelErr) {
+                        this.logger.error("Failed to delete user during organization deletion", userDelErr);
+                    }
+                }
+            }
             await this.orgRepo.delete(id);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: messages_1.MESSAGES.ORGANIZATION.DELETED
+                message: common_constants_1.COMMON_MESSAGES.DELETED,
             });
         }
         catch (error) {
-            this.logger.error('Delete organization failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Delete organization failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to delete organization'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -189,19 +261,19 @@ let AdminController = class AdminController {
             const filters = {
                 orgId: orgId,
                 role: role,
-                status: status
+                status: status,
             };
             const result = await this.userRepo.findPaginated(Number(limit), Number(offset), search, filters);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                data: result
+                data: result,
             });
         }
         catch (error) {
-            this.logger.error('List users failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("List users failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to fetch users'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -216,23 +288,23 @@ let AdminController = class AdminController {
             const { id } = req.params;
             const user = await this.userRepo.findById(id);
             if (!user) {
-                res.status(HttpStatus_1.HttpStatus.NOT_FOUND).json({
+                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: messages_1.MESSAGES.USER.NOT_FOUND
+                    message: common_constants_1.COMMON_MESSAGES.NOT_FOUND,
                 });
                 return;
             }
             const { password, otp, otpExpiry, resetPasswordToken, resetPasswordExpires, ...safeUser } = user;
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                data: safeUser
+                data: safeUser,
             });
         }
         catch (error) {
-            this.logger.error('Get user by ID failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Get user by ID failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to fetch user'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -246,21 +318,20 @@ let AdminController = class AdminController {
         try {
             const { id } = req.params;
             const updateData = req.body;
-            // Remove sensitive fields that shouldn't be updated directly
             const { password, otp, otpExpiry, resetPasswordToken, resetPasswordExpires, ...safeUpdateData } = updateData;
             const updatedUser = await this.userRepo.updateProfile(id, safeUpdateData);
             const { password: _, otp: __, otpExpiry: ___, resetPasswordToken: ____, resetPasswordExpires: _____, ...safeUser } = updatedUser;
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: messages_1.MESSAGES.USER.UPDATED,
-                data: safeUser
+                message: common_constants_1.COMMON_MESSAGES.UPDATED,
+                data: safeUser,
             });
         }
         catch (error) {
-            this.logger.error('Update user failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Update user failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to update user'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -275,25 +346,25 @@ let AdminController = class AdminController {
             const { id } = req.params;
             const { status } = req.body;
             if (!status) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: 'Status is required'
+                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
                 });
                 return;
             }
             const updatedUser = await this.userRepo.updateStatus(id, status);
             const { password, otp, otpExpiry, resetPasswordToken, resetPasswordExpires, ...safeUser } = updatedUser;
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'User status updated successfully',
-                data: safeUser
+                message: common_constants_1.COMMON_MESSAGES.UPDATED,
+                data: safeUser,
             });
         }
         catch (error) {
-            this.logger.error('Update user status failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Update user status failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to update user status'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -307,16 +378,16 @@ let AdminController = class AdminController {
         try {
             const { id } = req.params;
             await this.userRepo.delete(id);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: messages_1.MESSAGES.USER.DELETED
+                message: common_constants_1.COMMON_MESSAGES.DELETED,
             });
         }
         catch (error) {
-            this.logger.error('Delete user failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Delete user failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to delete user'
+                message: "Failed to delete user",
             });
         }
     }
@@ -334,22 +405,22 @@ let AdminController = class AdminController {
                 overview: {
                     totalUsers: userStats.total || 0,
                     totalOrganizations: orgStats.total || 0,
-                    generatedAt: new Date().toISOString()
+                    generatedAt: new Date().toISOString(),
                 },
                 users: userStats,
-                organizations: orgStats
+                organizations: orgStats,
             };
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Reports generated successfully',
-                data: report
+                message: common_constants_1.COMMON_MESSAGES,
+                data: report,
             });
         }
         catch (error) {
-            this.logger.error('Get reports failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Get reports failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to generate reports'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -363,19 +434,19 @@ let AdminController = class AdminController {
         try {
             const userStats = await this.userRepo.getStats();
             const orgStats = await this.orgRepo.getStats();
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
                 data: {
                     users: userStats,
-                    organizations: orgStats
-                }
+                    organizations: orgStats,
+                },
             });
         }
         catch (error) {
-            this.logger.error('Get dashboard stats failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Get dashboard stats failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to fetch dashboard statistics'
+                message: "Failed to fetch dashboard statistics",
             });
         }
     }
@@ -389,16 +460,16 @@ let AdminController = class AdminController {
         try {
             const { orgId } = req.params;
             const users = await this.userRepo.findByOrg(orgId);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                data: users
+                data: users,
             });
         }
         catch (error) {
-            this.logger.error('Get users by organization failed', error);
-            res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+            this.logger.error("Get users by organization failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: 'Failed to fetch users'
+                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
             });
         }
     }
@@ -412,24 +483,24 @@ let AdminController = class AdminController {
         try {
             const { email, orgId, role } = req.body;
             if (!email || !orgId) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: 'Email and organization ID are required'
+                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
                 });
                 return;
             }
             const result = await this.inviteMemberUseCase.execute(email, orgId, role);
-            res.status(HttpStatus_1.HttpStatus.CREATED).json({
+            res.status(statusCodes_enum_1.StatusCodes.CREATED).json({
                 success: true,
-                message: 'Invitation sent successfully',
-                data: result
+                message: common_constants_1.COMMON_MESSAGES.INVITATION_SENT,
+                data: result,
             });
         }
         catch (error) {
-            this.logger.error('Invite member failed', error);
-            res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+            this.logger.error("Invite member failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                 success: false,
-                message: error.message
+                message: error.message,
             });
         }
     }
@@ -443,24 +514,24 @@ let AdminController = class AdminController {
         try {
             const { emails, orgId, role } = req.body;
             if (!emails || !Array.isArray(emails) || !orgId) {
-                res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: 'Emails array and organization ID are required'
+                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
                 });
                 return;
             }
             const result = await this.inviteMemberUseCase.bulkInvite(emails, orgId, role);
-            res.status(HttpStatus_1.HttpStatus.OK).json({
+            res.status(statusCodes_enum_1.StatusCodes.OK).json({
                 success: true,
-                message: 'Bulk invitations processed',
-                data: result
+                message: common_constants_1.COMMON_MESSAGES.INVITATION_SENT,
+                data: result,
             });
         }
         catch (error) {
-            this.logger.error('Bulk invite members failed', error);
-            res.status(HttpStatus_1.HttpStatus.BAD_REQUEST).json({
+            this.logger.error("Bulk invite members failed", error);
+            res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
                 success: false,
-                message: error.message
+                message: error.message,
             });
         }
     }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { User } from "../../domain/entities/User";
 
 export interface UserDTO {
@@ -8,35 +7,23 @@ export interface UserDTO {
   firstName?: string;
   lastName?: string;
   role: string;
-  orgId?: string;
+  orgId?: string | null;
   emailVerified: boolean;
-  emailVerifiedAt?: Date;
+  emailVerifiedAt?: string;
   status: string;
-  createdAt: Date;
-  updatedAt?: Date;
-  lastLoginAt?: Date;
-  joinedAt?: Date;
-  avatar?: string;
-  phone?: string;
-  phoneVerified?: boolean;
-  timezone?: string;
-  language?: string;
-  title?: string;
-  department?: string;
-  bio?: string;
-  dateOfBirth?: Date;
-
-  // Profile completion indicators
+  createdAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
   profileComplete?: boolean;
-  hasPassword?: boolean;
 }
 
 /**
- * Convert User entity to UserDTO (safe for API responses)
- * @param user - User domain entity
- * @returns UserDTO without sensitive data
+ * Convert domain User entity to UserDTO (safe for API responses)
  */
 export function toUserDTO(user: User): UserDTO {
+  const toIso = (d?: Date | string | undefined): string | undefined =>
+    d ? new Date(d).toISOString() : undefined;
+
   return {
     id: user.id,
     email: user.email,
@@ -44,27 +31,14 @@ export function toUserDTO(user: User): UserDTO {
     firstName: user.firstName,
     lastName: user.lastName,
     role: user.role,
-    orgId: user.orgId,
-    emailVerified: user.emailVerified,
-    emailVerifiedAt: user.emailVerifiedAt,
+    orgId: user.orgId ?? null,
+    emailVerified: Boolean(user.emailVerified),
+    emailVerifiedAt: toIso(user.emailVerifiedAt),
     status: user.status,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    lastLoginAt: user.lastLoginAt,
-    joinedAt: user.joinedAt,
-    avatar: user.avatar,
-    phone: user.phone,
-    phoneVerified: user.phoneVerified,
-    timezone: user.timezone,
-    language: user.language,
-    title: user.title,
-    department: user.department,
-    bio: user.bio,
-    dateOfBirth: user.dateOfBirth,
-
-    // Derived fields
-    profileComplete: !!(user.firstName && user.lastName && user.phone),
-    hasPassword: !!user.password && user.password.length > 0,
+    createdAt: toIso(user.createdAt) as string,
+    updatedAt: toIso(user.updatedAt),
+    lastLoginAt: toIso(user.lastLoginAt),
+    profileComplete: Boolean(user.firstName && user.lastName),
   };
 }
 
@@ -110,14 +84,6 @@ export interface RegisterRequestDTO {
 export interface UpdateProfileRequestDTO {
   firstName?: string;
   lastName?: string;
-  phone?: string;
-  timezone?: string;
-  language?: string;
-  title?: string;
-  department?: string;
-  bio?: string;
-  dateOfBirth?: Date;
-  preferences?: Record<string, any>;
 }
 
 /**
@@ -168,7 +134,7 @@ export interface CompleteSignupDTO {
   password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
+
   acceptedTerms: boolean;
 }
 
@@ -189,7 +155,6 @@ export interface AcceptInvitationDTO {
   password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
 }
 
 /**

@@ -23,7 +23,7 @@ class PlanRepo {
             id: plan._id.toString(),
             name: plan.name,
             maxUsers: plan.maxUsers,
-            pricePerMonth: plan.pricePerMonth
+            pricePerMonth: plan.pricePerMonth,
         };
     }
     async create(plan) {
@@ -32,7 +32,7 @@ class PlanRepo {
             id: newPlan._id.toString(),
             name: newPlan.name,
             maxUsers: newPlan.maxUsers,
-            pricePerMonth: newPlan.pricePerMonth
+            pricePerMonth: newPlan.pricePerMonth,
         };
     }
 }

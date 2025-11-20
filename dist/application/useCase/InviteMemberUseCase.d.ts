@@ -1,9 +1,9 @@
 import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService ";
-import { IInviteMemberUseCase } from '../../domain/interfaces/useCases/IInviteMemberUseCase ';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
-import { IOrgRepo } from '../../domain/interfaces/IOrgRepo';
-import { IUserRepo } from '../../domain/interfaces/IUserRepo';
+import { IEmailService } from "../../domain/interfaces/services/IEmailService";
+import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
+import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 export declare class InviteMemberUseCase implements IInviteMemberUseCase {
     private readonly _inviteRepo;
     private readonly _emailService;

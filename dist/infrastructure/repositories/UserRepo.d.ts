@@ -1,7 +1,7 @@
-import { BaseRepository } from './BaseRepository';
-import { IUserRepo } from '../../domain/interfaces/IUserRepo';
-import { User } from '../../domain/entities/User';
-import { IUserDoc } from '../models/UserModel';
+import { BaseRepository } from "./BaseRepository";
+import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { User } from "../../domain/entities/User";
+import { IUserDoc } from "../models/UserModel";
 export declare class UserRepo extends BaseRepository<User, IUserDoc> implements IUserRepo {
     constructor();
     protected toDomain(doc: IUserDoc): User;
@@ -10,7 +10,7 @@ export declare class UserRepo extends BaseRepository<User, IUserDoc> implements 
         otp: string;
         expiresAt: Date;
     } | null>;
-    findOrganizationById?(orgId: string): Promise<any | null>;
+    findOrganizationById?(orgId: string): Promise<unknown | null>;
     private toDomainUser;
     create(user: Partial<User>): Promise<User>;
     ensureUserWithOtp(email: string, otp: string, expiry: Date): Promise<User>;
@@ -30,7 +30,6 @@ export declare class UserRepo extends BaseRepository<User, IUserDoc> implements 
     findByRole(role: string): Promise<User[]>;
     findByOrgAndRole(orgId: string, role: string): Promise<User[]>;
     updateStatus(id: string, status: string): Promise<User>;
-    hardDelete(id: string): Promise<void>;
     removeFromOrg(userId: string, _orgId: string): Promise<void>;
     updateLastLogin(id: string, loginTime: Date): Promise<void>;
     findPaginated(limit: number, offset: number, searchTerm?: string, filters?: {
@@ -59,7 +58,5 @@ export declare class UserRepo extends BaseRepository<User, IUserDoc> implements 
         unverified: number;
         byRole: Record<string, number>;
     }>;
-    getActivityHistory?(userId: string, limit: number, offset: number): Promise<any[]>;
-    logActivity?(userId: string, action: string, metadata?: Record<string, any>): Promise<void>;
 }
 //# sourceMappingURL=UserRepo.d.ts.map

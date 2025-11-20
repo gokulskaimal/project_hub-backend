@@ -43,13 +43,13 @@ let JsonWebTokenProvider = class JsonWebTokenProvider {
         try {
             const decoded = jsonwebtoken_1.default.verify(token, secret, options);
             // Handle both string and object returns
-            if (typeof decoded === 'string') {
+            if (typeof decoded === "string") {
                 return JSON.parse(decoded);
             }
             return decoded;
         }
         catch (error) {
-            console.warn('JWT verification failed:', error.message);
+            console.warn("JWT verification failed:", error.message);
             return null;
         }
     }
@@ -64,13 +64,13 @@ let JsonWebTokenProvider = class JsonWebTokenProvider {
             if (!decoded) {
                 return null;
             }
-            if (typeof decoded === 'string') {
+            if (typeof decoded === "string") {
                 return JSON.parse(decoded);
             }
             return decoded;
         }
         catch (error) {
-            console.warn('JWT decoding failed:', error.message);
+            console.warn("JWT decoding failed:", error.message);
             return null;
         }
     }

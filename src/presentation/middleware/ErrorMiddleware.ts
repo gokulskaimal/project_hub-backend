@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express";
 import logger from "../../infrastructure/services/Logger";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
@@ -17,7 +18,6 @@ export const asyncHandler =
   (req: Request, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch(next);
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(
   err: HttpError,
   req: Request,

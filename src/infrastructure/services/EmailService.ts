@@ -68,9 +68,9 @@ export class EmailService implements IEmailService {
         text: payload.text,
         html: payload.html,
       });
-      console.log(`✅ Email sent to ${payload.to}: ${payload.subject}`);
+      console.log(`Email sent to ${payload.to} `);
       if (process.env.NODE_ENV !== "production" && payload.text) {
-        console.log("✉️ Email content (dev):", payload.text);
+        console.log(payload.text);
       }
     } catch (err: unknown) {
       console.error("❌ Error sending email:", err);

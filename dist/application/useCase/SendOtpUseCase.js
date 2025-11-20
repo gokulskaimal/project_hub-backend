@@ -16,45 +16,44 @@ exports.SendOtpUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 let SendOtpUseCase = class SendOtpUseCase {
-    constructor(userRepo, otpService, emailService, logger) {
+    constructor(userRepo, otpService, emailService, logger, cache) {
         this._userRepo = userRepo;
         this._otpService = otpService;
         this._emailService = emailService;
         this._logger = logger;
+        this._cache = cache;
     }
     /**
      * ✅ FIXED: Send OTP with correct return type
      */
     async execute(email) {
-        this._logger.info('Sending OTP', { email });
+        this._logger.info("Sending OTP", { email });
         try {
             // Business Rule: Validate email format
             if (!this._isValidEmail(email)) {
-                throw new Error('Invalid email format');
+                throw new Error("Invalid email format");
             }
             // Business Rule: Check rate limiting
             const attemptsRemaining = await this._checkRateLimit(email);
             if (attemptsRemaining <= 0) {
-                throw new Error('Too many OTP requests. Please wait before requesting again.');
+                throw new Error("Too many OTP requests. Please wait before requesting again.");
             }
             // Business Rule: Generate OTP - ✅ FIXED: Use generateOtp instead of generate
             const otp = this._otpService.generateOtp(6); // 6-digit OTP
             const expiresAt = this._otpService.generateExpiry(10); // 10 minutes from now
-            // ✅ FIXED: Store OTP in database using storeOtp method
-            await this._userRepo.storeOtp(email, otp, expiresAt);
+            // ✅ Ensure a user record exists and store OTP (create if missing)
+            await this._userRepo.ensureUserWithOtp(email, otp, expiresAt);
             // Send OTP via email
-            await this._emailService.sendOtpEmail(email, otp, 'Email verification');
-            // Update rate limiting counter
-            await this._updateRateLimit(email);
-            this._logger.info('OTP sent successfully', { email, expiresAt });
+            await this._emailService.sendOtpEmail(email, otp, "Email verification");
+            this._logger.info("OTP sent successfully", { email, expiresAt });
             return {
-                message: 'OTP sent successfully to your email',
+                message: "OTP sent successfully to your email",
                 expiresAt,
-                attemptsRemaining: attemptsRemaining - 1
+                attemptsRemaining: attemptsRemaining - 1,
             };
         }
         catch (error) {
-            this._logger.error('Failed to send OTP', error, { email });
+            this._logger.error("Failed to send OTP", error, { email });
             throw error;
         }
     }
@@ -62,7 +61,7 @@ let SendOtpUseCase = class SendOtpUseCase {
      * ✅ ADDED: Resend OTP if previous one expired
      */
     async resendOtp(email) {
-        this._logger.info('Resending OTP', { email });
+        this._logger.info("Resending OTP", { email });
         try {
             // Business Rule: Check if previous OTP is still valid
             const existingOtp = await this._userRepo.getOtp(email);
@@ -74,7 +73,7 @@ let SendOtpUseCase = class SendOtpUseCase {
             return this.execute(email);
         }
         catch (error) {
-            this._logger.error('Failed to resend OTP', error, { email });
+            this._logger.error("Failed to resend OTP", error, { email });
             throw error;
         }
     }
@@ -85,28 +84,19 @@ let SendOtpUseCase = class SendOtpUseCase {
      */
     async _checkRateLimit(email) {
         try {
-            // In a real implementation, you would use Redis or database
-            // to track OTP request attempts per email per hour
             const MAX_ATTEMPTS_PER_HOUR = 5;
-            // Mock implementation - in production, store in Redis with TTL
-            return MAX_ATTEMPTS_PER_HOUR; // Always allow for demo
+            const key = `otp:reqs:${email}`;
+            const ttlSeconds = 60 * 60;
+            const current = await this._cache.incr(key);
+            if (current === 1) {
+                await this._cache.expire(key, ttlSeconds);
+            }
+            const attemptsRemaining = Math.max(0, MAX_ATTEMPTS_PER_HOUR - current);
+            return attemptsRemaining;
         }
         catch (error) {
-            this._logger.error('Rate limit check failed', error, { email });
-            return 0; // Fail safe - no attempts remaining
-        }
-    }
-    /**
-     * Update rate limiting counter
-     * @param email - User email
-     */
-    async _updateRateLimit(email) {
-        try {
-            // In a real implementation, increment counter in Redis
-            // with 1-hour TTL
-        }
-        catch (error) {
-            this._logger.error('Rate limit update failed', error, { email });
+            this._logger.error("Rate limit check failed", error, { email });
+            return 0;
         }
     }
     /**
@@ -126,6 +116,7 @@ exports.SendOtpUseCase = SendOtpUseCase = __decorate([
     __param(1, (0, inversify_1.inject)(types_1.TYPES.IOtpService)),
     __param(2, (0, inversify_1.inject)(types_1.TYPES.IEmailService)),
     __param(3, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object])
+    __param(4, (0, inversify_1.inject)(types_1.TYPES.ICacheService)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
 ], SendOtpUseCase);
 //# sourceMappingURL=SendOtpUseCase.js.map

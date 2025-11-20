@@ -1,20 +1,20 @@
 import mongoose from 'mongoose';
 declare const _default: mongoose.Model<{
     email: string;
-    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     orgId: string;
+    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     token: string;
     expiry: NativeDate;
 }, {}, {}, {}, mongoose.Document<unknown, {}, {
     email: string;
-    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     orgId: string;
+    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     token: string;
     expiry: NativeDate;
 }, {}, mongoose.DefaultSchemaOptions> & {
     email: string;
-    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     orgId: string;
+    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     token: string;
     expiry: NativeDate;
 } & {
@@ -23,20 +23,20 @@ declare const _default: mongoose.Model<{
     __v: number;
 }, mongoose.Schema<any, mongoose.Model<any, any, any, any, any, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, {
     email: string;
-    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     orgId: string;
+    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     token: string;
     expiry: NativeDate;
 }, mongoose.Document<unknown, {}, mongoose.FlatRecord<{
     email: string;
-    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     orgId: string;
+    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     token: string;
     expiry: NativeDate;
 }>, {}, mongoose.ResolveSchemaOptions<mongoose.DefaultSchemaOptions>> & mongoose.FlatRecord<{
     email: string;
-    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     orgId: string;
+    status: "PENDING" | "ACCEPTED" | "EXPIRED";
     token: string;
     expiry: NativeDate;
 }> & {

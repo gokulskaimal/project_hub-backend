@@ -26,17 +26,20 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
         this._orgRepo = orgRepo;
     }
     async execute(email, organizationName) {
-        this._logger.info('Manager registration attempt', { email, organizationName });
+        this._logger.info("Manager registration attempt", {
+            email,
+            organizationName,
+        });
         try {
             this._validateInput(email, organizationName);
             const isNameAvailable = await this.validateOrganizationName(organizationName);
             if (!isNameAvailable) {
-                throw new Error('Organization name is already taken');
+                throw new Error("Organization name is already taken");
             }
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser && existingUser.emailVerified) {
-                this._logger.warn('Manager already exists and verified', { email });
-                throw new Error('User already exists and is verified');
+                this._logger.warn("Manager already exists and verified", { email });
+                throw new Error("User already exists and is verified");
             }
             // ✅ FIXED: Use const assertion for organization status
             const organizationData = {
@@ -45,8 +48,8 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
                 createdAt: new Date(),
                 settings: {
                     allowInvitations: true,
-                    requireEmailVerification: true
-                }
+                    requireEmailVerification: true,
+                },
             };
             const organization = await this._orgRepo.create(organizationData);
             const invitationToken = this._generateInvitationToken();
@@ -56,13 +59,13 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
                 email,
                 orgId: organization.id,
                 role: UserRole_1.UserRole.ORG_MANAGER,
-                password: '',
+                password: "",
                 otp,
                 otpExpiry: expiry,
                 invitationToken,
                 emailVerified: false,
-                status: 'PENDING_VERIFICATION',
-                createdAt: new Date()
+                status: "PENDING_VERIFICATION",
+                createdAt: new Date(),
             };
             if (existingUser) {
                 await this._userRepo.updateProfile(existingUser.id, userData);
@@ -71,26 +74,30 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
                 await this._userRepo.create(userData);
             }
             await this._emailService.sendOtpEmail(email, otp, `${organizationName} manager registration`);
-            this._logger.info('Manager registration initiated successfully', {
+            this._logger.info("Manager registration initiated successfully", {
                 email,
                 organizationName,
-                organizationId: organization.id
+                organizationId: organization.id,
             });
             return {
-                message: 'Organization created and verification email sent',
+                message: "Organization created and verification email sent",
                 organizationId: organization.id,
-                invitationToken
+                invitationToken,
+                otpExpiresAt: expiry,
             };
         }
         catch (error) {
-            this._logger.error('Manager registration failed', error, { email, organizationName });
+            this._logger.error("Manager registration failed", error, {
+                email,
+                organizationName,
+            });
             throw error;
         }
     }
     async validateOrganizationName(name) {
-        this._logger.info('Validating organization name availability', { name });
+        this._logger.info("Validating organization name availability", { name });
         try {
-            if (!name || typeof name !== 'string') {
+            if (!name || typeof name !== "string") {
                 return false;
             }
             const trimmedName = name.trim();
@@ -106,42 +113,42 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
             }
             const existingOrg = await this._orgRepo.findByName(trimmedName);
             const isAvailable = !existingOrg;
-            this._logger.info('Organization name validation completed', {
+            this._logger.info("Organization name validation completed", {
                 name: trimmedName,
-                available: isAvailable
+                available: isAvailable,
             });
             return isAvailable;
         }
         catch (error) {
-            this._logger.error('Organization name validation failed', error, { name });
+            this._logger.error("Organization name validation failed", error, { name });
             return false;
         }
     }
     _validateInput(email, organizationName) {
-        if (!email || typeof email !== 'string') {
-            throw new Error('Email is required');
+        if (!email || typeof email !== "string") {
+            throw new Error("Email is required");
         }
-        if (!organizationName || typeof organizationName !== 'string') {
-            throw new Error('Organization name is required');
+        if (!organizationName || typeof organizationName !== "string") {
+            throw new Error("Organization name is required");
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error('Invalid email format');
+            throw new Error("Invalid email format");
         }
         if (email.length > 254) {
-            throw new Error('Email address is too long');
+            throw new Error("Email address is too long");
         }
         const trimmedName = organizationName.trim();
         if (trimmedName.length < 2) {
-            throw new Error('Organization name must be at least 2 characters long');
+            throw new Error("Organization name must be at least 2 characters long");
         }
         if (trimmedName.length > 100) {
-            throw new Error('Organization name must be less than 100 characters');
+            throw new Error("Organization name must be less than 100 characters");
         }
     }
     _generateInvitationToken() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let token = '';
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let token = "";
         for (let i = 0; i < 32; i++) {
             token += chars.charAt(Math.floor(Math.random() * chars.length));
         }

@@ -14,11 +14,6 @@ const inversify_1 = require("inversify");
 /**
  * OTP Service Implementation
  * Provides OTP generation, storage, and verification
- *
- * ✅ DEPENDENCY INVERSION PRINCIPLE:
- * - Implements IOtpService interface
- * - Can be easily swapped for Redis or database implementation
- * - Uses @injectable decorator for DI container
  */
 let OtpService = class OtpService {
     constructor() {
@@ -36,7 +31,7 @@ let OtpService = class OtpService {
      */
     generateOtp(length = 6) {
         if (length < 4 || length > 10) {
-            throw new Error('OTP length must be between 4 and 10');
+            throw new Error("OTP length must be between 4 and 10");
         }
         // Generate random number with specified length
         const min = Math.pow(10, length - 1);
@@ -51,7 +46,7 @@ let OtpService = class OtpService {
      */
     generateExpiry(minutesFromNow = 10) {
         if (minutesFromNow <= 0 || minutesFromNow > 60) {
-            throw new Error('OTP expiry must be between 1 and 60 minutes');
+            throw new Error("OTP expiry must be between 1 and 60 minutes");
         }
         return new Date(Date.now() + minutesFromNow * 60 * 1000);
     }
@@ -90,14 +85,14 @@ let OtpService = class OtpService {
      */
     storeOtp(email, otp, expiresAt) {
         if (!email || !otp) {
-            throw new Error('Email and OTP are required');
+            throw new Error("Email and OTP are required");
         }
         if (expiresAt <= new Date()) {
-            throw new Error('Expiry date must be in the future');
+            throw new Error("Expiry date must be in the future");
         }
         this.otpStore.set(email.toLowerCase(), {
             otp: otp.toString(),
-            expiresAt: expiresAt.getTime()
+            expiresAt: expiresAt.getTime(),
         });
     }
     /**
@@ -172,7 +167,7 @@ let OtpService = class OtpService {
         return {
             total: this.otpStore.size,
             expired,
-            valid
+            valid,
         };
     }
     /**

@@ -53,11 +53,9 @@ export class SendOtpUseCase implements ISendOtpUseCase {
         );
       }
 
-      // Business Rule: Generate OTP - ✅ FIXED: Use generateOtp instead of generate
       const otp = this._otpService.generateOtp(6); // 6-digit OTP
-      const expiresAt = this._otpService.generateExpiry(10); // 10 minutes from now
+      const expiresAt = this._otpService.generateExpiry(1); // 1 minute from now
 
-      // ✅ Ensure a user record exists and store OTP (create if missing)
       await this._userRepo.ensureUserWithOtp(email, otp, expiresAt);
 
       // Send OTP via email

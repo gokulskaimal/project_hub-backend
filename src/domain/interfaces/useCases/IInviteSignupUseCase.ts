@@ -1,4 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { User } from "../../entities/User";
+import { Organization } from "../../entities/Organization";
+import { AuthTokens } from "./types";
+
 export interface IInviteSignupUseCase {
   /**
    * Complete signup via invitation
@@ -9,16 +12,11 @@ export interface IInviteSignupUseCase {
       password: string;
       firstName: string;
       lastName: string;
-      phone?: string;
     },
   ): Promise<{
-    user: any;
-    organization: any;
-    tokens: {
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-    };
+    user: User;
+    organization: Organization;
+    tokens: AuthTokens;
   }>;
 
   /**

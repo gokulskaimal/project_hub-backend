@@ -8,15 +8,14 @@ import { IInviteSignupUseCase } from "../../domain/interfaces/useCases/IInviteSi
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { IHashService } from "../../domain/interfaces/services/IHashService";
 import { UserRole } from "../../domain/enums/UserRole";
+import { UserDTO } from "../dto/UserDTO";
+import { AuthTokens } from "../../domain/interfaces/useCases/types";
+import { User } from "../../domain/entities/User";
+import { Organization } from "../../domain/entities/Organization";
 
 /**
  * Invite Signup Use Case - Application Layer
  * Handles signup through invitation flow
- *
- * ✅ DEPENDENCY INVERSION PRINCIPLE:
- * - Implements IInviteSignupUseCase interface (abstraction)
- * - Depends on interfaces only, not concrete implementations
- * - All dependencies injected through constructor
  */
 @injectable()
 export class InviteSignupUseCase implements IInviteSignupUseCase {
@@ -42,18 +41,15 @@ export class InviteSignupUseCase implements IInviteSignupUseCase {
       password: string;
       firstName: string;
       lastName: string;
-      phone?: string;
     },
   ): Promise<{
-    user: any;
-    organization: any;
-    tokens: { accessToken: string; refreshToken: string; expiresIn: number };
+    user: User;
+    organization: Organization;
+    tokens: AuthTokens;
   }> {
     throw new Error("Method not implemented.");
   }
-  getInvitationDetails(
-    token: string,
-  ): Promise<{
+  getInvitationDetails(token: string): Promise<{
     email: string;
     organizationName: string;
     invitedBy: string;
@@ -76,7 +72,7 @@ export class InviteSignupUseCase implements IInviteSignupUseCase {
     password: string,
     orgId: string,
     role: UserRole,
-  ): Promise<any> {
+  ): Promise<Partial<User>> {
     this._logger.info("Invite signup attempt", { email, orgId, role });
 
     try {
@@ -172,7 +168,7 @@ export class InviteSignupUseCase implements IInviteSignupUseCase {
     name: string,
     orgId: string,
     role: UserRole,
-  ): Promise<any> {
+  ): Promise<Partial<User>> {
     this._logger.info("Verified invite signup attempt", {
       email,
       orgId,

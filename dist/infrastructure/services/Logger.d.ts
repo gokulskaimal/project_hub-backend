@@ -1,4 +1,4 @@
-import { ILogger } from '../../domain/interfaces/services/ILogger';
+import { ILogger } from "../../domain/interfaces/services/ILogger";
 /**
  * Winston Logger Implementation
  * Implements ILogger interface for dependency inversion

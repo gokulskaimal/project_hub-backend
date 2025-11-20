@@ -133,7 +133,6 @@ export interface IUserRepo {
   storeOtp(email: string, otp: string, expiry: Date): Promise<void>;
 
   /**
-   * ✅ ADDED: Get OTP details - REQUIRED BY SendOtpUseCase
    * @param email - User email
    * @returns OTP details or null
    */
@@ -153,11 +152,11 @@ export interface IUserRepo {
    */
   delete(id: string): Promise<void>;
 
-  /**
-   * Permanently delete user
-   * @param id - User ID
-   */
-  hardDelete(id: string): Promise<void>;
+  // /**
+  //  * Permanently delete user
+  //  * @param id - User ID
+  //  */
+  // hardDelete(id: string): Promise<void>;
 
   /**
    * Ensure user exists with OTP (create if not exists, update if exists)
@@ -176,7 +175,6 @@ export interface IUserRepo {
   removeFromOrg(userId: string, orgId: string): Promise<void>;
 
   /**
-   * ✅ ADDED: Find organization by ID - REQUIRED BY AcceptUseCase
    * @param orgId - Organization ID
    * @returns Organization or null
    */
@@ -189,23 +187,23 @@ export interface IUserRepo {
    * @param offset - Number of activities to skip
    * @returns Array of activity records
    */
-  getActivityHistory?(
-    userId: string,
-    limit: number,
-    offset: number,
-  ): Promise<any[]>;
+  // getActivityHistory?(
+  //   userId: string,
+  //   limit: number,
+  //   offset: number,
+  // ): Promise<any[]>;
 
-  /**
-   * Log user activity
-   * @param userId - User ID
-   * @param action - Action performed
-   * @param metadata - Additional metadata
-   */
-  logActivity?(
-    userId: string,
-    action: string,
-    metadata?: Record<string, any>,
-  ): Promise<void>;
+  // /**
+  //  * Log user activity
+  //  * @param userId - User ID
+  //  * @param action - Action performed
+  //  * @param metadata - Additional metadata
+  //  */
+  // logActivity?(
+  //   userId: string,
+  //   action: string,
+  //   metadata?: Record<string, any>,
+  // ): Promise<void>;
 
   /**
    * Find users with pagination

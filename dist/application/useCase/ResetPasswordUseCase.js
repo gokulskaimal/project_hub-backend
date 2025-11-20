@@ -27,19 +27,19 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
      * ✅ ADDED: Request password reset (send email with reset link)
      */
     async requestReset(email) {
-        this._logger.info('Processing password reset request', { email });
+        this._logger.info("Processing password reset request", { email });
         try {
             // Business Rule: Find user by email
             const user = await this._userRepo.findByEmail(email);
             if (!user) {
                 // Don't reveal if email exists - security best practice
-                return { message: 'If the email exists, a reset link has been sent' };
+                return { message: "If the email exists, a reset link has been sent" };
             }
             // Business Rule: Generate reset token
             const resetToken = this._jwtService.generateResetToken({
                 id: user.id,
                 email: user.email,
-                type: 'password_reset'
+                type: "password_reset",
             });
             // Business Rule: Set token expiry (1 hour)
             const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
@@ -47,32 +47,37 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             await this._userRepo.setResetPasswordToken(email, resetToken, expiresAt);
             // ✅ FIXED: Use sendResetPasswordEmail instead of sendPasswordResetEmail
             await this._emailService.sendResetPasswordEmail(email, resetToken);
-            this._logger.info('Password reset email sent', { email, userId: user.id });
+            this._logger.info("Password reset email sent", {
+                email,
+                userId: user.id,
+            });
             return {
-                message: 'Password reset email sent successfully',
-                token: resetToken // Only in development - remove in production
+                message: "Password reset email sent successfully",
+                token: resetToken, // Only in development - remove in production
             };
         }
         catch (error) {
-            this._logger.error('Password reset request failed', error, { email });
-            throw new Error('Failed to process password reset request');
+            this._logger.error("Password reset request failed", error, {
+                email,
+            });
+            throw new Error("Failed to process password reset request");
         }
     }
     /**
      * ✅ ADDED: Reset password using token
      */
     async resetWithToken(token, newPassword) {
-        this._logger.info('Processing password reset with token');
+        this._logger.info("Processing password reset with token");
         try {
             // Business Rule: Verify reset token
             const payload = this._jwtService.verifyResetToken(token);
             if (!payload) {
-                throw new Error('Invalid or expired reset token');
+                throw new Error("Invalid or expired reset token");
             }
             // Business Rule: Find user by reset token
             const user = await this._userRepo.findByResetToken(token);
             if (!user) {
-                throw new Error('Invalid or expired reset token');
+                throw new Error("Invalid or expired reset token");
             }
             // Business Rule: Validate new password
             this._validatePassword(newPassword);
@@ -80,11 +85,11 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             const hashedPassword = await this._hashService.hash(newPassword);
             // Update password and clear reset token
             await this._userRepo.updatePassword(user.id, hashedPassword);
-            this._logger.info('Password reset successful', { userId: user.id });
-            return { message: 'Password reset successfully' };
+            this._logger.info("Password reset successful", { userId: user.id });
+            return { message: "Password reset successfully" };
         }
         catch (error) {
-            this._logger.error('Password reset with token failed', error);
+            this._logger.error("Password reset with token failed", error);
             throw error;
         }
     }
@@ -110,7 +115,7 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             return !!user;
         }
         catch (error) {
-            this._logger.error('Reset token validation failed', error);
+            this._logger.error("Reset token validation failed", error);
             return false;
         }
     }
@@ -119,17 +124,17 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
      * @param password - Password to validate
      */
     _validatePassword(password) {
-        if (!password || typeof password !== 'string') {
-            throw new Error('Password is required');
+        if (!password || typeof password !== "string") {
+            throw new Error("Password is required");
         }
         if (password.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
+            throw new Error("Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new Error('Password must contain at least one lowercase letter, one uppercase letter, and one number');
+            throw new Error("Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new Error('Password must contain at least one special character');
+            throw new Error("Password must contain at least one special character");
         }
     }
 };

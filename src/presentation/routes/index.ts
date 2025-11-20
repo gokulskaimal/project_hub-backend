@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { diContainer } from "../../infrastructure/container/Container";
 import { TYPES } from "../../infrastructure/container/types";
 import { AuthController } from "../controllers/AuthController";
@@ -51,57 +51,85 @@ export class RouteFactory {
     });
 
     // Authentication routes
-    router.post("/login", (req, res) => this._authController.login(req, res));
-    router.post("/register", (req, res) =>
-      this._authController.register(req, res),
+    router.post("/login", (req: Request, res: Response, next: NextFunction) =>
+      this._authController.login(req, res, next),
     );
-    router.post("/register-manager", (req, res) =>
-      this._authController.registerManager(req, res),
+    router.post(
+      "/register",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.register(req, res, next),
     );
-    router.post("/logout", (req, res) => this._authController.logout(req, res));
+    router.post(
+      "/register-manager",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.registerManager(req, res, next),
+    );
+    router.post("/logout", (req: Request, res: Response, next: NextFunction) =>
+      this._authController.logout(req, res, next),
+    );
 
     // Token management
-    router.post("/refresh-token", (req, res) =>
-      this._authController.refreshToken(req, res),
+    router.post(
+      "/refresh-token",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.refreshToken(req, res, next),
     );
 
     // Email verification
-    router.post("/verify-email", (req, res) =>
-      this._authController.verifyEmail(req, res),
+    router.post(
+      "/verify-email",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.verifyEmail(req, res, next),
     );
 
     // OTP routes
-    router.post("/send-otp", (req, res) =>
-      this._authController.sendOtp(req, res),
+    router.post(
+      "/send-otp",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.sendOtp(req, res, next),
     );
-    router.post("/verify-otp", (req, res) =>
-      this._authController.verifyOtp(req, res),
+    router.post(
+      "/verify-otp",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.verifyOtp(req, res, next),
     );
 
     // Password reset
-    router.post("/reset-password-request", (req, res) =>
-      this._authController.resetPasswordReq(req, res),
+    router.post(
+      "/reset-password-request",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.resetPasswordReq(req, res, next),
     );
-    router.post("/reset-password", (req, res) =>
-      this._authController.resetPassword(req, res),
+    router.post(
+      "/reset-password",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.resetPassword(req, res, next),
     );
 
     // Signup completion
-    router.post("/complete-signup", (req, res) =>
-      this._authController.completeSignup(req, res),
+    router.post(
+      "/complete-signup",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.completeSignup(req, res, next),
     );
 
     // Invitation handling
-    router.post("/accept-invite", (req, res) =>
-      this._authController.acceptInvite(req, res),
+    router.post(
+      "/accept-invite",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.acceptInvite(req, res, next),
     );
-    router.get("/validate-invite/:token", (req, res) =>
-      this._authController.validateInviteToken(req, res),
+    router.get(
+      "/validate-invite/:token",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.validateInviteToken(req, res, next),
     );
 
     // Member invitation (might move to organization routes)
-    router.post("/invite-member", (req, res) =>
-      this._authController.inviteMember(req, res),
+    router.post(
+      "/invite-member",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.inviteMember(req, res, next),
     );
 
     return router;
@@ -120,9 +148,9 @@ export class RouteFactory {
     router.get("/members", (req, res) =>
       this._managerController.listMembers(req as AuthenticatedRequest, res),
     );
-    router.get("/members/:id", (req, res) =>
-      this._managerController.getMemberById(req as AuthenticatedRequest, res),
-    );
+    // router.get("/members/:id", (req, res) =>
+    //   this._managerController.getMemberById(req as AuthenticatedRequest, res),
+    // );
     router.put("/members/:id/status", (req, res) =>
       this._managerController.updateMemberStatus(
         req as AuthenticatedRequest,

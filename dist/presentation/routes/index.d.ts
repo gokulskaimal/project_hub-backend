@@ -1,19 +1,22 @@
-import express from 'express';
+import express from "express";
 /**
- * Route Factory using Dependency Injection
- *
- * This factory creates Express routers with controllers resolved from the DI container.
- * It ensures proper dependency injection throughout the application.
+ * Route
  */
 export declare class RouteFactory {
     private readonly _authController;
     private readonly _adminController;
+    private readonly _userController;
+    private readonly _managerController;
     constructor();
     /**
      * Create authentication routes
      * @returns Express Router with auth routes
      */
     createAuthRoutes(): express.Router;
+    /**
+     * Create manager routes (protected: ORG_MANAGER)
+     */
+    createManagerRoutes(): express.Router;
     /**
      * Create admin routes
      * @returns Express Router with admin routes
@@ -30,6 +33,11 @@ export declare class RouteFactory {
      */
     createProjectRoutes(): express.Router;
     /**
+     * Create user routes
+     * @returns Express Router with user routes
+     */
+    createUserRoutes(): express.Router;
+    /**
      * Create all routes and return them as an object
      * @returns Object containing all route routers
      */
@@ -38,6 +46,8 @@ export declare class RouteFactory {
         admin: express.Router;
         organizations: express.Router;
         projects: express.Router;
+        user: express.Router;
+        manager: express.Router;
     };
 }
 /**
@@ -49,5 +59,7 @@ export declare function createRoutes(): {
     admin: express.Router;
     organizations: express.Router;
     projects: express.Router;
+    user: express.Router;
+    manager: express.Router;
 };
 //# sourceMappingURL=index.d.ts.map

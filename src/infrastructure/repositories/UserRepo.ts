@@ -36,36 +36,8 @@ export class UserRepo
       createdAt: plain.createdAt,
       updatedAt: plain.updatedAt,
       lastLoginAt: plain.lastLoginAt,
-      joinedAt: plain.joinedAt,
-      signupMethod: plain.signupMethod,
-      invitedAt: plain.invitedAt,
-      invitedBy: plain.invitedBy,
-      phone: plain.phone,
-      phoneVerified: plain.phoneVerified,
-      timezone: plain.timezone,
-      language: plain.language,
-      title: plain.title,
-      department: plain.department,
-      bio: plain.bio,
-      dateOfBirth: plain.dateOfBirth,
-      preferences: plain.preferences,
-      permissions: plain.permissions,
-      failedLoginAttempts: plain.failedLoginAttempts,
-      lockedAt: plain.lockedAt,
-      lockExpiresAt: plain.lockExpiresAt,
-      twoFactorEnabled: plain.twoFactorEnabled,
-      twoFactorSecret: plain.twoFactorSecret,
-      backupCodes: plain.backupCodes,
-      sessionTokens: plain.sessionTokens,
-      tosAcceptedAt: plain.tosAcceptedAt,
-      privacyAcceptedAt: plain.privacyAcceptedAt,
-      registrationIp: plain.registrationIp,
-      registrationUserAgent: plain.registrationUserAgent,
-      lastKnownIp: plain.lastKnownIp,
-      isDeleted: plain.isDeleted,
-      deletedAt: plain.deletedAt,
-      deletionReason: plain.deletionReason,
-      metadata: plain.metadata,
+      resetPasswordToken: plain.resetPasswordToken,
+      resetPasswordExpires: plain.resetPasswordExpires,
     };
   }
 
@@ -98,7 +70,7 @@ export class UserRepo
       throw new Error(`Failed to get OTP: ${(error as Error).message}`);
     }
   }
-  async findOrganizationById?(orgId: string): Promise<any | null> {
+  async findOrganizationById?(orgId: string): Promise<unknown | null> {
     try {
       const org = await OrgModel.findById(orgId);
       return org ? org.toObject() : null;
@@ -113,7 +85,6 @@ export class UserRepo
     return this.toDomain(userDoc);
   }
 
-  // ✅ KEEP ALL YOUR EXISTING METHODS
   async create(user: Partial<User>): Promise<User> {
     const created = await UserModel.create({
       ...user,
@@ -240,10 +211,9 @@ export class UserRepo
   }
 
   async delete(id: string): Promise<void> {
-    await this.delete(id);
+    await UserModel.findByIdAndDelete(id);
   }
 
-  // ✅ IMPLEMENT ALL MISSING INTERFACE METHODS
   async findByRole(role: string): Promise<User[]> {
     try {
       const users = await UserModel.find({ role });
@@ -281,16 +251,16 @@ export class UserRepo
     }
   }
 
-  async hardDelete(id: string): Promise<void> {
-    try {
-      await UserModel.findByIdAndDelete(id);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to hard delete user: ${error.message}`);
-      }
-      throw new Error("Failed to hard delete user: Unknown error");
-    }
-  }
+  // async hardDelete(id: string): Promise<void> {
+  //   try {
+  //     await UserModel.findByIdAndDelete(id);
+  //   } catch (error) {
+  //     if (error instanceof Error) {
+  //       throw new Error(`Failed to hard delete user: ${error.message}`);
+  //     }
+  //     throw new Error("Failed to hard delete user: Unknown error");
+  //   }
+  // }
 
   async removeFromOrg(userId: string, _orgId: string): Promise<void> {
     try {
@@ -331,7 +301,10 @@ export class UserRepo
     hasMore: boolean;
   }> {
     try {
-      const query: any = {};
+      const query: any = {
+        // Exclude super admins from listing
+        role: { $ne: UserRole.SUPER_ADMIN },
+      };
 
       if (searchTerm) {
         query.$or = [
@@ -502,22 +475,22 @@ export class UserRepo
   }
 
   // ✅ OPTIONAL METHODS WITH PROPER SIGNATURES
-  async getActivityHistory?(
-    userId: string,
-    limit: number,
-    offset: number,
-  ): Promise<any[]> {
-    console.log(
-      `Getting activity history for user ${userId} (limit: ${limit}, offset: ${offset})`,
-    );
-    return [];
-  }
+  // async getActivityHistory?(
+  //   userId: string,
+  //   limit: number,
+  //   offset: number,
+  // ): Promise<any[]> {
+  //   console.log(
+  //     `Getting activity history for user ${userId} (limit: ${limit}, offset: ${offset})`,
+  //   );
+  //   return [];
+  // }
 
-  async logActivity?(
-    userId: string,
-    action: string,
-    metadata?: Record<string, any>,
-  ): Promise<void> {
-    console.log(`Logging activity for user ${userId}: ${action}`, metadata);
-  }
+  // async logActivity?(
+  //   userId: string,
+  //   action: string,
+  //   metadata?: Record<string, any>,
+  // ): Promise<void> {
+  //   console.log(`Logging activity for user ${userId}: ${action}`, metadata);
+  // }
 }

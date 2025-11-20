@@ -24,34 +24,48 @@ let UserProfileUseCase = class UserProfileUseCase {
         this._logger = logger;
     }
     async getProfile(userId) {
-        this._logger.info('Getting user profile', { userId });
+        this._logger.info("Getting user profile", { userId });
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error('User not found');
+                throw new Error("User not found");
             }
             const { password, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = user;
             return safeUserData;
         }
         catch (error) {
-            this._logger.error('Failed to get user profile', error, { userId });
+            this._logger.error("Failed to get user profile", error, {
+                userId,
+            });
             throw error;
         }
     }
     async updateProfile(userId, updateData) {
-        this._logger.info('Updating user profile', { userId, fields: Object.keys(updateData) });
+        this._logger.info("Updating user profile", {
+            userId,
+            fields: Object.keys(updateData),
+        });
         try {
             const existingUser = await this._userRepo.findById(userId);
             if (!existingUser) {
-                throw new Error('User not found');
+                throw new Error("User not found");
             }
             const allowedFields = [
-                'firstName', 'lastName', 'name', 'phone', 'avatar',
-                'timezone', 'language', 'title', 'department', 'bio',
-                'dateOfBirth', 'preferences'
+                "firstName",
+                "lastName",
+                "name",
+                "phone",
+                "avatar",
+                "timezone",
+                "language",
+                "title",
+                "department",
+                "bio",
+                "dateOfBirth",
+                "preferences",
             ];
             const filteredUpdateData = Object.keys(updateData)
-                .filter(key => allowedFields.includes(key))
+                .filter((key) => allowedFields.includes(key))
                 .reduce((obj, key) => {
                 obj[key] = updateData[key];
                 return obj;
@@ -62,149 +76,176 @@ let UserProfileUseCase = class UserProfileUseCase {
                 filteredUpdateData.name = `${firstName} ${lastName}`.trim();
             }
             const updatedUser = await this._userRepo.update(userId, filteredUpdateData);
-            this._logger.info('User profile updated successfully', { userId });
+            this._logger.info("User profile updated successfully", { userId });
             const { password, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = updatedUser;
             return safeUserData;
         }
         catch (error) {
-            this._logger.error('Failed to update user profile', error, { userId });
+            this._logger.error("Failed to update user profile", error, {
+                userId,
+            });
             throw error;
         }
     }
     async changePassword(userId, currentPassword, newPassword) {
-        this._logger.info('Changing user password', { userId });
+        this._logger.info("Changing user password", { userId });
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error('User not found');
+                throw new Error("User not found");
             }
             const isCurrentPasswordValid = await this._hashService.compare(currentPassword, user.password);
             if (!isCurrentPasswordValid) {
-                throw new Error('Current password is incorrect');
+                throw new Error("Current password is incorrect");
             }
             this._validatePassword(newPassword);
             const isSamePassword = await this._hashService.compare(newPassword, user.password);
             if (isSamePassword) {
-                throw new Error('New password must be different from current password');
+                throw new Error("New password must be different from current password");
             }
             const hashedNewPassword = await this._hashService.hash(newPassword);
             await this._userRepo.updatePassword(userId, hashedNewPassword);
-            this._logger.info('Password changed successfully', { userId });
+            this._logger.info("Password changed successfully", { userId });
         }
         catch (error) {
-            this._logger.error('Failed to change password', error, { userId });
+            this._logger.error("Failed to change password", error, {
+                userId,
+            });
             throw error;
         }
     }
     async deleteAccount(userId, password) {
-        this._logger.info('Deleting user account', { userId });
+        this._logger.info("Deleting user account", { userId });
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error('User not found');
+                throw new Error("User not found");
             }
             const isPasswordValid = await this._hashService.compare(password, user.password);
             if (!isPasswordValid) {
-                throw new Error('Invalid password');
+                throw new Error("Invalid password");
             }
             // ✅ FIXED: Use 'INACTIVE' instead of 'DELETED' (valid User status)
             await this._userRepo.update(userId, {
-                status: 'INACTIVE', // Use valid User status
+                status: "INACTIVE", // Use valid User status
                 deletedAt: new Date(),
-                email: `deleted_${Date.now()}_${user.email}`
+                email: `deleted_${Date.now()}_${user.email}`,
             });
-            this._logger.info('Account deleted successfully', { userId });
+            this._logger.info("Account deleted successfully", { userId });
         }
         catch (error) {
-            this._logger.error('Failed to delete account', error, { userId });
+            this._logger.error("Failed to delete account", error, {
+                userId,
+            });
             throw error;
         }
     }
     async getActivityHistory(userId, limit = 50, offset = 0) {
-        this._logger.info('Getting user activity history', { userId, limit, offset });
+        this._logger.info("Getting user activity history", {
+            userId,
+            limit,
+            offset,
+        });
         try {
             const activities = [
                 {
-                    id: '1',
-                    type: 'LOGIN',
-                    description: 'User logged in',
+                    id: "1",
+                    type: "LOGIN",
+                    description: "User logged in",
                     timestamp: new Date(),
-                    metadata: { ip: '192.168.1.1', userAgent: 'Mozilla/5.0...' }
+                    metadata: { ip: "192.168.1.1", userAgent: "Mozilla/5.0..." },
                 },
                 {
-                    id: '2',
-                    type: 'PROFILE_UPDATE',
-                    description: 'Profile information updated',
+                    id: "2",
+                    type: "PROFILE_UPDATE",
+                    description: "Profile information updated",
                     timestamp: new Date(Date.now() - 86400000),
-                    metadata: { updatedFields: ['firstName', 'phone'] }
-                }
+                    metadata: { updatedFields: ["firstName", "phone"] },
+                },
             ];
             const paginatedActivities = activities.slice(offset, offset + limit);
-            this._logger.info('Activity history retrieved', { userId, count: paginatedActivities.length });
+            this._logger.info("Activity history retrieved", {
+                userId,
+                count: paginatedActivities.length,
+            });
             return paginatedActivities;
         }
         catch (error) {
-            this._logger.error('Failed to get activity history', error, { userId });
+            this._logger.error("Failed to get activity history", error, {
+                userId,
+            });
             throw error;
         }
     }
     async uploadAvatar(userId, fileBuffer, fileName) {
-        this._logger.info('Uploading user avatar', { userId, fileName, fileSize: fileBuffer.length });
+        this._logger.info("Uploading user avatar", {
+            userId,
+            fileName,
+            fileSize: fileBuffer.length,
+        });
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error('User not found');
+                throw new Error("User not found");
             }
-            const allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
-            const fileExtension = fileName.split('.').pop()?.toLowerCase();
+            const allowedTypes = ["jpg", "jpeg", "png", "gif"];
+            const fileExtension = fileName.split(".").pop()?.toLowerCase();
             if (!fileExtension || !allowedTypes.includes(fileExtension)) {
-                throw new Error('Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.');
+                throw new Error("Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.");
             }
             if (fileBuffer.length > 5 * 1024 * 1024) {
-                throw new Error('File size too large. Maximum size is 5MB.');
+                throw new Error("File size too large. Maximum size is 5MB.");
             }
             const avatarUrl = `/uploads/avatars/${userId}_${Date.now()}.${fileExtension}`;
             await this._userRepo.update(userId, { avatar: avatarUrl });
-            this._logger.info('Avatar uploaded successfully', { userId, avatarUrl });
+            this._logger.info("Avatar uploaded successfully", { userId, avatarUrl });
             return avatarUrl;
         }
         catch (error) {
-            this._logger.error('Failed to upload avatar', error, { userId, fileName });
+            this._logger.error("Failed to upload avatar", error, {
+                userId,
+                fileName,
+            });
             throw error;
         }
     }
     async updatePreferences(userId, preferences) {
-        this._logger.info('Updating user preferences', { userId, preferences: Object.keys(preferences) });
+        this._logger.info("Updating user preferences", {
+            userId,
+            preferences: Object.keys(preferences),
+        });
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error('User not found');
+                throw new Error("User not found");
             }
             const existingPreferences = user.preferences || {};
             const updatedPreferences = { ...existingPreferences, ...preferences };
             const updatedUser = await this._userRepo.update(userId, {
-                preferences: updatedPreferences
+                preferences: updatedPreferences,
             });
-            this._logger.info('User preferences updated successfully', { userId });
+            this._logger.info("User preferences updated successfully", { userId });
             return updatedUser.preferences;
         }
         catch (error) {
-            this._logger.error('Failed to update preferences', error, { userId });
+            this._logger.error("Failed to update preferences", error, {
+                userId,
+            });
             throw error;
         }
     }
     _validatePassword(password) {
-        if (!password || typeof password !== 'string') {
-            throw new Error('Password is required');
+        if (!password || typeof password !== "string") {
+            throw new Error("Password is required");
         }
         if (password.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
+            throw new Error("Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new Error('Password must contain at least one lowercase letter, one uppercase letter, and one number');
+            throw new Error("Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new Error('Password must contain at least one special character');
+            throw new Error("Password must contain at least one special character");
         }
     }
 };

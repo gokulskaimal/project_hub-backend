@@ -1,9 +1,9 @@
-import { Response } from 'express';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
-import { IUserRepo } from '../../domain/interfaces/IUserRepo';
-import { IInviteRepo } from '../../domain/interfaces/IInviteRepo';
-import { IInviteMemberUseCase } from '../../domain/interfaces/useCases/IInviteMemberUseCase ';
-import { AuthenticatedRequest } from '../middleware/types/AuthenticatedRequest';
+import { Response } from "express";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
+import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
+import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 /**
  * Manager Controller
  *
@@ -58,12 +58,6 @@ export declare class ManagerController {
      * @param res - Express response object
      */
     listMembers(req: AuthenticatedRequest, res: Response): Promise<void>;
-    /**
-     * Get member by ID - Manager only
-     * @param req - Authenticated request object
-     * @param res - Express response object
-     */
-    getMemberById(req: AuthenticatedRequest, res: Response): Promise<void>;
     /**
      * Update member status - Manager only
      * @param req - Authenticated request object

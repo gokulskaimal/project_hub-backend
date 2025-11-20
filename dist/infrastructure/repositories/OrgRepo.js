@@ -5,105 +5,146 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrgRepo = void 0;
 const inversify_1 = require("inversify");
 const Organization_1 = require("../../domain/entities/Organization");
+const OrgModel_1 = __importDefault(require("../models/OrgModel"));
 let OrgRepo = class OrgRepo {
-    constructor() {
-        this.organizations = [];
-        this.nextId = 1;
+    toDomain(doc) {
+        const o = doc.toObject();
+        return {
+            id: doc.id?.toString() || doc._id?.toString(),
+            name: o.name,
+            status: o.status || Organization_1.OrganizationStatus.ACTIVE,
+            createdAt: o.createdAt || new Date(),
+            updatedAt: o.updatedAt,
+            displayName: o.displayName,
+            description: o.description,
+            logo: o.logo,
+            website: o.website,
+            planId: o.planId?.toString(),
+            subscriptionStatus: o.subscriptionStatus,
+            maxManagers: o.maxManagers,
+            maxUsers: o.maxUsers,
+            currentUserCount: o.currentUserCount,
+            industry: o.industry,
+            size: o.size,
+            address: o.address,
+            contact: o.contact,
+            billing: o.billing,
+            settings: o.settings,
+            features: o.features,
+            timezone: o.timezone,
+            locale: o.locale,
+            createdBy: o.createdBy?.toString(),
+            trialStartsAt: o.trialStartsAt,
+            trialEndsAt: o.trialEndsAt,
+            subscriptionStartsAt: o.subscriptionStartsAt,
+            subscriptionEndsAt: o.subscriptionEndsAt,
+            lastActivityAt: o.lastActivityAt,
+            isDeleted: o.isDeleted,
+            deletedAt: o.deletedAt,
+            deletionReason: o.deletionReason,
+            customFields: o.customFields,
+            tags: o.tags,
+            priority: o.priority,
+            onboardingStatus: o.onboardingStatus,
+            integrations: o.integrations,
+            usage: o.usage,
+            metadata: o.metadata,
+        };
     }
     async create(org) {
-        const newOrg = {
-            id: this.nextId.toString(),
-            name: org.name || '',
-            status: org.status || 'ACTIVE',
+        const created = await OrgModel_1.default.create({
+            name: org.name,
+            status: org.status || Organization_1.OrganizationStatus.ACTIVE,
             createdAt: org.createdAt || new Date(),
-            updatedAt: new Date(),
-            ...org
-        };
-        this.nextId++;
-        this.organizations.push(newOrg);
-        return newOrg;
+            settings: org.settings ?? {
+                allowInvitations: true,
+                requireEmailVerification: true,
+            },
+        });
+        return this.toDomain(created);
     }
     async findById(id) {
-        return this.organizations.find(org => org.id === id) || null;
+        const doc = await OrgModel_1.default.findById(id);
+        return doc ? this.toDomain(doc) : null;
     }
     async findByName(name) {
-        return this.organizations.find(org => org.name.toLowerCase().trim() === name.toLowerCase().trim()) || null;
+        const doc = await OrgModel_1.default.findOne({
+            name: new RegExp(`^${name.trim()}$`, "i"),
+        });
+        return doc ? this.toDomain(doc) : null;
     }
     async findAll() {
-        return [...this.organizations];
+        const docs = await OrgModel_1.default.find();
+        return docs.map((d) => this.toDomain(d));
     }
     async update(id, data) {
-        const orgIndex = this.organizations.findIndex(org => org.id === id);
-        if (orgIndex === -1) {
-            throw new Error('Organization not found');
-        }
-        this.organizations[orgIndex] = {
-            ...this.organizations[orgIndex],
-            ...data,
-            updatedAt: new Date()
-        };
-        return this.organizations[orgIndex];
+        const updated = await OrgModel_1.default.findByIdAndUpdate(id, { ...data, updatedAt: new Date() }, { new: true });
+        if (!updated)
+            throw new Error("Organization not found");
+        return this.toDomain(updated);
     }
     async delete(id) {
-        await this.update(id, {
+        await OrgModel_1.default.findByIdAndUpdate(id, {
             status: Organization_1.OrganizationStatus.INACTIVE,
-            deletedAt: new Date()
+            deletedAt: new Date(),
         });
     }
-    /**
-     * ✅ ADDED: Hard delete - REQUIRED BY INTERFACE
-     */
     async hardDelete(id) {
-        const orgIndex = this.organizations.findIndex(org => org.id === id);
-        if (orgIndex === -1) {
-            throw new Error('Organization not found');
-        }
-        this.organizations.splice(orgIndex, 1);
+        await OrgModel_1.default.findByIdAndDelete(id);
     }
-    /**
-     * ✅ ADDED: Find by status - REQUIRED BY INTERFACE
-     */
     async findByStatus(status) {
-        return this.organizations.filter(org => org.status === status);
+        const docs = await OrgModel_1.default.find({ status });
+        return docs.map((d) => this.toDomain(d));
     }
     async findPaginated(limit, offset, searchTerm) {
-        let filtered = [...this.organizations];
+        const query = {};
         if (searchTerm) {
-            const search = searchTerm.toLowerCase();
-            filtered = filtered.filter(org => org.name.toLowerCase().includes(search));
+            query.name = { $regex: searchTerm, $options: "i" };
         }
-        const total = filtered.length;
-        const organizations = filtered.slice(offset, offset + limit);
-        const hasMore = offset + limit < total;
-        return { organizations, total, hasMore };
+        const [docs, total] = await Promise.all([
+            OrgModel_1.default.find(query).skip(offset).limit(limit).sort({ createdAt: -1 }),
+            OrgModel_1.default.countDocuments(query),
+        ]);
+        return {
+            organizations: docs.map((d) => this.toDomain(d)),
+            total,
+            hasMore: offset + limit < total,
+        };
     }
     async count() {
-        return this.organizations.length;
+        return OrgModel_1.default.countDocuments();
     }
-    /**
-     * ✅ FIXED: Count by specific status - MATCHES INTERFACE SIGNATURE
-     */
     async countByStatus(status) {
-        return this.organizations.filter(org => org.status === status).length;
+        return OrgModel_1.default.countDocuments({ status });
     }
     async nameExists(name, excludeId) {
-        return this.organizations.some(org => org.name.toLowerCase().trim() === name.toLowerCase().trim() &&
-            org.id !== excludeId);
+        const query = {
+            name: new RegExp(`^${name.trim()}$`, "i"),
+        };
+        if (excludeId)
+            query._id = { $ne: excludeId };
+        const exists = await OrgModel_1.default.findOne(query).select("_id");
+        return !!exists;
     }
-    /**
-     * ✅ FIXED: Get stats - MATCHES INTERFACE SIGNATURE
-     */
     async getStats() {
-        const total = this.organizations.length;
-        const active = this.organizations.filter(org => org.status === 'ACTIVE').length;
-        const inactive = this.organizations.filter(org => org.status === 'INACTIVE').length;
+        const total = await OrgModel_1.default.countDocuments();
+        const active = await OrgModel_1.default.countDocuments({
+            status: Organization_1.OrganizationStatus.ACTIVE,
+        });
+        const inactive = await OrgModel_1.default.countDocuments({
+            status: Organization_1.OrganizationStatus.INACTIVE,
+        });
+        const agg = await OrgModel_1.default.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]);
         const byStatus = {};
-        this.organizations.forEach(org => {
-            byStatus[org.status] = (byStatus[org.status] || 0) + 1;
+        agg.forEach((s) => {
+            byStatus[s._id] = s.count;
         });
         return { total, active, inactive, byStatus };
     }

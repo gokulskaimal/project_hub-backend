@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
-import { IUserRepo } from '../../domain/interfaces/IUserRepo';
-import { IOrgRepo } from '../../domain/interfaces/IOrgRepo';
-import { IInviteMemberUseCase } from '../../domain/interfaces/useCases/IInviteMemberUseCase ';
-import { ILogger } from '../../domain/interfaces/services/ILogger';
+import { Request, Response } from "express";
+import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
+import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
+import { ILogger } from "../../domain/interfaces/services/ILogger";
 /**
  * Admin Controller
  *

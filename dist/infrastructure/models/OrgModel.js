@@ -7,11 +7,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const OrgSchema = new mongoose_1.default.Schema({
     name: { type: String, required: true, unique: true },
-    planId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Plan' },
+    planId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Plan" },
     status: {
         type: String,
-        enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_APPROVAL', 'TRIAL', 'EXPIRED'],
-        default: 'ACTIVE'
+        enum: [
+            "ACTIVE",
+            "INACTIVE",
+            "SUSPENDED",
+            "PENDING_APPROVAL",
+            "TRIAL",
+            "EXPIRED",
+        ],
+        default: "ACTIVE",
     },
     // Basic information
     displayName: { type: String },
@@ -21,7 +28,7 @@ const OrgSchema = new mongoose_1.default.Schema({
     // Subscription info
     subscriptionStatus: {
         type: String,
-        enum: ['ACTIVE', 'INACTIVE', 'TRIAL', 'EXPIRED', 'CANCELLED']
+        enum: ["ACTIVE", "INACTIVE", "TRIAL", "EXPIRED", "CANCELLED"],
     },
     // Limits
     maxManagers: { type: Number, default: 5 },
@@ -31,7 +38,7 @@ const OrgSchema = new mongoose_1.default.Schema({
     industry: { type: String },
     size: {
         type: String,
-        enum: ['STARTUP', 'SMALL', 'MEDIUM', 'LARGE', 'ENTERPRISE']
+        enum: ["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"],
     },
     // Nested objects
     address: {
@@ -49,15 +56,15 @@ const OrgSchema = new mongoose_1.default.Schema({
     billing: {
         billingEmail: String,
         taxId: String,
-        currency: { type: String, default: 'USD' },
+        currency: { type: String, default: "USD" },
         paymentMethod: String,
     },
     // Flexible objects
     settings: { type: mongoose_1.default.Schema.Types.Mixed, default: {} },
     features: [{ type: String }],
-    timezone: { type: String, default: 'UTC' },
-    locale: { type: String, default: 'en' },
-    createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'User' },
+    timezone: { type: String, default: "UTC" },
+    locale: { type: String, default: "en" },
+    createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" },
     // Date fields
     trialStartsAt: Date,
     trialEndsAt: Date,
@@ -73,8 +80,8 @@ const OrgSchema = new mongoose_1.default.Schema({
     tags: [{ type: String }],
     priority: {
         type: String,
-        enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
-        default: 'MEDIUM'
+        enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+        default: "MEDIUM",
     },
     onboardingStatus: {
         completed: { type: Boolean, default: false },
@@ -93,12 +100,11 @@ const OrgSchema = new mongoose_1.default.Schema({
     metadata: { type: mongoose_1.default.Schema.Types.Mixed, default: {} },
 }, {
     timestamps: true, // ✅ AUTO-CREATES createdAt and updatedAt
-    collection: 'organizations'
+    collection: "organizations",
 });
-OrgSchema.index({ name: 1 }, { unique: true });
 OrgSchema.index({ status: 1 });
 OrgSchema.index({ planId: 1 });
 OrgSchema.index({ createdBy: 1 });
 OrgSchema.index({ isDeleted: 1 });
-exports.default = mongoose_1.default.model('Organization', OrgSchema);
+exports.default = mongoose_1.default.model("Organization", OrgSchema);
 //# sourceMappingURL=OrgModel.js.map
