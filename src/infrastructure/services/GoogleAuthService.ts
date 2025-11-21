@@ -6,8 +6,13 @@ export class GoogleAuthService {
   private client: OAuth2Client;
 
   constructor() {
-    const clientId = process.env.GOOGLE_CLIENT_ID || "";
-    this.client = new OAuth2Client(clientId);
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      console.warn(
+        "WARNING: GOOGLE_CLIENT_ID is not defined in environment variables.",
+      );
+    }
+    this.client = new OAuth2Client(clientId || "");
   }
 
   async verifyToken(idToken: string): Promise<TokenPayload> {

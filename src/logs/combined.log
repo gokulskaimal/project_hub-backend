@@ -4123,3 +4123,130 @@
 {"duration":"7ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":404,"timestamp":"2025-11-19T17:39:57.703Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
 {"duration":"4ms","ip":"::1","level":"info","message":"GET /health","method":"GET","statusCode":200,"timestamp":"2025-11-20T03:44:41.188Z","url":"/health","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-GB) WindowsPowerShell/5.1.26100.7019"}
 {"level":"info","message":"Received SIGINT. Starting graceful shutdown...","timestamp":"2025-11-20T03:56:22.416Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T05:47:42.701Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T05:47:42.804Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T05:47:42.808Z"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T05:48:29.775Z"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2025-11-20T05:48:30.223Z","userId":"691eabae5353009c1c8b2b7a"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-11-20T05:48:30.225Z","userId":"691eabae5353009c1c8b2b7a"}
+{"duration":"457ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-11-20T05:48:30.230Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"13ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":400,"timestamp":"2025-11-20T05:49:34.705Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","managerId":"691eabae5353009c1c8b2b7a","message":"Manager listing invitations","orgId":null,"timestamp":"2025-11-20T05:49:34.708Z"}
+{"duration":"9ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-11-20T05:49:34.709Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","message":"User getting profile","timestamp":"2025-11-20T05:49:42.031Z","userId":"691eabae5353009c1c8b2b7a"}
+{"level":"info","message":"Getting user profile","timestamp":"2025-11-20T05:49:42.033Z","userId":"691eabae5353009c1c8b2b7a"}
+{"duration":"14ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":200,"timestamp":"2025-11-20T05:49:42.039Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T05:52:47.818Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T05:52:47.916Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T05:52:47.919Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T05:53:02.768Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T05:53:02.861Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T05:53:02.863Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T05:53:41.382Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T05:53:41.476Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T05:53:41.479Z"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T05:58:00.786Z"}
+{"error":{"message":"Organization Name Required","name":"Error","stack":"Error: Organization Name Required\n    at AuthUseCases.googleSignIn (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\application\\useCase\\AuthUseCase.ts:161:17)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\controllers\\AuthController.ts:380:24"},"level":"error","message":"Google Sign-In failed in controller","timestamp":"2025-11-20T05:58:01.118Z"}
+{"error":{"message":"Organization Name Required","name":"Error","stack":"Error: Organization Name Required\n    at AuthUseCases.googleSignIn (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\application\\useCase\\AuthUseCase.ts:161:17)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\controllers\\AuthController.ts:380:24"},"level":"error","message":"Request failed Something went wrong","path":"/api/auth/google-signin","stack":"Error: Organization Name Required\n    at AuthUseCases.googleSignIn (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\application\\useCase\\AuthUseCase.ts:161:17)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\controllers\\AuthController.ts:380:24","status":500,"timestamp":"2025-11-20T05:58:01.120Z"}
+{"duration":"341ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":500,"timestamp":"2025-11-20T05:58:01.125Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T07:18:23.003Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T07:18:23.134Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T07:18:23.139Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T07:18:56.748Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T07:18:56.897Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T07:18:56.900Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T07:19:04.333Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T07:19:05.484Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T07:19:05.582Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T07:19:05.584Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T07:19:09.690Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T07:19:09.788Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T07:19:09.793Z"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T07:19:29.170Z"}
+{"duration":"398ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T07:19:29.567Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T10:19:49.296Z"}
+{"duration":"115ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T10:19:49.401Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T10:22:17.188Z"}
+{"duration":"6ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T10:22:17.194Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:15:45.412Z"}
+{"duration":"96ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T12:15:45.500Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:18:59.400Z"}
+{"duration":"15ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T12:18:59.415Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:22:36.643Z"}
+{"duration":"11ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T12:22:36.654Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:23:55.844Z"}
+{"duration":"12ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T12:23:55.855Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T12:28:55.591Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T12:28:55.936Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T12:28:55.952Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T12:30:55.583Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T12:30:55.896Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T12:30:55.908Z"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:32:05.119Z"}
+{"duration":"607ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T12:32:05.724Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Received SIGINT. Starting graceful shutdown...","timestamp":"2025-11-20T12:33:53.307Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T12:34:14.578Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T12:34:14.681Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T12:34:14.684Z"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:34:50.684Z"}
+{"duration":"384ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T12:34:51.068Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T12:40:05.049Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T12:40:05.317Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T12:40:05.324Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T12:40:21.169Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T12:40:21.433Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T12:40:21.440Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-11-20T12:46:11.520Z"}
+{"email":"email@email.com","level":"info","message":"Super admin ensured/updated from environment","timestamp":"2025-11-20T12:46:11.801Z","updated":{"role":false,"verified":false}}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-11-20T12:46:11.809Z"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:47:08.641Z"}
+{"email":"projecthub.new@gmail.com","level":"info","message":"New user created as org manager via Google","orgId":"691f0dcdc382758249517ec5","timestamp":"2025-11-20T12:47:09.095Z","userId":"691f0dcdc382758249517ec7"}
+{"email":"projecthub.new@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2025-11-20T12:47:09.110Z","userId":"691f0dcdc382758249517ec7"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-11-20T12:47:09.113Z","userId":"691f0dcdc382758249517ec7"}
+{"duration":"480ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-11-20T12:47:09.120Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:48:48.372Z"}
+{"email":"mrdudesir94@gmail.com","level":"info","message":"New user created as org manager via Google","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:48:48.394Z","userId":"691f0e30c382758249517ecc"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2025-11-20T12:48:48.399Z","userId":"691f0e30c382758249517ecc"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-11-20T12:48:48.400Z","userId":"691f0e30c382758249517ecc"}
+{"duration":"30ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-11-20T12:48:48.402Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing organization members","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:48:53.101Z"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing invitations","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:48:53.115Z"}
+{"duration":"24ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:48:53.118Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"77ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:48:53.152Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"emailCount":1,"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager bulk inviting members","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:49:11.957Z"}
+{"email":"gokulskaimal94@gmail.com","level":"info","message":"Processing member invitation","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:49:11.958Z"}
+{"email":"gokulskaimal94@gmail.com","level":"info","message":"Invitation email sent","orgName":"DUde","timestamp":"2025-11-20T12:49:15.482Z"}
+{"email":"gokulskaimal94@gmail.com","expiresAt":"2025-11-21T12:49:11.968Z","invitationId":"xf06qabow19","level":"info","message":"Member invitation sent successfully","orgId":"691f0e30c382758249517eca","orgName":"DUde","timestamp":"2025-11-20T12:49:15.483Z"}
+{"duration":"3544ms","ip":"::1","level":"info","message":"POST /api/manager/bulk-invite","method":"POST","statusCode":200,"timestamp":"2025-11-20T12:49:15.487Z","url":"/api/manager/bulk-invite","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing invitations","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:49:15.505Z"}
+{"duration":"14ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:49:15.508Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:49:57.268Z"}
+{"email":"gokulskaimal94@gmail.com","inviteToken":"COV0PSKU...","level":"info","message":"New user created from invite via Google","timestamp":"2025-11-20T12:49:57.280Z","userId":"691f0e75c382758249517eda"}
+{"email":"gokulskaimal94@gmail.com","isInviteSignup":true,"level":"info","message":"Google sign-in successful","role":"TEAM MEMBER","timestamp":"2025-11-20T12:49:57.285Z","userId":"691f0e75c382758249517eda"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-11-20T12:49:57.286Z","userId":"691f0e75c382758249517eda"}
+{"duration":"20ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-11-20T12:49:57.289Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"31ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":403,"timestamp":"2025-11-20T12:53:56.380Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"19ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":403,"timestamp":"2025-11-20T12:53:56.387Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T12:55:34.473Z"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2025-11-20T12:55:34.585Z","userId":"691f0e30c382758249517ecc"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-11-20T12:55:34.588Z","userId":"691f0e30c382758249517ecc"}
+{"duration":"120ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-11-20T12:55:34.590Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing organization members","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:55:35.157Z"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing invitations","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:55:35.164Z"}
+{"duration":"39ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:55:35.166Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"50ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:55:35.171Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing organization members","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:56:58.867Z"}
+{"ip":"::1","level":"info","managerId":"691f0e30c382758249517ecc","message":"Manager listing invitations","orgId":"691f0e30c382758249517eca","timestamp":"2025-11-20T12:56:58.874Z"}
+{"duration":"20ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:56:58.876Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"33ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2025-11-20T12:56:58.881Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T13:24:39.251Z"}
+{"duration":"25ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":400,"timestamp":"2025-11-20T13:24:39.273Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Google Sign-In attempt initiated","timestamp":"2025-11-20T13:24:55.812Z"}
+{"email":"gokulskaimal@gmail.com","level":"info","message":"New user created as org manager via Google","orgId":"691f16a7c382758249517eeb","timestamp":"2025-11-20T13:24:55.864Z","userId":"691f16a7c382758249517eed"}
+{"email":"gokulskaimal@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2025-11-20T13:24:55.873Z","userId":"691f16a7c382758249517eed"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-11-20T13:24:55.874Z","userId":"691f16a7c382758249517eed"}
+{"duration":"63ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-11-20T13:24:55.876Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"ip":"::1","level":"info","managerId":"691f16a7c382758249517eed","message":"Manager listing organization members","orgId":"691f16a7c382758249517eeb","timestamp":"2025-11-20T13:24:56.293Z"}
+{"ip":"::1","level":"info","managerId":"691f16a7c382758249517eed","message":"Manager listing invitations","orgId":"691f16a7c382758249517eeb","timestamp":"2025-11-20T13:24:56.296Z"}
+{"duration":"19ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-11-20T13:24:56.298Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"28ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2025-11-20T13:24:56.301Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}

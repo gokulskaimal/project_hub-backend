@@ -104,6 +104,7 @@ export class AuthController {
   private googleSignInSchema = z.object({
     idToken: z.string().min(1),
     inviteToken: z.string().optional(),
+    orgName: z.string().optional(),
   });
 
   // Methods exposed as arrow functions so routing can pass them directly
@@ -365,30 +366,56 @@ export class AuthController {
 
   googleSignIn = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const parsed = this.googleSignInSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: "Invalid input", details: parsed.error.format() });
-      }
+      this.logger.info("Google Sign-In attempt initiated");
+      try {
+        const parsed = this.googleSignInSchema.safeParse(req.body);
+        if (!parsed.success) {
+          this.logger.warn(
+            "Google Sign-In invalid input",
+            parsed.error.format(),
+          );
+          return res
+            .status(400)
+            .json({ error: "Invalid input", details: parsed.error.format() });
+        }
 
-      const { idToken, inviteToken } = parsed.data;
-      const result = await this.authUseCases.googleSignIn(idToken, inviteToken);
-
-      // Set refresh token cookie if available
-      if (result.tokens.refreshToken) {
-        res.cookie(
-          "refreshToken",
-          result.tokens.refreshToken,
-          this.refreshCookieOptions,
+        const { idToken, inviteToken, orgName } = parsed.data;
+        const result = await this.authUseCases.googleSignIn(
+          idToken,
+          inviteToken,
+          orgName,
         );
-      }
 
-      return res.json({
-        accessToken: result.tokens.accessToken,
-        user: result.user,
-        expiresIn: result.tokens.expiresIn,
-      });
+        // Set refresh token cookie if available
+        if (result.tokens.refreshToken) {
+          res.cookie(
+            "refreshToken",
+            result.tokens.refreshToken,
+            this.refreshCookieOptions,
+          );
+        }
+
+        this.logger.info("Google Sign-In successful", {
+          userId: result.user.id,
+        });
+        return res.json({
+          accessToken: result.tokens.accessToken,
+          user: result.user,
+          expiresIn: result.tokens.expiresIn,
+        });
+      } catch (error: unknown) {
+        if (
+          error instanceof Error &&
+          error.message === "Organization Name Required"
+        ) {
+          return res.status(400).json({ error: "Organization Name Required" });
+        }
+        this.logger.error(
+          "Google Sign-In failed in controller",
+          error as Error,
+        );
+        throw error;
+      }
     },
   );
 }

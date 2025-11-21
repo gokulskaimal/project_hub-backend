@@ -68,6 +68,13 @@ export class RouteFactory {
       this._authController.logout(req, res, next),
     );
 
+    // Google Sign-In
+    router.post(
+      "/google-signin",
+      (req: Request, res: Response, next: NextFunction) =>
+        this._authController.googleSignIn(req, res, next),
+    );
+
     // Token management
     router.post(
       "/refresh-token",

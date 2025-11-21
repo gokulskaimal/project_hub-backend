@@ -9,6 +9,7 @@ export interface IAuthUseCases {
   googleSignIn(
     idToken: string,
     inviteToken?: string,
+    orgName?: string,
   ): Promise<{ user: UserDTO; tokens: AuthTokens }>;
 
   refresh(refreshToken: string): Promise<AuthTokens>;

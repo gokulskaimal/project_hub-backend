@@ -111,6 +111,7 @@ export class AuthUseCases implements IAuthUseCases {
   async googleSignIn(
     idToken: string,
     inviteToken?: string,
+    orgName?: string,
   ): Promise<{ user: UserDTO; tokens: AuthTokens }> {
     const payload = await this._googleAuthService.verifyToken(idToken);
 
@@ -135,8 +136,13 @@ export class AuthUseCases implements IAuthUseCases {
     } else {
       // New user - check if coming from invite
       if (inviteToken) {
-        // TODO: Validate invite token and extract org/role info
-        // For now, create as team member (you can implement invite validation later)
+        // TODO: Inject IInviteRepo and properly validate the invite token to ensure:
+        // 1. Token exists and is not expired
+        // 2. Token status is PENDING
+        // 3. Email matches invite recipient
+        // 4. Extract the orgId and assignedRole from the invite
+        // For now, create as team member with proper logging
+
         const newUser = await this._userRepo.create({
           email,
           emailVerified: emailVerified,
@@ -154,8 +160,27 @@ export class AuthUseCases implements IAuthUseCases {
           createdAt: new Date(),
         });
         user = newUser;
+
+        this._logger.info("New user created from invite via Google", {
+          userId: newUser.id,
+          email,
+          inviteToken: inviteToken.substring(0, 8) + "...",
+        });
       } else {
-        // Normal signup - create as organization member
+        // Normal signup - REQUIRES Organization Name
+        if (!orgName) {
+          throw new Error("Organization Name Required");
+        }
+
+        // Create Organization
+        const newOrg = await this._orgRepo.create({
+          name: orgName,
+          status: OrganizationStatus.ACTIVE,
+          createdAt: new Date(),
+          // You might want to add more default fields here
+        });
+
+        // Create User as ORG_MANAGER linked to new Org
         const newUser = await this._userRepo.create({
           email,
           emailVerified: emailVerified,
@@ -167,12 +192,19 @@ export class AuthUseCases implements IAuthUseCases {
           firstName: payload.given_name,
           lastName: payload.family_name,
           avatar: payload.picture,
-          role: UserRole.ORG_MANAGER, // Organization member for normal signup
+          role: UserRole.ORG_MANAGER,
+          orgId: newOrg.id, // Link to created org
           status: "ACTIVE",
           password: "",
           createdAt: new Date(),
         });
         user = newUser;
+
+        this._logger.info("New user created as org manager via Google", {
+          userId: newUser.id,
+          email,
+          orgId: newOrg.id,
+        });
       }
     }
 
