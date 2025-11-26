@@ -1,3 +1,4 @@
-declare const router: import("express-serve-static-core").Router;
-export default router;
+import { Router } from "express";
+import { Container } from "inversify";
+export declare function createAuthRoutes(container: Container): Router;
 //# sourceMappingURL=authRoutes.d.ts.map

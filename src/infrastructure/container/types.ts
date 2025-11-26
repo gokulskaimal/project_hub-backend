@@ -15,7 +15,13 @@ export const TYPES = {
   IInviteRepo: Symbol.for("IInviteRepo"),
 
   // ===== USE CASES =====
-  IAuthUseCases: Symbol.for("IAuthUseCases"),
+  ILoginUseCase: Symbol.for("ILoginUseCase"),
+  IRegisterUseCase: Symbol.for("IRegisterUseCase"),
+  IGoogleSignInUseCase: Symbol.for("IGoogleSignInUseCase"),
+  ITokenRefreshUseCase: Symbol.for("ITokenRefreshUseCase"),
+  ILogoutUseCase: Symbol.for("ILogoutUseCase"),
+  IVerifyEmailUseCase: Symbol.for("IVerifyEmailUseCase"),
+  IValidateTokenUseCase: Symbol.for("IValidateTokenUseCase"),
   IRegisterManagerUseCase: Symbol.for("IRegisterManagerUseCase"),
   ISendOtpUseCase: Symbol.for("ISendOtpUseCase"),
   IVerifyOtpUseCase: Symbol.for("IVerifyOtpUseCase"),
@@ -46,6 +52,7 @@ export const TYPES = {
   DatabaseConfig: Symbol.for("DatabaseConfig"),
   JwtConfig: Symbol.for("JwtConfig"),
   EmailConfig: Symbol.for("EmailConfig"),
+  IBootstrapService: Symbol.for("IBootstrapService"),
 } as const;
 
 /**

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Document, Types } from "mongoose";
 
 export interface IOrgDOc extends Document {
@@ -42,7 +41,7 @@ export interface IOrgDOc extends Document {
     paymentMethod?: string;
   };
 
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
   features?: string[];
   timezone?: string;
   locale?: string;
@@ -61,7 +60,7 @@ export interface IOrgDOc extends Document {
   deletionReason?: string;
 
   // Additional fields
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
   tags?: string[];
   priority?: string;
 
@@ -76,7 +75,7 @@ export interface IOrgDOc extends Document {
     string,
     {
       enabled: boolean;
-      config?: Record<string, any>;
+      config?: Record<string, unknown>;
       connectedAt?: Date;
     }
   >;
@@ -89,7 +88,7 @@ export interface IOrgDOc extends Document {
     lastResetAt?: Date;
   };
 
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 const OrgSchema = new mongoose.Schema<IOrgDOc>(

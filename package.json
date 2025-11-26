@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --transpile-only --respawn src/presentation/server.ts",
+    "dev": "ts-node-dev --transpile-only --respawn src/server.ts",
     "build": "tsc",
     "start": "node dist/presentation/server.js",
     "test": "echo \"No tests specified\" && exit 0",

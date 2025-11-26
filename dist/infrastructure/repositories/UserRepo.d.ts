@@ -1,6 +1,7 @@
 import { BaseRepository } from "./BaseRepository";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { User } from "../../domain/entities/User";
+import { Organization } from "../../domain/entities/Organization";
 import { IUserDoc } from "../models/UserModel";
 export declare class UserRepo extends BaseRepository<User, IUserDoc> implements IUserRepo {
     constructor();
@@ -10,7 +11,7 @@ export declare class UserRepo extends BaseRepository<User, IUserDoc> implements 
         otp: string;
         expiresAt: Date;
     } | null>;
-    findOrganizationById?(orgId: string): Promise<unknown | null>;
+    findOrganizationById?(orgId: string): Promise<Organization | null>;
     private toDomainUser;
     create(user: Partial<User>): Promise<User>;
     ensureUserWithOtp(email: string, otp: string, expiry: Date): Promise<User>;

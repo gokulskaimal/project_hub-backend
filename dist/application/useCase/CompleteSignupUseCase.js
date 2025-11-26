@@ -13,10 +13,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompleteSignupUseCase = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let CompleteSignupUseCase = class CompleteSignupUseCase {
     constructor(userRepo, logger, hashService, jwtService) {
         this._userRepo = userRepo;
@@ -27,27 +27,27 @@ let CompleteSignupUseCase = class CompleteSignupUseCase {
     async validateSignupData(data) {
         const { email, password, firstName, lastName } = data;
         if (!email || typeof email !== "string") {
-            throw new Error("Email is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email is required");
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error("Invalid email format");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
         }
         if (!firstName ||
             typeof firstName !== "string" ||
             firstName.trim().length < 2) {
-            throw new Error("First name must be at least 2 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "First name must be at least 2 characters long");
         }
         if (firstName.trim().length > 100) {
-            throw new Error("First name must be less than 100 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "First name must be less than 100 characters long");
         }
         if (!lastName ||
             typeof lastName !== "string" ||
             lastName.trim().length < 2) {
-            throw new Error("Last name must be at least 2 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Last name must be at least 2 characters long");
         }
         if (lastName.trim().length > 100) {
-            throw new Error("Last name must be less than 100 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Last name must be less than 100 characters long");
         }
         // Validate password strength using existing helper
         this._validatePassword(password);
@@ -67,17 +67,17 @@ let CompleteSignupUseCase = class CompleteSignupUseCase {
             const user = await this._userRepo.findByEmail(email);
             if (!user) {
                 this._logger.warn("User not found for signup completion", { email });
-                throw new Error("User not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
             if (!user.emailVerified) {
                 this._logger.warn("Email not verified for signup completion", {
                     email,
                 });
-                throw new Error("Email must be verified before completing signup");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.FORBIDDEN, "Email must be verified before completing signup");
             }
             if (user.name && user.password) {
                 this._logger.warn("Signup already completed", { email });
-                throw new Error("Signup has already been completed");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "Signup has already been completed");
             }
             const hashedPassword = await this._hashService.hash(password);
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
@@ -93,7 +93,12 @@ let CompleteSignupUseCase = class CompleteSignupUseCase {
                 firstName,
                 lastName,
             });
-            const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = updatedUser;
+            const safeUserData = { ...updatedUser };
+            Reflect.deleteProperty(safeUserData, "password");
+            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+            Reflect.deleteProperty(safeUserData, "otp");
+            Reflect.deleteProperty(safeUserData, "otpExpiry");
             const accessToken = this._jwtService.generateAccessToken({
                 id: updatedUser.id,
                 email: updatedUser.email,
@@ -124,25 +129,25 @@ let CompleteSignupUseCase = class CompleteSignupUseCase {
     }
     _validatePassword(password) {
         if (!password || typeof password !== "string") {
-            throw new Error("Password is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is required");
         }
         if (password.length < 8) {
-            throw new Error("Password must be at least 8 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be at least 8 characters long");
         }
         if (password.length > 128) {
-            throw new Error("Password must be less than 128 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be less than 128 characters long");
         }
         if (!/[a-z]/.test(password)) {
-            throw new Error("Password must contain at least one lowercase letter");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one lowercase letter");
         }
         if (!/[A-Z]/.test(password)) {
-            throw new Error("Password must contain at least one uppercase letter");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one uppercase letter");
         }
         if (!/\d/.test(password)) {
-            throw new Error("Password must contain at least one number");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new Error("Password must contain at least one special character");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one special character");
         }
         const weakPasswords = [
             "password",
@@ -154,7 +159,7 @@ let CompleteSignupUseCase = class CompleteSignupUseCase {
             "welcome1",
         ];
         if (weakPasswords.includes(password.toLowerCase())) {
-            throw new Error("Password is too common. Please choose a stronger password");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is too common. Please choose a stronger password");
         }
     }
 };

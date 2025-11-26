@@ -13,8 +13,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AcceptUseCase = void 0;
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const UserRole_1 = require("../../domain/enums/UserRole");
@@ -63,11 +61,22 @@ let AcceptUseCase = class AcceptUseCase {
                 throw new Error("Invitation has expired");
             }
             if (invite.status !== "PENDING") {
-                this._logger.warn("Invitation already processed", {
+                this._logger.warn("Invitation not available", {
                     token: token.substring(0, 8) + "...",
                     status: invite.status,
                 });
-                throw new Error("Invitation has already been processed");
+                if (invite.status === "CANCELLED") {
+                    throw new Error("This invitation has been cancelled by your organization administrator");
+                }
+                else if (invite.status === "ACCEPTED") {
+                    throw new Error("This invitation has already been used to create an account");
+                }
+                else if (invite.status === "EXPIRED") {
+                    throw new Error("This invitation has expired. Please request a new invitation");
+                }
+                else {
+                    throw new Error(`Invitation is not available (status: ${invite.status})`);
+                }
             }
             // Business Rule: Check if user already exists
             const existingUser = await this._userRepo.findByEmail(invite.email);
@@ -97,7 +106,6 @@ let AcceptUseCase = class AcceptUseCase {
                 password: hashedPassword,
                 emailVerified: true, // Pre-verified through invitation
                 status: "ACTIVE",
-                invitedAt: new Date(),
                 createdAt: new Date(),
                 ...additionalData,
             });
@@ -122,7 +130,12 @@ let AcceptUseCase = class AcceptUseCase {
                 lastName,
             });
             // Return safe user data (exclude sensitive fields)
-            const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = newUser;
+            const safeUserData = { ...newUser };
+            Reflect.deleteProperty(safeUserData, "password");
+            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+            Reflect.deleteProperty(safeUserData, "otp");
+            Reflect.deleteProperty(safeUserData, "otpExpiry");
             return {
                 user: safeUserData,
                 organization: {
@@ -147,7 +160,6 @@ let AcceptUseCase = class AcceptUseCase {
         }
     }
     /**
-     * ✅ ADDED: Validate invitation token
      * @param token - Invitation token
      * @returns Validation result
      */
@@ -161,6 +173,8 @@ let AcceptUseCase = class AcceptUseCase {
                 return { valid: false };
             }
             const expired = invite.expiry < new Date();
+            const cancelled = invite.status === "CANCELLED";
+            const accepted = invite.status === "ACCEPTED";
             const processed = invite.status !== "PENDING";
             return {
                 valid: !expired && !processed,
@@ -169,8 +183,11 @@ let AcceptUseCase = class AcceptUseCase {
                     orgId: invite.orgId,
                     createdAt: invite.createdAt,
                     expiry: invite.expiry,
+                    status: invite.status,
                 },
                 expired,
+                cancelled,
+                accepted,
             };
         }
         catch (error) {

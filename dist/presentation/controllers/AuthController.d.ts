@@ -1,5 +1,10 @@
-import { Request, Response, NextFunction } from "express";
-import { IAuthUseCases } from "../../domain/interfaces/useCases/IAuthUseCases";
+import { Request, Response } from "express";
+import { ILoginUseCase } from "../../domain/interfaces/useCases/ILoginUseCase";
+import { IRegisterUseCase } from "../../domain/interfaces/useCases/IRegisterUseCase";
+import { IGoogleSignInUseCase } from "../../domain/interfaces/useCases/IGoogleSignInUseCase";
+import { ITokenRefreshUseCase } from "../../domain/interfaces/useCases/ITokenRefreshUseCase";
+import { ILogoutUseCase } from "../../domain/interfaces/useCases/ILogoutUseCase";
+import { IVerifyEmailUseCase } from "../../domain/interfaces/useCases/IVerifyEmailUseCase";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegisterManagerUseCase";
 import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
@@ -10,7 +15,12 @@ import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase"
 import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
 export declare class AuthController {
     private readonly logger;
-    private readonly authUseCases;
+    private readonly loginUC;
+    private readonly registerUC;
+    private readonly googleSignInUC;
+    private readonly tokenRefreshUC;
+    private readonly logoutUC;
+    private readonly verifyEmailUC;
     private readonly registerManagerUC;
     private readonly sendOtpUC;
     private readonly verifyOtpUC;
@@ -19,22 +29,22 @@ export declare class AuthController {
     private readonly acceptUC;
     private resetPasswordUC;
     private readonly refreshCookieOptions;
-    constructor(logger: ILogger, authUseCases: IAuthUseCases, registerManagerUC: IRegisterManagerUseCase, sendOtpUC: ISendOtpUseCase, verifyOtpUC: IVerifyOtpUseCase, completeSignupUC: ICompleteSignupUseCase, inviteMemberUC: IInviteMemberUseCase, acceptUC: IAcceptUseCase, resetPasswordUC: IResetPasswordUseCase);
-    private registerSchema;
-    private loginSchema;
-    register: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    login: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    refreshToken: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    logout: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    registerManager: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    sendOtp: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    verifyOtp: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    completeSignup: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    inviteMember: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    acceptInvite: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    validateInviteToken: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    resetPasswordReq: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    resetPassword: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    verifyEmail: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
+    constructor(logger: ILogger, loginUC: ILoginUseCase, registerUC: IRegisterUseCase, googleSignInUC: IGoogleSignInUseCase, tokenRefreshUC: ITokenRefreshUseCase, logoutUC: ILogoutUseCase, verifyEmailUC: IVerifyEmailUseCase, registerManagerUC: IRegisterManagerUseCase, sendOtpUC: ISendOtpUseCase, verifyOtpUC: IVerifyOtpUseCase, completeSignupUC: ICompleteSignupUseCase, inviteMemberUC: IInviteMemberUseCase, acceptUC: IAcceptUseCase, resetPasswordUC: IResetPasswordUseCase);
+    private sendSuccess;
+    register: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    login: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    refreshToken: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    logout: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    registerManager: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    sendOtp: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    verifyOtp: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    completeSignup: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    inviteMember: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    acceptInvite: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    validateInviteToken: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    resetPasswordReq: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    resetPassword: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    verifyEmail: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    googleSignIn: (req: Request, res: Response, next: import("express").NextFunction) => void;
 }
 //# sourceMappingURL=AuthController.d.ts.map

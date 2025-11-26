@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
@@ -7,6 +5,9 @@ import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/IComple
 import { IHashService } from "../../domain/interfaces/services/IHashService";
 import { IJwtService } from "../../domain/interfaces/services/IJwtService";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { User } from "../../domain/entities/User";
 
 @injectable()
 export class CompleteSignupUseCase implements ICompleteSignupUseCase {
@@ -35,11 +36,11 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
     const { email, password, firstName, lastName } = data;
 
     if (!email || typeof email !== "string") {
-      throw new Error("Email is required");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Email is required");
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new Error("Invalid email format");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
     }
 
     if (
@@ -47,10 +48,16 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
       typeof firstName !== "string" ||
       firstName.trim().length < 2
     ) {
-      throw new Error("First name must be at least 2 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "First name must be at least 2 characters long",
+      );
     }
     if (firstName.trim().length > 100) {
-      throw new Error("First name must be less than 100 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "First name must be less than 100 characters long",
+      );
     }
 
     if (
@@ -58,10 +65,16 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
       typeof lastName !== "string" ||
       lastName.trim().length < 2
     ) {
-      throw new Error("Last name must be at least 2 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Last name must be at least 2 characters long",
+      );
     }
     if (lastName.trim().length > 100) {
-      throw new Error("Last name must be less than 100 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Last name must be less than 100 characters long",
+      );
     }
 
     // Validate password strength using existing helper
@@ -82,9 +95,9 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
     password: string,
     firstName: string,
     lastName: string,
-    additionalData: Record<string, any> = {},
+    additionalData: Record<string, unknown> = {},
   ): Promise<{
-    user: any;
+    user: Partial<User>;
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
   }> {
     this._logger.info("Completing user signup", { email, firstName, lastName });
@@ -94,19 +107,25 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
       const user = await this._userRepo.findByEmail(email);
       if (!user) {
         this._logger.warn("User not found for signup completion", { email });
-        throw new Error("User not found");
+        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
       }
 
       if (!user.emailVerified) {
         this._logger.warn("Email not verified for signup completion", {
           email,
         });
-        throw new Error("Email must be verified before completing signup");
+        throw new HttpError(
+          StatusCodes.FORBIDDEN,
+          "Email must be verified before completing signup",
+        );
       }
 
       if (user.name && user.password) {
         this._logger.warn("Signup already completed", { email });
-        throw new Error("Signup has already been completed");
+        throw new HttpError(
+          StatusCodes.CONFLICT,
+          "Signup has already been completed",
+        );
       }
 
       const hashedPassword = await this._hashService.hash(password);
@@ -126,14 +145,14 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
         lastName,
       });
 
-      const {
-        password: _,
-        resetPasswordToken,
-        resetPasswordExpires,
-        otp,
-        otpExpiry,
-        ...safeUserData
-      } = updatedUser;
+      const safeUserData = {
+        ...(updatedUser as unknown as Record<string, unknown>),
+      } as Record<string, unknown>;
+      Reflect.deleteProperty(safeUserData, "password");
+      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+      Reflect.deleteProperty(safeUserData, "otp");
+      Reflect.deleteProperty(safeUserData, "otpExpiry");
 
       const accessToken = this._jwtService.generateAccessToken({
         id: updatedUser.id,
@@ -165,25 +184,43 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
   }
   private _validatePassword(password: string): void {
     if (!password || typeof password !== "string") {
-      throw new Error("Password is required");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Password is required");
     }
     if (password.length < 8) {
-      throw new Error("Password must be at least 8 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must be at least 8 characters long",
+      );
     }
     if (password.length > 128) {
-      throw new Error("Password must be less than 128 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must be less than 128 characters long",
+      );
     }
     if (!/[a-z]/.test(password)) {
-      throw new Error("Password must contain at least one lowercase letter");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must contain at least one lowercase letter",
+      );
     }
     if (!/[A-Z]/.test(password)) {
-      throw new Error("Password must contain at least one uppercase letter");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must contain at least one uppercase letter",
+      );
     }
     if (!/\d/.test(password)) {
-      throw new Error("Password must contain at least one number");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must contain at least one number",
+      );
     }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new Error("Password must contain at least one special character");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must contain at least one special character",
+      );
     }
     const weakPasswords = [
       "password",
@@ -195,7 +232,8 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
       "welcome1",
     ];
     if (weakPasswords.includes(password.toLowerCase())) {
-      throw new Error(
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
         "Password is too common. Please choose a stronger password",
       );
     }

@@ -13,18 +13,7 @@ export interface UserDTO {
     createdAt: string;
     updatedAt?: string;
     lastLoginAt?: string;
-    joinedAt?: string;
-    avatar?: string;
-    phone?: string;
-    phoneVerified?: boolean;
-    timezone?: string;
-    language?: string;
-    title?: string;
-    department?: string;
-    bio?: string;
-    dateOfBirth?: string;
     profileComplete?: boolean;
-    hasPassword?: boolean;
 }
 /**
  * Convert domain User entity to UserDTO (safe for API responses)
@@ -69,14 +58,6 @@ export interface RegisterRequestDTO {
 export interface UpdateProfileRequestDTO {
     firstName?: string;
     lastName?: string;
-    phone?: string;
-    timezone?: string;
-    language?: string;
-    title?: string;
-    department?: string;
-    bio?: string;
-    dateOfBirth?: Date;
-    preferences?: Record<string, any>;
 }
 /**
  * Change Password Request DTO
@@ -121,7 +102,6 @@ export interface CompleteSignupDTO {
     password: string;
     firstName: string;
     lastName: string;
-    phone?: string;
     acceptedTerms: boolean;
 }
 /**
@@ -140,7 +120,6 @@ export interface AcceptInvitationDTO {
     password: string;
     firstName: string;
     lastName: string;
-    phone?: string;
 }
 /**
  * Bulk Invite DTO

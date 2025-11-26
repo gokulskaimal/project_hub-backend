@@ -13,19 +13,15 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteSignupUseCase = void 0;
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const UserRole_1 = require("../../domain/enums/UserRole");
+const Organization_1 = require("../../domain/entities/Organization");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 /**
  * Invite Signup Use Case - Application Layer
  * Handles signup through invitation flow
- *
- * ✅ DEPENDENCY INVERSION PRINCIPLE:
- * - Implements IInviteSignupUseCase interface (abstraction)
- * - Depends on interfaces only, not concrete implementations
- * - All dependencies injected through constructor
  */
 let InviteSignupUseCase = class InviteSignupUseCase {
     constructor(userRepo, orgRepo, logger, hashService) {
@@ -34,10 +30,18 @@ let InviteSignupUseCase = class InviteSignupUseCase {
         this._logger = logger;
         this._hashService = hashService;
     }
-    execute(inviteToken, userData) {
+    // @deprecated - Use signup() method instead
+    execute(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _inviteToken, 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _userData) {
         throw new Error("Method not implemented.");
     }
-    getInvitationDetails(token) {
+    // @deprecated - Use signup() method instead
+    getInvitationDetails(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _token) {
         throw new Error("Method not implemented.");
     }
     /**
@@ -57,7 +61,7 @@ let InviteSignupUseCase = class InviteSignupUseCase {
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser) {
                 this._logger.warn("User already exists for invite signup", { email });
-                throw new Error("User already exists with this email address");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "User already exists with this email address");
             }
             // Business Rule: Verify organization exists
             const organization = await this._orgRepo.findById(orgId);
@@ -65,16 +69,16 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 this._logger.warn("Organization not found for invite signup", {
                     orgId,
                 });
-                throw new Error("Organization not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "Organization not found");
             }
             // Business Rule: Check organization status
-            if (organization.status === "INACTIVE" ||
-                organization.status === "SUSPENDED") {
+            if (organization.status === Organization_1.OrganizationStatus.INACTIVE ||
+                organization.status === Organization_1.OrganizationStatus.SUSPENDED) {
                 this._logger.warn("Signup attempted for inactive organization", {
                     orgId,
                     status: organization.status,
                 });
-                throw new Error("Organization is not currently accepting new members");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.FORBIDDEN, "Organization is not currently accepting new members");
             }
             // Business Rule: Validate role permissions
             this._validateRolePermissions(role, organization);
@@ -98,7 +102,12 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 role,
             });
             // Return safe user data (exclude sensitive fields)
-            const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = newUser;
+            const safeUserData = { ...newUser };
+            Reflect.deleteProperty(safeUserData, "password");
+            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+            Reflect.deleteProperty(safeUserData, "otp");
+            Reflect.deleteProperty(safeUserData, "otpExpiry");
             return safeUserData;
         }
         catch (error) {
@@ -135,7 +144,7 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 this._logger.warn("User already exists for verified invite signup", {
                     email,
                 });
-                throw new Error("User already exists with this email address");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "User already exists with this email address");
             }
             // Business Rule: Verify organization exists
             const organization = await this._orgRepo.findById(orgId);
@@ -143,7 +152,7 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 this._logger.warn("Organization not found for verified invite signup", {
                     orgId,
                 });
-                throw new Error("Organization not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "Organization not found");
             }
             // Business Rule: Hash password
             const hashedPassword = await this._hashService.hash(password);
@@ -167,7 +176,12 @@ let InviteSignupUseCase = class InviteSignupUseCase {
                 role,
             });
             // Return safe user data
-            const { password: _, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = newUser;
+            const safeUserData = { ...newUser };
+            Reflect.deleteProperty(safeUserData, "password");
+            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+            Reflect.deleteProperty(safeUserData, "otp");
+            Reflect.deleteProperty(safeUserData, "otpExpiry");
             return safeUserData;
         }
         catch (error) {
@@ -189,21 +203,21 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      */
     _validateInput(email, password, orgId, role) {
         if (!email || typeof email !== "string") {
-            throw new Error("Email is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email is required");
         }
         if (!password || typeof password !== "string") {
-            throw new Error("Password is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is required");
         }
         if (!orgId || typeof orgId !== "string") {
-            throw new Error("Organization ID is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization ID is required");
         }
         if (!role || !Object.values(UserRole_1.UserRole).includes(role)) {
-            throw new Error("Valid role is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Valid role is required");
         }
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error("Invalid email format");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
         }
         // Validate password strength
         this._validatePassword(password);
@@ -219,13 +233,13 @@ let InviteSignupUseCase = class InviteSignupUseCase {
     _validateInputWithName(email, password, name, orgId, role) {
         this._validateInput(email, password, orgId, role);
         if (!name || typeof name !== "string") {
-            throw new Error("Name is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Name is required");
         }
         if (name.trim().length < 2) {
-            throw new Error("Name must be at least 2 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Name must be at least 2 characters long");
         }
         if (name.trim().length > 100) {
-            throw new Error("Name must be less than 100 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Name must be less than 100 characters long");
         }
     }
     /**
@@ -234,22 +248,22 @@ let InviteSignupUseCase = class InviteSignupUseCase {
      */
     _validatePassword(password) {
         if (password.length < 8) {
-            throw new Error("Password must be at least 8 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be at least 8 characters long");
         }
         if (password.length > 128) {
-            throw new Error("Password must be less than 128 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be less than 128 characters long");
         }
         // Check for at least one lowercase letter
         if (!/[a-z]/.test(password)) {
-            throw new Error("Password must contain at least one lowercase letter");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one lowercase letter");
         }
         // Check for at least one uppercase letter
         if (!/[A-Z]/.test(password)) {
-            throw new Error("Password must contain at least one uppercase letter");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one uppercase letter");
         }
         // Check for at least one number
         if (!/\d/.test(password)) {
-            throw new Error("Password must contain at least one number");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one number");
         }
     }
     /**
@@ -261,7 +275,7 @@ let InviteSignupUseCase = class InviteSignupUseCase {
         // Business Rule: Only certain roles can be assigned through invitation
         const allowedRoles = [UserRole_1.UserRole.TEAM_MEMBER, UserRole_1.UserRole.ORG_MANAGER];
         if (!allowedRoles.includes(role)) {
-            throw new Error(`Role ${role} cannot be assigned through invitation`);
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.FORBIDDEN, `Role ${role} cannot be assigned through invitation`);
         }
         // Business Rule: Check organization-specific role limits (if applicable)
         if (role === UserRole_1.UserRole.ORG_MANAGER && organization.maxManagers) {

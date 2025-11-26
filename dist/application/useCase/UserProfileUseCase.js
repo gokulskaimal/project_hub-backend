@@ -13,10 +13,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserProfileUseCase = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let UserProfileUseCase = class UserProfileUseCase {
     constructor(userRepo, hashService, logger) {
         this._userRepo = userRepo;
@@ -28,9 +28,14 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error("User not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
-            const { password, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = user;
+            const safeUserData = { ...user };
+            Reflect.deleteProperty(safeUserData, "password");
+            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+            Reflect.deleteProperty(safeUserData, "otp");
+            Reflect.deleteProperty(safeUserData, "otpExpiry");
             return safeUserData;
         }
         catch (error) {
@@ -48,22 +53,9 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const existingUser = await this._userRepo.findById(userId);
             if (!existingUser) {
-                throw new Error("User not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
-            const allowedFields = [
-                "firstName",
-                "lastName",
-                "name",
-                "phone",
-                "avatar",
-                "timezone",
-                "language",
-                "title",
-                "department",
-                "bio",
-                "dateOfBirth",
-                "preferences",
-            ];
+            const allowedFields = ["firstName", "lastName", "name", "avatar"];
             const filteredUpdateData = Object.keys(updateData)
                 .filter((key) => allowedFields.includes(key))
                 .reduce((obj, key) => {
@@ -77,7 +69,12 @@ let UserProfileUseCase = class UserProfileUseCase {
             }
             const updatedUser = await this._userRepo.update(userId, filteredUpdateData);
             this._logger.info("User profile updated successfully", { userId });
-            const { password, resetPasswordToken, resetPasswordExpires, otp, otpExpiry, ...safeUserData } = updatedUser;
+            const safeUserData = { ...updatedUser };
+            Reflect.deleteProperty(safeUserData, "password");
+            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+            Reflect.deleteProperty(safeUserData, "otp");
+            Reflect.deleteProperty(safeUserData, "otpExpiry");
             return safeUserData;
         }
         catch (error) {
@@ -92,16 +89,16 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error("User not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
             const isCurrentPasswordValid = await this._hashService.compare(currentPassword, user.password);
             if (!isCurrentPasswordValid) {
-                throw new Error("Current password is incorrect");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.UNAUTHORIZED, "Current password is incorrect");
             }
             this._validatePassword(newPassword);
             const isSamePassword = await this._hashService.compare(newPassword, user.password);
             if (isSamePassword) {
-                throw new Error("New password must be different from current password");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "New password must be different from current password");
             }
             const hashedNewPassword = await this._hashService.hash(newPassword);
             await this._userRepo.updatePassword(userId, hashedNewPassword);
@@ -119,16 +116,15 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new Error("User not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
             const isPasswordValid = await this._hashService.compare(password, user.password);
             if (!isPasswordValid) {
-                throw new Error("Invalid password");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.UNAUTHORIZED, "Invalid password");
             }
             // ✅ FIXED: Use 'INACTIVE' instead of 'DELETED' (valid User status)
             await this._userRepo.update(userId, {
                 status: "INACTIVE", // Use valid User status
-                deletedAt: new Date(),
                 email: `deleted_${Date.now()}_${user.email}`,
             });
             this._logger.info("Account deleted successfully", { userId });
@@ -160,7 +156,7 @@ let UserProfileUseCase = class UserProfileUseCase {
                     type: "PROFILE_UPDATE",
                     description: "Profile information updated",
                     timestamp: new Date(Date.now() - 86400000),
-                    metadata: { updatedFields: ["firstName", "phone"] },
+                    metadata: { updatedFields: ["firstName"] },
                 },
             ];
             const paginatedActivities = activities.slice(offset, offset + limit);
@@ -177,75 +173,18 @@ let UserProfileUseCase = class UserProfileUseCase {
             throw error;
         }
     }
-    async uploadAvatar(userId, fileBuffer, fileName) {
-        this._logger.info("Uploading user avatar", {
-            userId,
-            fileName,
-            fileSize: fileBuffer.length,
-        });
-        try {
-            const user = await this._userRepo.findById(userId);
-            if (!user) {
-                throw new Error("User not found");
-            }
-            const allowedTypes = ["jpg", "jpeg", "png", "gif"];
-            const fileExtension = fileName.split(".").pop()?.toLowerCase();
-            if (!fileExtension || !allowedTypes.includes(fileExtension)) {
-                throw new Error("Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.");
-            }
-            if (fileBuffer.length > 5 * 1024 * 1024) {
-                throw new Error("File size too large. Maximum size is 5MB.");
-            }
-            const avatarUrl = `/uploads/avatars/${userId}_${Date.now()}.${fileExtension}`;
-            await this._userRepo.update(userId, { avatar: avatarUrl });
-            this._logger.info("Avatar uploaded successfully", { userId, avatarUrl });
-            return avatarUrl;
-        }
-        catch (error) {
-            this._logger.error("Failed to upload avatar", error, {
-                userId,
-                fileName,
-            });
-            throw error;
-        }
-    }
-    async updatePreferences(userId, preferences) {
-        this._logger.info("Updating user preferences", {
-            userId,
-            preferences: Object.keys(preferences),
-        });
-        try {
-            const user = await this._userRepo.findById(userId);
-            if (!user) {
-                throw new Error("User not found");
-            }
-            const existingPreferences = user.preferences || {};
-            const updatedPreferences = { ...existingPreferences, ...preferences };
-            const updatedUser = await this._userRepo.update(userId, {
-                preferences: updatedPreferences,
-            });
-            this._logger.info("User preferences updated successfully", { userId });
-            return updatedUser.preferences;
-        }
-        catch (error) {
-            this._logger.error("Failed to update preferences", error, {
-                userId,
-            });
-            throw error;
-        }
-    }
     _validatePassword(password) {
         if (!password || typeof password !== "string") {
-            throw new Error("Password is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is required");
         }
         if (password.length < 8) {
-            throw new Error("Password must be at least 8 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new Error("Password must contain at least one lowercase letter, one uppercase letter, and one number");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new Error("Password must contain at least one special character");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one special character");
         }
     }
 };

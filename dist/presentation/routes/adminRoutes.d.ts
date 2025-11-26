@@ -1,10 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import { Container } from "inversify";
-/**
- * Create all application routes using Dependency Injection
- * @param container - Inversify DI container
- * @returns Express router with all routes
- */
-export declare function createRoutes(container: Container): express.Router;
-export default createRoutes;
+export declare function createAdminRoutes(container: Container): Router;
 //# sourceMappingURL=adminRoutes.d.ts.map

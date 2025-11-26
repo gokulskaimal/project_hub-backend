@@ -17,7 +17,13 @@ import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
 import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
 
 // Domain Interfaces - Use Cases
-import { IAuthUseCases } from "../../domain/interfaces/useCases/IAuthUseCases";
+import { ILoginUseCase } from "../../domain/interfaces/useCases/ILoginUseCase";
+import { IRegisterUseCase } from "../../domain/interfaces/useCases/IRegisterUseCase";
+import { IGoogleSignInUseCase } from "../../domain/interfaces/useCases/IGoogleSignInUseCase";
+import { ITokenRefreshUseCase } from "../../domain/interfaces/useCases/ITokenRefreshUseCase";
+import { ILogoutUseCase } from "../../domain/interfaces/useCases/ILogoutUseCase";
+import { IVerifyEmailUseCase } from "../../domain/interfaces/useCases/IVerifyEmailUseCase";
+import { IValidateTokenUseCase } from "../../domain/interfaces/useCases/IValidateTokenUseCase";
 import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegisterManagerUseCase";
 import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
 import { IVerifyOtpUseCase } from "../../domain/interfaces/useCases/IVerifyOtpUseCase";
@@ -30,6 +36,7 @@ import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases
 
 // Infrastructure Implementations - Services
 import { Logger } from "../services/Logger";
+import { BootstrapService } from "../services/BootstrapService";
 import { HashService } from "../services/HashService";
 import { JwtService } from "../services/JwtService";
 import { GoogleAuthService } from "../services/GoogleAuthService";
@@ -48,7 +55,13 @@ import { OrgRepo } from "../repositories/OrgRepo";
 import { InviteRepo } from "../repositories/InviteRepo";
 
 // Application Use Cases
-import { AuthUseCases } from "../../application/useCase/AuthUseCase";
+import { LoginUseCase } from "../../application/useCase/LoginUseCase";
+import { RegisterUseCase } from "../../application/useCase/RegisterUseCase";
+import { GoogleSignInUseCase } from "../../application/useCase/GoogleSignInUseCase";
+import { TokenRefreshUseCase } from "../../application/useCase/TokenRefreshUseCase";
+import { LogoutUseCase } from "../../application/useCase/LogoutUseCase";
+import { VerifyEmailUseCase } from "../../application/useCase/VerifyEmailUseCase";
+import { ValidateTokenUseCase } from "../../application/useCase/ValidateTokenUseCase";
 import { RegisterManagerUseCase } from "../../application/useCase/RegisterManagerUseCase";
 import { SendOtpUseCase } from "../../application/useCase/SendOtpUseCase";
 import { VerifyOtpUseCase } from "../../application/useCase/VerifyOtpUseCase";
@@ -112,6 +125,10 @@ class DIContainer {
   private _bindServices(): void {
     this._container.bind<ILogger>(TYPES.ILogger).to(Logger).inSingletonScope();
     this._container
+      .bind(TYPES.IBootstrapService)
+      .to(BootstrapService)
+      .inSingletonScope();
+    this._container
       .bind<IHashService>(TYPES.IHashService)
       .to(HashService)
       .inSingletonScope();
@@ -168,8 +185,32 @@ class DIContainer {
 
   private _bindUseCases(): void {
     this._container
-      .bind<IAuthUseCases>(TYPES.IAuthUseCases)
-      .to(AuthUseCases)
+      .bind<ILoginUseCase>(TYPES.ILoginUseCase)
+      .to(LoginUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IRegisterUseCase>(TYPES.IRegisterUseCase)
+      .to(RegisterUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IGoogleSignInUseCase>(TYPES.IGoogleSignInUseCase)
+      .to(GoogleSignInUseCase)
+      .inTransientScope();
+    this._container
+      .bind<ITokenRefreshUseCase>(TYPES.ITokenRefreshUseCase)
+      .to(TokenRefreshUseCase)
+      .inTransientScope();
+    this._container
+      .bind<ILogoutUseCase>(TYPES.ILogoutUseCase)
+      .to(LogoutUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IVerifyEmailUseCase>(TYPES.IVerifyEmailUseCase)
+      .to(VerifyEmailUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IValidateTokenUseCase>(TYPES.IValidateTokenUseCase)
+      .to(ValidateTokenUseCase)
       .inTransientScope();
     this._container
       .bind<IRegisterManagerUseCase>(TYPES.IRegisterManagerUseCase)

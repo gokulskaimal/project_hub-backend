@@ -8,6 +8,8 @@ import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegis
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
 import { OrganizationStatus } from "../../domain/entities/Organization";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class RegisterManagerUseCase implements IRegisterManagerUseCase {
@@ -51,13 +53,19 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
       const isNameAvailable =
         await this.validateOrganizationName(organizationName);
       if (!isNameAvailable) {
-        throw new Error("Organization name is already taken");
+        throw new HttpError(
+          StatusCodes.CONFLICT,
+          "Organization name is already taken",
+        );
       }
 
       const existingUser = await this._userRepo.findByEmail(email);
       if (existingUser && existingUser.emailVerified) {
         this._logger.warn("Manager already exists and verified", { email });
-        throw new Error("User already exists and is verified");
+        throw new HttpError(
+          StatusCodes.CONFLICT,
+          "User already exists and is verified",
+        );
       }
 
       // ✅ FIXED: Use const assertion for organization status
@@ -168,29 +176,38 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
 
   private _validateInput(email: string, organizationName: string): void {
     if (!email || typeof email !== "string") {
-      throw new Error("Email is required");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Email is required");
     }
 
     if (!organizationName || typeof organizationName !== "string") {
-      throw new Error("Organization name is required");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Organization name is required",
+      );
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new Error("Invalid email format");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
     }
 
     if (email.length > 254) {
-      throw new Error("Email address is too long");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Email address is too long");
     }
 
     const trimmedName = organizationName.trim();
     if (trimmedName.length < 2) {
-      throw new Error("Organization name must be at least 2 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Organization name must be at least 2 characters long",
+      );
     }
 
     if (trimmedName.length > 100) {
-      throw new Error("Organization name must be less than 100 characters");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Organization name must be less than 100 characters",
+      );
     }
   }
 

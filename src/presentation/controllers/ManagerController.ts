@@ -9,128 +9,57 @@ import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { toUserDTO } from "../../application/dto/UserDTO";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
+import { asyncHandler } from "../../utils/asyncHandler";
 
-/**
- * Manager Controller
- *
- * Handles operations specific to organization managers including member management
- * and invitation handling within their organization
- */
 @injectable()
 export class ManagerController {
-  private readonly _logger: ILogger;
-  private readonly _userRepo: IUserRepo;
-  private readonly _inviteRepo: IInviteRepo;
-  private readonly _inviteMemberUC: IInviteMemberUseCase;
-
-  /**
-   * Creates a new ManagerController instance with dependency injection
-   *
-   * @param logger - Logging service
-   * @param userRepo - User repository for member management
-   * @param inviteRepo - Invitation repository for invitation management
-   * @param inviteMemberUC - Use case for inviting members
-   */
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.IInviteRepo) inviteRepo: IInviteRepo,
-    @inject(TYPES.IInviteMemberUseCase) inviteMemberUC: IInviteMemberUseCase,
-  ) {
-    this._logger = logger;
-    this._userRepo = userRepo;
-    this._inviteRepo = inviteRepo;
-    this._inviteMemberUC = inviteMemberUC;
+    @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
+    @inject(TYPES.IInviteRepo) private _inviteRepo: IInviteRepo,
+    @inject(TYPES.IInviteMemberUseCase)
+    private _inviteMemberUC: IInviteMemberUseCase,
+  ) {}
+
+  private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
+    res
+      .status(StatusCodes.OK)
+      .json({
+        success: true,
+        message,
+        data,
+        timestamp: new Date().toISOString(),
+      });
   }
 
-  /**
-   * Invites a new member to the manager's organization
-   *
-   * @param req - Authenticated request object with email in body
-   * @param res - Express response object
-   */
-  public async inviteMember(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  inviteMember = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const { email } = req.body;
       const orgId = req.user!.orgId!;
-      const managerId = req.user!.id;
+      this._logger.info("Manager inviting member", { orgId, email });
 
-      if (!email) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Email is required",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      this._logger.info("Manager inviting member", {
-        managerId,
-        inviteEmail: email,
-        orgId,
-        ip: req.ip,
-      });
+      if (!email)
+        throw { status: StatusCodes.BAD_REQUEST, message: "Email is required" };
 
       const result = await this._inviteMemberUC.execute(email, orgId);
+      this.sendSuccess(res, result, COMMON_MESSAGES.INVITATION_SENT);
+    },
+  );
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.INVITATION_SENT,
-        data: result,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to invite member";
-
-      this._logger.error("Failed to invite member", err as Error, {
-        managerId: req.user?.id,
-        inviteEmail: req.body.email,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
-
-  /**
-   * Invites multiple members to the manager's organization in bulk
-   *
-   * @param req - Authenticated request object with emails array in body
-   * @param res - Express response object
-   */
-  public async bulkInvite(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  bulkInvite = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const { emails } = req.body;
       const orgId = req.user!.orgId!;
-      const managerId = req.user!.id;
-
-      if (!emails || !Array.isArray(emails) || emails.length === 0) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Emails array is required",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
       this._logger.info("Manager bulk inviting members", {
-        managerId,
-        emailCount: emails.length,
         orgId,
-        ip: req.ip,
+        count: emails?.length,
       });
+
+      if (!emails?.length)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "Emails array is required",
+        };
 
       const results = [];
       const errors = [];
@@ -140,16 +69,21 @@ export class ManagerController {
           const result = await this._inviteMemberUC.execute(email, orgId);
           results.push({ email, status: "success", result });
         } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error";
-          errors.push({ email, status: "error", error: errorMessage });
+          this._logger.error("Bulk invite failed for email", error as Error, {
+            email,
+            orgId,
+          });
+          errors.push({
+            email,
+            status: "error",
+            error: (error as Error).message,
+          });
         }
       }
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: `Bulk invite completed. ${results.length} successful, ${errors.length} failed`,
-        data: {
+      this.sendSuccess(
+        res,
+        {
           successful: results,
           failed: errors,
           summary: {
@@ -158,395 +92,116 @@ export class ManagerController {
             failed: errors.length,
           },
         },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to bulk invite members";
+        `Bulk invite completed`,
+      );
+    },
+  );
 
-      this._logger.error("Failed to bulk invite members", err as Error, {
-        managerId: req.user?.id,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
-
-  /**
-   * Lists all invitations for the manager's organization
-   *
-   * @param req - Authenticated request object
-   * @param res - Express response object
-   */
-  public async listInvitations(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  listInvitations = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const orgId = req.user!.orgId!;
-      const managerId = req.user!.id;
-
-      this._logger.info("Manager listing invitations", {
-        managerId,
-        orgId,
-        ip: req.ip,
-      });
-
+      this._logger.info("Listing invitations", { orgId });
       const invitations =
         (await this._inviteRepo.findByOrganization?.(orgId)) || [];
+      this.sendSuccess(res, invitations, COMMON_MESSAGES.INVITATIONS_RETRIEVED);
+    },
+  );
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.INVITATIONS_RETRIEVED,
-        data: invitations,
-        count: invitations.length,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to retrieve invitations";
-
-      this._logger.error("Failed to list invitations", err as Error, {
-        managerId: req.user?.id,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
-
-  /**
-   * Cancels a pending invitation
-   *
-   * @param req - Authenticated request object with invitation token parameter
-   * @param res - Express response object
-   */
-  public async cancelInvitation(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  cancelInvitation = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const { token } = req.params;
       const orgId = req.user!.orgId!;
-      const managerId = req.user!.id;
-
-      if (!token) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Invitation token is required",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      this._logger.info("Manager cancelling invitation", {
-        managerId,
-        token: token.substring(0, 10) + "...",
-        orgId,
-        ip: req.ip,
-      });
+      this._logger.info("Cancelling invitation", { orgId, token: "REDACTED" });
 
       const invitation = await this._inviteRepo.findByToken(token);
+      if (!invitation)
+        throw {
+          status: StatusCodes.NOT_FOUND,
+          message: "Invitation not found",
+        };
+      if (invitation.orgId !== orgId)
+        throw { status: StatusCodes.FORBIDDEN, message: "Access denied" };
 
-      if (!invitation) {
-        res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          error: "Invitation not found",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Verify invitation belongs to same organization
-      if (invitation.orgId !== orgId) {
-        res.status(StatusCodes.FORBIDDEN).json({
-          success: false,
-          error:
-            "Access denied: Invitation does not belong to your organization",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Cancel the invitation
       await this._inviteRepo.markCancelled?.(token);
+      this.sendSuccess(res, null, "Invitation cancelled successfully");
+    },
+  );
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: "Invitation cancelled successfully",
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to cancel invitation";
-
-      this._logger.error("Failed to cancel invitation", err as Error, {
-        managerId: req.user?.id,
-        token: req.params.token,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
-
-  /**
-   * List organization members - Manager only
-   * @param req - Authenticated request object
-   * @param res - Express response object
-   */
-  public async listMembers(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  listMembers = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const orgId = req.user!.orgId!;
       const managerId = req.user!.id;
+      this._logger.info("Listing members", { orgId, managerId });
 
-      if (!orgId) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Organization ID not found in user context",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      this._logger.info("Manager listing organization members", {
-        managerId,
-        orgId,
-        ip: req.ip,
-      });
-
-      // Use findByOrg method if available, fallback to empty array
       const users = (await this._userRepo.findByOrg?.(orgId)) || [];
-
-      // Exclude the current manager from the list
       const filtered = users.filter((u) => u.id !== managerId);
-
-      // Convert to DTOs (hide sensitive data)
       const memberDTOs = filtered.map((user) => toUserDTO(user));
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: COMMON_MESSAGES.MEMBERS_RETRIEVED,
-        data: memberDTOs,
-        count: memberDTOs.length,
-        orgId,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to retrieve organization members";
+      this.sendSuccess(res, memberDTOs, COMMON_MESSAGES.MEMBERS_RETRIEVED);
+    },
+  );
 
-      this._logger.error("Failed to list organization members", err as Error, {
-        managerId: req.user?.id,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
-
-  /**
-   * Update member status - Manager only
-   * @param req - Authenticated request object
-   * @param res - Express response object
-   */
-  public async updateMemberStatus(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  updateMemberStatus = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const { id } = req.params;
       const { status } = req.body;
       const orgId = req.user!.orgId!;
       const managerId = req.user!.id;
-
-      if (!id || !status) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Member ID and status are required",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Prevent manager from changing their own status
-      if (id === managerId) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "You cannot change your own status",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      this._logger.info("Manager updating member status", {
-        managerId,
-        targetMemberId: id,
-        newStatus: status,
+      this._logger.info("Updating member status", {
         orgId,
-        ip: req.ip,
+        managerId,
+        targetUserId: id,
+        status,
       });
+
+      if (id === managerId)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "Cannot change your own status",
+        };
 
       const member = await this._userRepo.findById(id);
+      if (!member)
+        throw { status: StatusCodes.NOT_FOUND, message: "Member not found" };
+      if (member.orgId !== orgId)
+        throw {
+          status: StatusCodes.FORBIDDEN,
+          message: "Member not in your organization",
+        };
 
-      if (!member) {
-        res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          error: "Member not found",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Verify member belongs to same organization
-      if (member.orgId !== orgId) {
-        res.status(StatusCodes.FORBIDDEN).json({
-          success: false,
-          error: "Access denied: Member does not belong to your organization",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Update member status through repository
       const updatedMember = await this._userRepo.updateStatus(id, status);
+      this.sendSuccess(res, toUserDTO(updatedMember), "Member status updated");
+    },
+  );
 
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: "Member status updated successfully",
-        data: toUserDTO(updatedMember),
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to update member status";
-
-      this._logger.error("Failed to update member status", err as Error, {
-        managerId: req.user?.id,
-        targetMemberId: req.params.id,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
-
-  /**
-   * Remove member from organization - Manager only
-   * @param req - Authenticated request object
-   * @param res - Express response object
-   */
-  public async removeMember(
-    req: AuthenticatedRequest,
-    res: Response,
-  ): Promise<void> {
-    try {
+  removeMember = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const { id } = req.params;
       const orgId = req.user!.orgId!;
       const managerId = req.user!.id;
-
-      if (!id) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Member ID is required",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Prevent manager from removing themselves
-      if (id === managerId) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Cannot remove yourself from the organization",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      this._logger.info("Manager removing member", {
-        managerId,
-        targetMemberId: id,
+      this._logger.info("Removing member", {
         orgId,
-        ip: req.ip,
+        managerId,
+        targetUserId: id,
       });
+
+      if (id === managerId)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "Cannot remove yourself",
+        };
 
       const member = await this._userRepo.findById(id);
+      if (!member)
+        throw { status: StatusCodes.NOT_FOUND, message: "Member not found" };
+      if (member.orgId !== orgId)
+        throw {
+          status: StatusCodes.FORBIDDEN,
+          message: "Member not in your organization",
+        };
 
-      if (!member) {
-        res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          error: "Member not found",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Verify member belongs to same organization
-      if (member.orgId !== orgId) {
-        res.status(StatusCodes.FORBIDDEN).json({
-          success: false,
-          error: "Access denied: Member does not belong to your organization",
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Remove member through repository
       await this._userRepo.removeFromOrg(id, orgId);
-
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: "Member removed from organization successfully",
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to remove member";
-
-      this._logger.error("Failed to remove member", err as Error, {
-        managerId: req.user?.id,
-        targetMemberId: req.params.id,
-        orgId: req.user?.orgId,
-        ip: req.ip,
-      });
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
+      this.sendSuccess(res, null, "Member removed successfully");
+    },
+  );
 }

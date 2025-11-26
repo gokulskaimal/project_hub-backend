@@ -1,253 +1,55 @@
-import express from "express";
+import { Router } from "express";
 import { Container } from "inversify";
 import { AdminController } from "../controllers/AdminController";
-import { ManagerController } from "../controllers/ManagerController";
-import { UserController } from "../controllers/UserController";
-import { AuthController } from "../controllers/AuthController";
+import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";
 import { UserRole } from "../../domain/enums/UserRole";
 import { API_ROUTES } from "./constants";
-import { TYPES } from "../../infrastructure/container/types";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
-import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
+import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 
-/**
- * Create all application routes using Dependency Injection
- * @param container - Inversify DI container
- * @returns Express router with all routes
- */
-export function createRoutes(container: Container): express.Router {
-  const router = express.Router();
+export function createAdminRoutes(container: Container): Router {
+  const router = Router();
+  const controller = container.get<AdminController>(TYPES.AdminController);
 
-  // GET CONTROLLERS FROM DI CONTAINER (No more 'new' keyword!)
-  const adminController = container.get<AdminController>(TYPES.AdminController);
-  const managerController = container.get<ManagerController>(
-    TYPES.ManagerController,
+  // Protect all admin routes
+  router.use("/admin", authMiddleware, roleMiddleware(UserRole.SUPER_ADMIN));
+
+  // Organizations
+  router.get(API_ROUTES.ADMIN.ORGANIZATIONS, (req, res, next) =>
+    controller.listOrganizations(req as AuthenticatedRequest, res, next),
   );
-  const userController = container.get<UserController>(TYPES.UserController);
-  const authController = container.get<AuthController>(TYPES.AuthController);
-
-  // =================================================================
-  // AUTHENTICATION ROUTES (Public)
-  // =================================================================
-
-  // POST /api/auth/login
-  router.post(API_ROUTES.AUTH.LOGIN, (req, res, next) =>
-    authController.login(req, res, next),
+  router.post(API_ROUTES.ADMIN.ORGANIZATIONS, (req, res, next) =>
+    controller.createOrganization(req as AuthenticatedRequest, res, next),
+  );
+  router.put(`${API_ROUTES.ADMIN.ORGANIZATIONS}/:id`, (req, res, next) =>
+    controller.updateOrganization(req as AuthenticatedRequest, res, next),
+  );
+  router.delete(`${API_ROUTES.ADMIN.ORGANIZATIONS}/:id`, (req, res, next) =>
+    controller.deleteOrganization(req as AuthenticatedRequest, res, next),
   );
 
-  // POST /api/auth/register
-  router.post(API_ROUTES.AUTH.REGISTER, (req, res, next) =>
-    authController.register(req, res, next),
+  // Users
+  router.get(API_ROUTES.ADMIN.USERS, (req, res, next) =>
+    controller.listUsers(req as AuthenticatedRequest, res, next),
+  );
+  router.delete(`${API_ROUTES.ADMIN.USERS}/:id`, (req, res, next) =>
+    controller.deleteUser(req as AuthenticatedRequest, res, next),
+  );
+  router.put(`${API_ROUTES.ADMIN.USERS}/:id/status`, (req, res, next) =>
+    controller.updateUserStatus(req as AuthenticatedRequest, res, next),
   );
 
-  // POST /api/auth/verify-otp
-  router.post(API_ROUTES.AUTH.VERIFY_OTP, (req, res, next) =>
-    authController.verifyOtp(req, res, next),
+  // Specific actions
+  router.get(API_ROUTES.ADMIN.REPORTS, (req, res, next) =>
+    controller.getReports(req as AuthenticatedRequest, res, next),
   );
-
-  // POST /api/auth/reset-password
-  router.post(API_ROUTES.AUTH.RESET_PASSWORD, (req, res, next) =>
-    authController.resetPasswordReq(req, res, next),
+  router.post("/invite-member", (req, res, next) =>
+    controller.inviteMember(req as AuthenticatedRequest, res, next),
   );
-
-  // POST /api/auth/complete-reset
-  router.post(API_ROUTES.AUTH.COMPLETE_RESET, (req, res) =>
-    res.status(501).json({
-      message: "Endpoint not implemented",
-    }),
+  router.post("/bulk-invite", (req, res, next) =>
+    controller.bulkInviteMembers(req as AuthenticatedRequest, res, next),
   );
-
-  // POST /api/auth/refresh-token
-  router.post("/auth/refresh-token", (req, res, next) =>
-    authController.refreshToken(req, res, next),
-  );
-
-  // =================================================================
-  // ADMIN ROUTES (Super Admin Only)
-  // =================================================================
-
-  // GET /api/admin/organizations
-  router.get(
-    API_ROUTES.ADMIN.ORGANIZATIONS,
-    authMiddleware,
-    roleMiddleware(UserRole.SUPER_ADMIN),
-    (req, res) => adminController.listOrganizations(req, res),
-  );
-
-  // POST /api/admin/organizations
-  router.post(
-    API_ROUTES.ADMIN.ORGANIZATIONS,
-    authMiddleware,
-    roleMiddleware(UserRole.SUPER_ADMIN),
-    (req, res) => adminController.createOrganization(req, res),
-  );
-
-  // PUT /api/admin/organizations/:id
-  router.put(
-    `${API_ROUTES.ADMIN.ORGANIZATIONS}/:id`,
-    authMiddleware,
-    roleMiddleware(UserRole.SUPER_ADMIN),
-    (req, res) => adminController.updateOrganization(req, res),
-  );
-
-  // DELETE /api/admin/organizations/:id
-  router.delete(
-    `${API_ROUTES.ADMIN.ORGANIZATIONS}/:id`,
-    authMiddleware,
-    roleMiddleware(UserRole.SUPER_ADMIN),
-    (req, res) => adminController.deleteOrganization(req, res),
-  );
-
-  // GET /api/admin/users
-  router.get(
-    API_ROUTES.ADMIN.USERS,
-    authMiddleware,
-    roleMiddleware(UserRole.SUPER_ADMIN),
-    (req, res) => adminController.listUsers(req, res),
-  );
-
-  // GET /api/admin/reports
-  router.get(
-    API_ROUTES.ADMIN.REPORTS,
-    authMiddleware,
-    roleMiddleware(UserRole.SUPER_ADMIN),
-    (req, res) => adminController.getReports(req, res),
-  );
-
-  // =================================================================
-  // MANAGER ROUTES (Organization Manager Only)
-  // =================================================================
-
-  // POST /api/manager/invite
-  router.post(
-    API_ROUTES.MANAGER.INVITE,
-    authMiddleware,
-    roleMiddleware(UserRole.ORG_MANAGER),
-    (req, res) => managerController.inviteMember(req, res),
-  );
-
-  // POST /api/manager/bulk-invite
-  router.post(
-    API_ROUTES.MANAGER.BULK_INVITE,
-    authMiddleware,
-    roleMiddleware(UserRole.ORG_MANAGER),
-    (req, res) => managerController.bulkInvite(req, res),
-  );
-
-  // GET /api/manager/members
-  router.get(
-    API_ROUTES.MANAGER.MEMBERS,
-    authMiddleware,
-    roleMiddleware(UserRole.ORG_MANAGER),
-    (req, res) => managerController.listMembers(req, res),
-  );
-
-  // DELETE /api/manager/members/:id
-  router.delete(
-    `${API_ROUTES.MANAGER.MEMBERS}/:id`,
-    authMiddleware,
-    roleMiddleware(UserRole.ORG_MANAGER),
-    (req, res) => managerController.removeMember(req, res),
-  );
-
-  // GET /api/manager/activity
-  // router.get(
-  //     API_ROUTES.MANAGER.ACTIVITY,
-  //     authMiddleware,
-  //     roleMiddleware(UserRole.ORG_MANAGER),
-  //     (req, res) => managerController.getActivity(req, res)
-  // );
-
-  // GET /api/manager/invitations
-  router.get(
-    "/manager/invitations",
-    authMiddleware,
-    roleMiddleware(UserRole.ORG_MANAGER),
-    (req, res) => managerController.listInvitations(req, res),
-  );
-
-  // DELETE /api/manager/invitations/:token
-  router.delete(
-    "/manager/invitations/:token",
-    authMiddleware,
-    roleMiddleware(UserRole.ORG_MANAGER),
-    (req, res) => managerController.cancelInvitation(req, res),
-  );
-
-  // =================================================================
-  // USER ROUTES (Authenticated Users)
-  // =================================================================
-
-  // GET /api/user/profile
-  router.get(API_ROUTES.USER.PROFILE, authMiddleware, (req, res) =>
-    userController.getProfile(req, res),
-  );
-
-  // PUT /api/user/profile
-  router.put(API_ROUTES.USER.PROFILE, authMiddleware, (req, res) =>
-    userController.updateProfile(req, res),
-  );
-
-  // POST /api/user/change-password
-  router.post(API_ROUTES.USER.CHANGE_PASSWORD, authMiddleware, (req, res) =>
-    userController.changePassword(req, res),
-  );
-
-  // GET /api/user/activity
-  // router.get(
-  //     '/user/activity',
-  //     authMiddleware,
-  //     (req, res) => userController.getActivityHistory(req, res)
-  // );
-
-  // DELETE /api/user/account
-  router.delete("/user/account", authMiddleware, (req, res) =>
-    userController.deleteAccount(req, res),
-  );
-
-  // =================================================================
-  // PUBLIC ROUTES
-  // =================================================================
-
-  // GET /api/health - Health check endpoint
-  // router.get("/health", (req, res) => {
-  //   res.status(StatusCodes.OK).json({
-  //     status: "healthy",
-  //     timestamp: new Date().toISOString(),
-  //     version: process.env.APP_VERSION || "1.0.0",
-  //     environment: process.env.NODE_ENV || "development",
-  //   });
-  // });
-
-  // GET /api/invite/:token - Public invitation acceptance page
-  router.get("/invite/:token", (req, res, next) =>
-    authController.validateInviteToken(req, res, next),
-  );
-
-  // POST /api/invite/:token/accept - Accept invitation
-  router.post("/invite/:token/accept", (req, res, next) =>
-    authController.acceptInvite(req, res, next),
-  );
-
-  // =================================================================
-  // ERROR HANDLING & 404
-  // =================================================================
-
-  // Handle 404 for API routes
-  router.use("*", (req, res) => {
-    res.status(StatusCodes.NOT_FOUND).json({
-      success: false,
-      error: COMMON_MESSAGES.NOT_FOUND,
-      path: req.originalUrl,
-      method: req.method,
-      timestamp: new Date().toISOString(),
-    });
-  });
 
   return router;
 }
-
-// Export default router factory function
-export default createRoutes;

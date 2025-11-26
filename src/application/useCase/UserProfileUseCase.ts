@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { IHashService } from "../../domain/interfaces/services/IHashService";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class UserProfileUseCase implements IUserProfileUseCase {
@@ -23,23 +23,23 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     this._logger = logger;
   }
 
-  public async getProfile(userId: string): Promise<any> {
+  public async getProfile(userId: string): Promise<Record<string, unknown>> {
     this._logger.info("Getting user profile", { userId });
 
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
-        throw new Error("User not found");
+        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
       }
 
-      const {
-        password,
-        resetPasswordToken,
-        resetPasswordExpires,
-        otp,
-        otpExpiry,
-        ...safeUserData
-      } = user;
+      const safeUserData = {
+        ...(user as unknown as Record<string, unknown>),
+      } as Record<string, unknown>;
+      Reflect.deleteProperty(safeUserData, "password");
+      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+      Reflect.deleteProperty(safeUserData, "otp");
+      Reflect.deleteProperty(safeUserData, "otpExpiry");
       return safeUserData;
     } catch (error) {
       this._logger.error("Failed to get user profile", error as Error, {
@@ -51,8 +51,8 @@ export class UserProfileUseCase implements IUserProfileUseCase {
 
   public async updateProfile(
     userId: string,
-    updateData: Record<string, any>,
-  ): Promise<any> {
+    updateData: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
     this._logger.info("Updating user profile", {
       userId,
       fields: Object.keys(updateData),
@@ -61,14 +61,14 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     try {
       const existingUser = await this._userRepo.findById(userId);
       if (!existingUser) {
-        throw new Error("User not found");
+        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
       }
 
-      const allowedFields = ["firstName", "lastName", "name"];
+      const allowedFields = ["firstName", "lastName", "name", "avatar"];
 
       const filteredUpdateData = Object.keys(updateData)
         .filter((key) => allowedFields.includes(key))
-        .reduce((obj: Record<string, any>, key) => {
+        .reduce((obj: Record<string, unknown>, key) => {
           obj[key] = updateData[key];
           return obj;
         }, {});
@@ -87,14 +87,14 @@ export class UserProfileUseCase implements IUserProfileUseCase {
 
       this._logger.info("User profile updated successfully", { userId });
 
-      const {
-        password,
-        resetPasswordToken,
-        resetPasswordExpires,
-        otp,
-        otpExpiry,
-        ...safeUserData
-      } = updatedUser;
+      const safeUserData = {
+        ...(updatedUser as unknown as Record<string, unknown>),
+      } as Record<string, unknown>;
+      Reflect.deleteProperty(safeUserData, "password");
+      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+      Reflect.deleteProperty(safeUserData, "otp");
+      Reflect.deleteProperty(safeUserData, "otpExpiry");
       return safeUserData;
     } catch (error) {
       this._logger.error("Failed to update user profile", error as Error, {
@@ -114,7 +114,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
-        throw new Error("User not found");
+        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
       }
 
       const isCurrentPasswordValid = await this._hashService.compare(
@@ -122,7 +122,10 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         user.password,
       );
       if (!isCurrentPasswordValid) {
-        throw new Error("Current password is incorrect");
+        throw new HttpError(
+          StatusCodes.UNAUTHORIZED,
+          "Current password is incorrect",
+        );
       }
 
       this._validatePassword(newPassword);
@@ -132,7 +135,10 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         user.password,
       );
       if (isSamePassword) {
-        throw new Error("New password must be different from current password");
+        throw new HttpError(
+          StatusCodes.BAD_REQUEST,
+          "New password must be different from current password",
+        );
       }
 
       const hashedNewPassword = await this._hashService.hash(newPassword);
@@ -153,7 +159,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
-        throw new Error("User not found");
+        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
       }
 
       const isPasswordValid = await this._hashService.compare(
@@ -161,7 +167,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         user.password,
       );
       if (!isPasswordValid) {
-        throw new Error("Invalid password");
+        throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid password");
       }
 
       // ✅ FIXED: Use 'INACTIVE' instead of 'DELETED' (valid User status)
@@ -183,7 +189,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     userId: string,
     limit: number = 50,
     offset: number = 0,
-  ): Promise<any[]> {
+  ): Promise<Record<string, unknown>[]> {
     this._logger.info("Getting user activity history", {
       userId,
       limit,
@@ -226,21 +232,28 @@ export class UserProfileUseCase implements IUserProfileUseCase {
 
   private _validatePassword(password: string): void {
     if (!password || typeof password !== "string") {
-      throw new Error("Password is required");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Password is required");
     }
 
     if (password.length < 8) {
-      throw new Error("Password must be at least 8 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must be at least 8 characters long",
+      );
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      throw new Error(
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
         "Password must contain at least one lowercase letter, one uppercase letter, and one number",
       );
     }
 
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new Error("Password must contain at least one special character");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must contain at least one special character",
+      );
     }
   }
 }

@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ResetPasswordUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let ResetPasswordUseCase = class ResetPasswordUseCase {
     constructor(userRepo, hashService, jwtService, emailService, logger) {
         this._userRepo = userRepo;
@@ -60,7 +62,7 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             this._logger.error("Password reset request failed", error, {
                 email,
             });
-            throw new Error("Failed to process password reset request");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR, "Failed to process password reset request");
         }
     }
     /**
@@ -72,12 +74,12 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             // Business Rule: Verify reset token
             const payload = this._jwtService.verifyResetToken(token);
             if (!payload) {
-                throw new Error("Invalid or expired reset token");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid or expired reset token");
             }
             // Business Rule: Find user by reset token
             const user = await this._userRepo.findByResetToken(token);
             if (!user) {
-                throw new Error("Invalid or expired reset token");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid or expired reset token");
             }
             // Business Rule: Validate new password
             this._validatePassword(newPassword);
@@ -125,16 +127,16 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
      */
     _validatePassword(password) {
         if (!password || typeof password !== "string") {
-            throw new Error("Password is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is required");
         }
         if (password.length < 8) {
-            throw new Error("Password must be at least 8 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new Error("Password must contain at least one lowercase letter, one uppercase letter, and one number");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new Error("Password must contain at least one special character");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one special character");
         }
     }
 };

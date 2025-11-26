@@ -1,30 +1,31 @@
-import express from "express";
+import { Router } from "express";
+import { Container } from "inversify";
 import { UserController } from "../controllers/UserController";
-import { UserRepo } from "../../infrastructure/repositories/UserRepo";
-import { UserProfileUseCase } from "../../application/useCase/UserProfileUseCase";
+import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
-import { USER_ROUTES } from "./constants";
-import { HashService } from "../../infrastructure/services/HashService";
-import { Logger } from "../../infrastructure/services/Logger";
+import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
+import { API_ROUTES } from "./constants";
 
-const router = express.Router();
+export function createUserRoutes(container: Container): Router {
+  const router = Router();
+  const controller = container.get<UserController>(TYPES.UserController);
 
-const userRepo = new UserRepo();
-const hashService = new HashService();
-const logger = new Logger();
-const userProfileUseCase = new UserProfileUseCase(
-  userRepo,
-  hashService,
-  logger,
-);
+  // Protect all user routes
+  router.use(authMiddleware);
 
-const userController = new UserController(logger, userProfileUseCase);
+  router.get(API_ROUTES.USER.PROFILE, (req, res, next) => {
+    console.log("UserRoutes: Reached /user/profile handler");
+    controller.getProfile(req as AuthenticatedRequest, res, next);
+  });
+  router.put(API_ROUTES.USER.PROFILE, (req, res, next) =>
+    controller.updateProfile(req as AuthenticatedRequest, res, next),
+  );
+  router.post(API_ROUTES.USER.CHANGE_PASSWORD, (req, res, next) =>
+    controller.changePassword(req as AuthenticatedRequest, res, next),
+  );
+  router.delete("/account", (req, res, next) =>
+    controller.deleteAccount(req as AuthenticatedRequest, res, next),
+  );
 
-router.get(USER_ROUTES.PROFILE, authMiddleware, (req, res) =>
-  userController.getProfile(req, res),
-);
-router.put(USER_ROUTES.PROFILE, authMiddleware, (req, res) =>
-  userController.updateProfile(req, res),
-);
-
-export default router;
+  return router;
+}

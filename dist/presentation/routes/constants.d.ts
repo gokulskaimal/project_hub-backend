@@ -14,6 +14,7 @@ export declare const API_ROUTES: {
         readonly COMPLETE_SIGNUP: "/auth/complete-signup";
         readonly INVITE_MEMBER: "/auth/invite-member";
         readonly ACCEPT_INVITE: "/auth/accept-invite";
+        readonly GOOGLE_SIGNIN: "/auth/google-signin";
     };
     readonly ADMIN: {
         readonly ORGANIZATIONS: "/admin/organizations";
@@ -25,6 +26,7 @@ export declare const API_ROUTES: {
         readonly BULK_INVITE: "/manager/bulk-invite";
         readonly MEMBERS: "/manager/members";
         readonly ACTIVITY: "/manager/activity";
+        readonly INVITATIONS: "/manager/invitations";
     };
     readonly USER: {
         readonly PROFILE: "/user/profile";
@@ -36,6 +38,7 @@ export declare const MANAGER_ROUTES: {
     readonly BULK_INVITE: "/manager/bulk-invite";
     readonly MEMBERS: "/manager/members";
     readonly ACTIVITY: "/manager/activity";
+    readonly INVITATIONS: "/manager/invitations";
 };
 export declare const USER_ROUTES: {
     readonly PROFILE: "/user/profile";
@@ -60,5 +63,6 @@ export declare const AUTH_ROUTES: {
     readonly COMPLETE_SIGNUP: "/auth/complete-signup";
     readonly INVITE_MEMBER: "/auth/invite-member";
     readonly ACCEPT_INVITE: "/auth/accept-invite";
+    readonly GOOGLE_SIGNIN: "/auth/google-signin";
 };
 //# sourceMappingURL=constants.d.ts.map

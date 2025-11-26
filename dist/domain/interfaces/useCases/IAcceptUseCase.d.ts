@@ -1,10 +1,13 @@
+import { User } from "../../entities/User";
+import { Organization } from "../../entities/Organization";
+import { Invite } from "../../entities/Invite";
 export interface IAcceptUseCase {
     /**
      * Accept organization invitation
      */
-    execute(token: string, password: string, firstName: string, lastName: string, additionalData?: Record<string, any>): Promise<{
-        user: any;
-        organization: any;
+    execute(token: string, password: string, firstName: string, lastName: string, additionalData?: Record<string, unknown>): Promise<{
+        user: Partial<User>;
+        organization: Partial<Organization>;
         tokens: {
             accessToken: string;
             refreshToken: string;
@@ -16,7 +19,7 @@ export interface IAcceptUseCase {
      */
     validateInvitationToken(token: string): Promise<{
         valid: boolean;
-        invitation?: any;
+        invitation?: Partial<Invite>;
         expired?: boolean;
     }>;
 }

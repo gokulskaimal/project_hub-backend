@@ -4,6 +4,8 @@ import { IVerifyOtpUseCase } from "../../domain/interfaces/useCases/IVerifyOtpUs
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { ICacheService } from "../../domain/interfaces/services/ICacheService";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
@@ -33,11 +35,10 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
     try {
       if (!email || !otp) {
-        return {
-          valid: false,
-          message: "Email and OTP are required",
-          verified: false,
-        };
+        throw new HttpError(
+          StatusCodes.BAD_REQUEST,
+          "Email and OTP are required",
+        );
       }
 
       const user = await this._userRepo.verifyOtp(email, otp);
@@ -52,14 +53,12 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
           attemptsRemaining,
         });
 
-        return {
-          valid: false,
-          message:
-            attemptsRemaining > 0
-              ? `Invalid OTP. ${attemptsRemaining} attempts remaining.`
-              : "Invalid OTP. Too many attempts. Please request a new OTP.",
-          verified: false,
-        };
+        const message =
+          attemptsRemaining > 0
+            ? `Invalid OTP. ${attemptsRemaining} attempts remaining.`
+            : "Invalid OTP. Too many attempts. Please request a new OTP.";
+
+        throw new HttpError(StatusCodes.BAD_REQUEST, message);
       }
 
       await this._userRepo.verifyEmail(user.id);
@@ -78,12 +77,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
       };
     } catch (error) {
       this._logger.error("OTP verification failed", error as Error, { email });
-
-      return {
-        valid: false,
-        message: "OTP verification failed. Please try again.",
-        verified: false,
-      };
+      throw error;
     }
   }
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document, Model, FilterQuery } from "mongoose";
 import { IBaseRepository } from "../../domain/interfaces/IBaseRepository";
 
@@ -38,7 +37,8 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
    * @returns The created domain entity
    */
   async create(data: Partial<TDomain>): Promise<TDomain> {
-    const doc = await this.model.create(data as any);
+    // Cast via unknown to avoid unsafe `any` while satisfying Mongoose model typing
+    const doc = await this.model.create(data as unknown as Partial<TDoc>);
     return this.toDomain(doc);
   }
 
@@ -73,10 +73,18 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
    * @throws Error if the document is not found
    */
   async update(id: string, data: Partial<TDomain>): Promise<TDomain> {
+    // Merge update payload and cast safely for Mongoose
+    const updatePayload = {
+      ...(data as unknown as Record<string, unknown>),
+      updatedAt: new Date(),
+    };
     const doc = await this.model.findByIdAndUpdate(
       id,
-      { ...(data as any), updatedAt: new Date() },
-      { new: true, runValidators: true },
+      updatePayload as unknown as Partial<TDoc>,
+      {
+        new: true,
+        runValidators: true,
+      },
     );
     if (!doc) throw new Error("Document not found");
     return this.toDomain(doc);

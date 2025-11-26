@@ -18,66 +18,32 @@ const types_1 = require("../../infrastructure/container/types");
 const Organization_1 = require("../../domain/entities/Organization");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 const common_constants_1 = require("../../infrastructure/config/common.constants");
-/**
- * Admin Controller
- *
- * Handles administrative operations for managing organizations and users
- * Implements the presentation layer of the application architecture
- */
+const asyncHandler_1 = require("../../utils/asyncHandler");
 let AdminController = class AdminController {
-    /**
-     * Creates a new AdminController instance with dependency injection
-     *
-     * @param userRepo - User repository for user management
-     * @param orgRepo - Organization repository for organization management
-     * @param inviteMemberUseCase - Use case for inviting members
-     * @param logger - Logging service
-     */
-    constructor(userRepo, orgRepo, inviteMemberUseCase, logger) {
+    constructor(userRepo, orgRepo, inviteMemberUseCase, orgManagementUseCase, logger) {
         this.userRepo = userRepo;
         this.orgRepo = orgRepo;
         this.inviteMemberUseCase = inviteMemberUseCase;
+        this.orgManagementUseCase = orgManagementUseCase;
         this.logger = logger;
-    }
-    /**
-     * Lists all organizations with pagination and search capabilities
-     *
-     * @param req - Express request object with query parameters
-     * @param res - Express response object
-     */
-    async listOrganizations(req, res) {
-        try {
+        this.listOrganizations = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { limit = 50, offset = 0, search } = req.query;
-            const result = await this.orgRepo.findPaginated(Number(limit), Number(offset), search);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                data: result,
-            });
-        }
-        catch (error) {
-            this.logger.error("List organizations failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: "Failed to fetch organizations",
-            });
-        }
-    }
-    /**
-     * Creates a new organization
-     *
-     * @param req - Express request object with organization data
-     * @param res - Express response object
-     */
-    async createOrganization(req, res) {
-        try {
-            const { name, description, settings } = req.body;
-            if (!name) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: "Organization name is required",
-                });
-                return;
+            this.logger.info("Listing organizations", { limit, offset, search });
+            if (limit === undefined || offset === undefined) {
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid pagination parameters");
             }
+            const result = await this.orgRepo.findPaginated(Number(limit), Number(offset), search);
+            this.sendSuccess(res, result);
+        });
+        this.createOrganization = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { name, description, settings } = req.body;
+            this.logger.info("Creating organization", { name });
+            if (!name)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization name is required");
+            if (!description)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization description is required");
+            if (!settings)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization settings are required");
             const newOrg = await this.orgRepo.create({
                 name,
                 description,
@@ -85,455 +51,156 @@ let AdminController = class AdminController {
                 status: Organization_1.OrganizationStatus.ACTIVE,
                 createdAt: new Date(),
             });
-            res.status(statusCodes_enum_1.StatusCodes.CREATED).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.CREATED,
-                data: newOrg,
-            });
-        }
-        catch (error) {
-            this.logger.error("Create organization failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: "Failed to create organization",
-            });
-        }
-    }
-    /**
-     * Retrieves an organization by its ID
-     *
-     * @param req - Express request object with organization ID parameter
-     * @param res - Express response object
-     */
-    async getOrganizationById(req, res) {
-        try {
+            this.sendSuccess(res, newOrg, common_constants_1.COMMON_MESSAGES.CREATED, statusCodes_enum_1.StatusCodes.CREATED);
+        });
+        this.getOrganizationById = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
+            this.logger.info("Fetching organization by ID", { orgId: id });
             const organization = await this.orgRepo.findById(id);
-            if (!organization) {
-                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
-                    success: false,
-                    message: common_constants_1.COMMON_MESSAGES.NOT_FOUND,
-                });
-                return;
-            }
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                data: organization,
-            });
-        }
-        catch (error) {
-            this.logger.error("Get organization by ID failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Updates an existing organization
-     *
-     * @param req - Express request object with organization ID and update data
-     * @param res - Express response object
-     */
-    async updateOrganization(req, res) {
-        try {
+            if (!organization)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, common_constants_1.COMMON_MESSAGES.NOT_FOUND);
+            this.sendSuccess(res, organization);
+        });
+        this.updateOrganization = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
             const updateData = req.body;
-            const updatedOrg = await this.orgRepo.update(id, updateData);
-            // If status is being changed, apply cascading effects to all users
+            this.logger.info("Updating organization", { orgId: id, updatedFields: Object.keys(updateData || {}) });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization ID is required");
+            if (!updateData)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Update data is required");
+            // If status is being updated, use the use case to handle cascading effects
             if (updateData.status) {
-                try {
-                    const usersInOrg = await this.userRepo.findByOrg(id);
-                    if (usersInOrg && usersInOrg.length > 0) {
-                        if (updateData.status === Organization_1.OrganizationStatus.SUSPENDED) {
-                            // Suspend all users in the organization
-                            for (const user of usersInOrg) {
-                                try {
-                                    await this.userRepo.updateStatus(user.id, "SUSPENDED");
-                                    this.logger.info("User suspended due to organization suspension", {
-                                        userId: user.id,
-                                        orgId: id,
-                                        userEmail: user.email,
-                                    });
-                                }
-                                catch (userErr) {
-                                    this.logger.error("Failed to suspend user during org suspension", userErr, {
-                                        userId: user.id,
-                                        orgId: id,
-                                    });
-                                    // Continue suspending other users even if one fails
-                                }
-                            }
-                        }
-                        else if (updateData.status === Organization_1.OrganizationStatus.ACTIVE) {
-                            // Reactivate suspended users in the organization
-                            for (const user of usersInOrg) {
-                                if (user.status === "SUSPENDED") {
-                                    try {
-                                        await this.userRepo.updateStatus(user.id, "ACTIVE");
-                                        this.logger.info("User reactivated due to organization activation", {
-                                            userId: user.id,
-                                            orgId: id,
-                                            userEmail: user.email,
-                                        });
-                                    }
-                                    catch (userErr) {
-                                        this.logger.error("Failed to reactivate user during org activation", userErr, {
-                                            userId: user.id,
-                                            orgId: id,
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
+                const updatedOrg = await this.orgManagementUseCase.updateOrganizationStatus(id, updateData.status);
+                // If there are other fields to update besides status, update them now
+                const { status, ...otherFields } = updateData;
+                if (Object.keys(otherFields).length > 0) {
+                    await this.orgRepo.update(id, otherFields);
+                    // Re-fetch to get the final state
+                    const finalOrg = await this.orgRepo.findById(id);
+                    this.sendSuccess(res, finalOrg, common_constants_1.COMMON_MESSAGES.UPDATED);
+                    return;
                 }
-                catch (cascadeErr) {
-                    this.logger.error("Error applying cascading user status updates", cascadeErr, {
-                        orgId: id,
-                        newOrgStatus: updateData.status,
-                    });
-                }
+                this.sendSuccess(res, updatedOrg, common_constants_1.COMMON_MESSAGES.UPDATED);
+                return;
             }
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.UPDATED,
-                data: updatedOrg,
-            });
-        }
-        catch (error) {
-            this.logger.error("Update organization failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: "Failed to update organization",
-            });
-        }
-    }
-    /**
-     * Deletes an organization by its ID
-     *
-     * @param req - Express request object with organization ID parameter
-     * @param res - Express response object
-     */
-    async deleteOrganization(req, res) {
-        try {
+            // Default update for non-status fields
+            const updatedOrg = await this.orgRepo.update(id, updateData);
+            this.sendSuccess(res, updatedOrg, common_constants_1.COMMON_MESSAGES.UPDATED);
+        });
+        this.deleteOrganization = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
-            // Cascade: delete all users that belong to this organization first
-            const usersInOrg = await this.userRepo.findByOrg(id);
-            if (usersInOrg && usersInOrg.length > 0) {
-                for (const user of usersInOrg) {
-                    try {
-                        await this.userRepo.delete(user.id);
-                        this.logger.info("User deleted due to organization deletion", {
-                            userId: user.id,
-                            orgId: id,
-                            email: user.email,
-                        });
-                    }
-                    catch (userDelErr) {
-                        this.logger.error("Failed to delete user during organization deletion", userDelErr);
-                    }
-                }
-            }
-            await this.orgRepo.delete(id);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.DELETED,
-            });
-        }
-        catch (error) {
-            this.logger.error("Delete organization failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Lists all users with pagination, search, and filtering capabilities
-     *
-     * @param req - Express request object with query parameters
-     * @param res - Express response object
-     */
-    async listUsers(req, res) {
-        try {
+            this.logger.info("Deleting organization", { orgId: id });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization ID is required");
+            await this.orgManagementUseCase.deleteOrganizationCascade(id);
+            this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.DELETED);
+        });
+        this.listUsers = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { limit = 50, offset = 0, search, orgId, role, status } = req.query;
+            this.logger.info("Listing users", { limit, offset, search, orgId, role, status });
+            // Explicitly typed filters object
             const filters = {
-                orgId: orgId,
-                role: role,
-                status: status,
+                orgId: typeof orgId === 'string' ? orgId : undefined,
+                role: typeof role === 'string' ? role : undefined,
+                status: typeof status === 'string' ? status : undefined
             };
             const result = await this.userRepo.findPaginated(Number(limit), Number(offset), search, filters);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                data: result,
-            });
-        }
-        catch (error) {
-            this.logger.error("List users failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Retrieves a user by their ID
-     *
-     * @param req - Express request object with user ID parameter
-     * @param res - Express response object
-     */
-    async getUserById(req, res) {
-        try {
+            this.sendSuccess(res, result);
+        });
+        this.getUserById = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
+            this.logger.info("Fetching user by ID", { userId: id });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "User ID is required");
             const user = await this.userRepo.findById(id);
-            if (!user) {
-                res.status(statusCodes_enum_1.StatusCodes.NOT_FOUND).json({
-                    success: false,
-                    message: common_constants_1.COMMON_MESSAGES.NOT_FOUND,
-                });
-                return;
-            }
-            const { password, otp, otpExpiry, resetPasswordToken, resetPasswordExpires, ...safeUser } = user;
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                data: safeUser,
-            });
-        }
-        catch (error) {
-            this.logger.error("Get user by ID failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Updates a user's information
-     *
-     * @param req - Express request object with user ID and update data
-     * @param res - Express response object
-     */
-    async updateUser(req, res) {
-        try {
+            if (!user)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, common_constants_1.COMMON_MESSAGES.NOT_FOUND);
+            const safeUser = { ...user };
+            Reflect.deleteProperty(safeUser, "password");
+            Reflect.deleteProperty(safeUser, "otp");
+            this.sendSuccess(res, safeUser);
+        });
+        this.updateUser = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
-            const updateData = req.body;
-            const { password, otp, otpExpiry, resetPasswordToken, resetPasswordExpires, ...safeUpdateData } = updateData;
+            this.logger.info("Updating user", { userId: id });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "User ID is required");
+            const safeUpdateData = { ...req.body };
+            Reflect.deleteProperty(safeUpdateData, "password");
+            Reflect.deleteProperty(safeUpdateData, "otp");
             const updatedUser = await this.userRepo.updateProfile(id, safeUpdateData);
-            const { password: _, otp: __, otpExpiry: ___, resetPasswordToken: ____, resetPasswordExpires: _____, ...safeUser } = updatedUser;
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.UPDATED,
-                data: safeUser,
-            });
-        }
-        catch (error) {
-            this.logger.error("Update user failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Updates a user's status
-     *
-     * @param req - Express request object with user ID and status data
-     * @param res - Express response object
-     */
-    async updateUserStatus(req, res) {
-        try {
+            const safeUser = { ...updatedUser };
+            Reflect.deleteProperty(safeUser, "password");
+            this.sendSuccess(res, safeUser, common_constants_1.COMMON_MESSAGES.UPDATED);
+        });
+        this.updateUserStatus = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
             const { status } = req.body;
-            if (!status) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
-                });
-                return;
-            }
+            this.logger.info("Updating user status", { userId: id, status });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "User ID is required");
+            if (!status)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, common_constants_1.COMMON_MESSAGES.INVALID_INPUT);
             const updatedUser = await this.userRepo.updateStatus(id, status);
-            const { password, otp, otpExpiry, resetPasswordToken, resetPasswordExpires, ...safeUser } = updatedUser;
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.UPDATED,
-                data: safeUser,
-            });
-        }
-        catch (error) {
-            this.logger.error("Update user status failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Deletes a user from the system
-     *
-     * @param req - Express request object with user ID parameter
-     * @param res - Express response object
-     */
-    async deleteUser(req, res) {
-        try {
+            const safeUser = { ...updatedUser };
+            Reflect.deleteProperty(safeUser, "password");
+            this.sendSuccess(res, safeUser, common_constants_1.COMMON_MESSAGES.UPDATED);
+        });
+        this.deleteUser = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
+            this.logger.info("Deleting user", { userId: id });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "User ID is required");
             await this.userRepo.delete(id);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.DELETED,
-            });
-        }
-        catch (error) {
-            this.logger.error("Delete user failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: "Failed to delete user",
-            });
-        }
-    }
-    /**
-     * Generates system reports with user and organization statistics
-     *
-     * @param req - Express request object
-     * @param res - Express response object
-     */
-    async getReports(req, res) {
-        try {
-            const userStats = await this.userRepo.getStats();
-            const orgStats = await this.orgRepo.getStats();
+            this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.DELETED);
+        });
+        this.getReports = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            this.logger.info("Fetching reports");
+            const [userStats, orgStats] = await Promise.all([
+                this.userRepo.getStats(),
+                this.orgRepo.getStats()
+            ]);
             const report = {
-                overview: {
-                    totalUsers: userStats.total || 0,
-                    totalOrganizations: orgStats.total || 0,
-                    generatedAt: new Date().toISOString(),
-                },
+                overview: { totalUsers: userStats.total, totalOrganizations: orgStats.total },
                 users: userStats,
                 organizations: orgStats,
             };
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES,
-                data: report,
-            });
-        }
-        catch (error) {
-            this.logger.error("Get reports failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Retrieves statistics for the admin dashboard
-     *
-     * @param req - Express request object
-     * @param res - Express response object
-     */
-    async getDashboardStats(req, res) {
-        try {
-            const userStats = await this.userRepo.getStats();
-            const orgStats = await this.orgRepo.getStats();
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                data: {
-                    users: userStats,
-                    organizations: orgStats,
-                },
-            });
-        }
-        catch (error) {
-            this.logger.error("Get dashboard stats failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: "Failed to fetch dashboard statistics",
-            });
-        }
-    }
-    /**
-     * Retrieves all users belonging to a specific organization
-     *
-     * @param req - Express request object with organization ID parameter
-     * @param res - Express response object
-     */
-    async getUsersByOrganization(req, res) {
-        try {
+            this.sendSuccess(res, report);
+        });
+        this.getDashboardStats = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            this.logger.info("Fetching dashboard stats");
+            const [userStats, orgStats] = await Promise.all([
+                this.userRepo.getStats(),
+                this.orgRepo.getStats()
+            ]);
+            this.sendSuccess(res, { users: userStats, organizations: orgStats });
+        });
+        this.getUsersByOrganization = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { orgId } = req.params;
+            this.logger.info("Fetching users by organization", { orgId });
             const users = await this.userRepo.findByOrg(orgId);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                data: users,
-            });
-        }
-        catch (error) {
-            this.logger.error("Get users by organization failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: common_constants_1.COMMON_MESSAGES.SERVER_ERROR,
-            });
-        }
-    }
-    /**
-     * Invites a new member to an organization
-     *
-     * @param req - Express request object with email, organization ID, and role
-     * @param res - Express response object
-     */
-    async inviteMember(req, res) {
-        try {
+            this.sendSuccess(res, users);
+        });
+        this.inviteMember = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { email, orgId, role } = req.body;
-            if (!email || !orgId) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
-                });
-                return;
-            }
+            this.logger.info("Admin inviting member", { email, orgId, role });
+            if (!email || !orgId)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, common_constants_1.COMMON_MESSAGES.INVALID_INPUT);
             const result = await this.inviteMemberUseCase.execute(email, orgId, role);
-            res.status(statusCodes_enum_1.StatusCodes.CREATED).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.INVITATION_SENT,
-                data: result,
-            });
-        }
-        catch (error) {
-            this.logger.error("Invite member failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                success: false,
-                message: error.message,
-            });
-        }
-    }
-    /**
-     * Invites multiple members to an organization in bulk
-     *
-     * @param req - Express request object with emails array, organization ID, and role
-     * @param res - Express response object
-     */
-    async bulkInviteMembers(req, res) {
-        try {
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.INVITATION_SENT, statusCodes_enum_1.StatusCodes.CREATED);
+        });
+        this.bulkInviteMembers = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { emails, orgId, role } = req.body;
-            if (!emails || !Array.isArray(emails) || !orgId) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
-                });
-                return;
-            }
+            this.logger.info("Admin bulk inviting members", { count: emails?.length, orgId, role });
+            if (!emails?.length || !orgId)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, common_constants_1.COMMON_MESSAGES.INVALID_INPUT);
             const result = await this.inviteMemberUseCase.bulkInvite(emails, orgId, role);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.INVITATION_SENT,
-                data: result,
-            });
-        }
-        catch (error) {
-            this.logger.error("Bulk invite members failed", error);
-            res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                success: false,
-                message: error.message,
-            });
-        }
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.INVITATION_SENT);
+        });
+    }
+    sendSuccess(res, data, message = "Success", status = statusCodes_enum_1.StatusCodes.OK) {
+        res.status(status).json({ success: true, message, data, timestamp: new Date().toISOString() });
     }
 };
 exports.AdminController = AdminController;
@@ -542,7 +209,8 @@ exports.AdminController = AdminController = __decorate([
     __param(0, (0, inversify_1.inject)(types_1.TYPES.IUserRepo)),
     __param(1, (0, inversify_1.inject)(types_1.TYPES.IOrgRepo)),
     __param(2, (0, inversify_1.inject)(types_1.TYPES.IInviteMemberUseCase)),
-    __param(3, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object])
+    __param(3, (0, inversify_1.inject)(types_1.TYPES.IOrganizationManagementUseCase)),
+    __param(4, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
 ], AdminController);
 //# sourceMappingURL=AdminController.js.map

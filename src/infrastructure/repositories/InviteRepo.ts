@@ -1,117 +1,125 @@
 import { injectable } from "inversify";
+import { BaseRepository } from "./BaseRepository";
 import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
 import { Invite } from "../../domain/entities/Invite";
+import InviteModel from "../models/InviteModel";
+import { Document, Model } from "mongoose";
 
-// ✅ KEEP YOUR EXISTING IN-MEMORY STORAGE
-const invites: Invite[] = [];
+interface IInviteDoc extends Document {
+  email: string;
+  orgId: string;
+  token: string;
+  status: "PENDING" | "ACCEPTED" | "EXPIRED" | "CANCELLED";
+  expiry: Date;
+  role?: string;
+  createdAt: Date;
+  updatedAt?: Date;
+  acceptedAt?: Date;
+  cancelledAt?: Date;
+}
 
 @injectable()
-export class InviteRepo implements IInviteRepo {
-  // ✅ KEEP YOUR EXISTING METHODS
-  async create(invite: Partial<Invite>): Promise<Invite> {
-    const newInvite = {
-      ...invite,
-      id: Math.random().toString(36).slice(2),
-      status: "PENDING",
-      createdAt: new Date(),
-      expiry: invite.expiry || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days default
+export class InviteRepo
+  extends BaseRepository<Invite, IInviteDoc>
+  implements IInviteRepo
+{
+  constructor() {
+    // Cast to unknown first to resolve strict Mongoose type incompatibilities
+    super(InviteModel as unknown as Model<IInviteDoc>);
+  }
+
+  protected toDomain(doc: IInviteDoc): Invite {
+    const obj = doc.toObject();
+    return {
+      id: obj._id.toString(),
+      email: obj.email,
+      orgId: obj.orgId,
+      token: obj.token,
+      status: obj.status,
+      expiry: obj.expiry,
+      assignedRole: obj.role,
+      createdAt: obj.createdAt,
+      updatedAt: obj.updatedAt,
+      acceptedAt: obj.acceptedAt,
+      cancelledAt: obj.cancelledAt,
     } as Invite;
-    invites.push(newInvite);
-    return newInvite;
   }
 
   async findByToken(token: string): Promise<Invite | null> {
-    return invites.find((i) => i.token === token) || null;
+    const doc = await this.model.findOne({ token });
+    return doc ? this.toDomain(doc) : null;
   }
 
   async markAccepted(token: string): Promise<void> {
-    const invite = invites.find((i) => i.token === token);
-    if (invite) {
-      invite.status = "ACCEPTED";
-      invite.acceptedAt = new Date();
-    }
+    await this.model.findOneAndUpdate(
+      { token },
+      { status: "ACCEPTED", acceptedAt: new Date() },
+    );
   }
 
   async expire(token: string): Promise<void> {
-    const invite = invites.find((i) => i.token === token);
-    if (invite) {
-      invite.status = "EXPIRED";
-      // ✅ NOTE: Using updatedAt since expiredAt doesn't exist in interface
-      invite.updatedAt = new Date();
-    }
+    await this.model.findOneAndUpdate(
+      { token },
+      { status: "EXPIRED", updatedAt: new Date() },
+    );
   }
 
-  // ✅ IMPLEMENT MISSING INTERFACE METHODS WITH CORRECT SIGNATURES
-
-  // ✅ FIX: Interface expects (email: string, orgId: string) => Promise<Invite | null>
   async findPendingByEmail(
     email: string,
     orgId: string,
   ): Promise<Invite | null> {
-    return (
-      invites.find(
-        (invite) =>
-          invite.email === email &&
-          invite.orgId === orgId &&
-          invite.status === "PENDING",
-      ) || null
-    );
+    const doc = await this.model.findOne({
+      email,
+      orgId,
+      status: "PENDING",
+      expiry: { $gt: new Date() },
+    });
+    return doc ? this.toDomain(doc) : null;
   }
 
   async findByOrganization(orgId: string): Promise<Invite[]> {
-    return invites.filter((invite) => invite.orgId === orgId);
+    const docs = await this.model.find({ orgId }).sort({ createdAt: -1 });
+    return docs.map((d) => this.toDomain(d));
   }
 
   async findPendingByOrganization(orgId: string): Promise<Invite[]> {
-    return invites.filter(
-      (invite) => invite.orgId === orgId && invite.status === "PENDING",
-    );
+    const docs = await this.model.find({
+      orgId,
+      status: "PENDING",
+      expiry: { $gt: new Date() },
+    });
+    return docs.map((d) => this.toDomain(d));
   }
 
   async markCancelled(token: string): Promise<void> {
-    const invite = invites.find((i) => i.token === token);
-    if (invite) {
-      invite.status = "CANCELLED";
-      invite.cancelledAt = new Date();
-    }
+    await this.model.findOneAndUpdate(
+      { token },
+      { status: "CANCELLED", cancelledAt: new Date() },
+    );
   }
 
   async expireOldInvitations(): Promise<number> {
-    const now = new Date();
-    let expiredCount = 0;
-
-    for (const invite of invites) {
-      if (invite.status === "PENDING" && invite.expiry && invite.expiry < now) {
-        invite.status = "EXPIRED";
-        invite.updatedAt = new Date();
-        expiredCount++;
-      }
-    }
-
-    return expiredCount;
+    const result = await this.model.updateMany(
+      {
+        status: "PENDING",
+        expiry: { $lt: new Date() },
+      },
+      {
+        status: "EXPIRED",
+        updatedAt: new Date(),
+      },
+    );
+    return result.modifiedCount;
   }
 
-  async delete(token: string): Promise<void> {
-    const index = invites.findIndex((i) => i.token === token);
-    if (index !== -1) {
-      invites.splice(index, 1);
-    }
-  }
-
-  async update(token: string, updateData: Partial<Invite>): Promise<Invite> {
-    const invite = invites.find((i) => i.token === token);
-    if (!invite) throw new Error("Invite not found");
-
-    Object.assign(invite, updateData, { updatedAt: new Date() });
-    return invite;
-  }
+  // --- Implemented Missing Interface Methods ---
 
   async isValidInvitation(token: string): Promise<boolean> {
-    const invite = await this.findByToken(token);
-    if (!invite) return false;
-    if (invite.status !== "PENDING") return false;
-    if (invite.expiry && invite.expiry < new Date()) {
-      // Auto-expire if expired
+    const doc = await this.model.findOne({ token, status: "PENDING" });
+    if (!doc) return false;
+
+    if (doc.expiry < new Date()) {
+      // It's expired but wasn't marked yet. Mark it now.
       await this.expire(token);
       return false;
     }
@@ -125,88 +133,33 @@ export class InviteRepo implements IInviteRepo {
     expired: number;
     cancelled: number;
   }> {
-    const orgInvites = invites.filter((i) => i.orgId === orgId);
+    const stats = await this.model.aggregate([
+      { $match: { orgId } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
 
-    return {
-      total: orgInvites.length,
-      pending: orgInvites.filter((i) => i.status === "PENDING").length,
-      accepted: orgInvites.filter((i) => i.status === "ACCEPTED").length,
-      expired: orgInvites.filter((i) => i.status === "EXPIRED").length,
-      cancelled: orgInvites.filter((i) => i.status === "CANCELLED").length,
-    };
-  }
-
-  async findAll(): Promise<Invite[]> {
-    return [...invites]; // Return a copy
-  }
-
-  async findById(id: string): Promise<Invite | null> {
-    return invites.find((i) => i.id === id) || null;
-  }
-
-  async cleanup(): Promise<number> {
-    return await this.expireOldInvitations();
-  }
-
-  async count(): Promise<number> {
-    return invites.length;
-  }
-
-  async findByEmail(email: string): Promise<Invite[]> {
-    return invites.filter((invite) => invite.email === email);
-  }
-
-  async findByStatus(status: string): Promise<Invite[]> {
-    return invites.filter((invite) => invite.status === status);
-  }
-
-  async clearAll(): Promise<void> {
-    invites.length = 0;
-  }
-
-  async performMaintenance(): Promise<void> {
-    const cleanedCount = await this.cleanup();
-    if (cleanedCount > 0) {
-      console.log(
-        `🧹 InviteRepo: Cleaned up ${cleanedCount} expired invitations`,
-      );
-    }
-  }
-
-  async getStats(): Promise<{
-    total: number;
-    pending: number;
-    accepted: number;
-    cancelled: number;
-    expired: number;
-    byOrg: Record<string, number>;
-    byStatus: Record<string, number>;
-    lastUpdated: Date;
-  }> {
-    const stats = {
-      total: invites.length,
-      pending: invites.filter((invite) => invite.status === "PENDING").length,
-      accepted: invites.filter((invite) => invite.status === "ACCEPTED").length,
-      cancelled: invites.filter((invite) => invite.status === "CANCELLED")
-        .length,
-      expired: invites.filter((invite) => invite.status === "EXPIRED").length,
-      byOrg: {} as Record<string, number>,
-      byStatus: {} as Record<string, number>,
-      lastUpdated: new Date(),
+    // Convert array of {_id: "PENDING", count: 5} to object
+    const result = {
+      total: 0,
+      pending: 0,
+      accepted: 0,
+      expired: 0,
+      cancelled: 0,
     };
 
-    // Count by organization
-    invites.forEach((invite) => {
-      const orgId = invite.orgId || "NO_ORG";
-      stats.byOrg[orgId] = (stats.byOrg[orgId] || 0) + 1;
+    stats.forEach((s) => {
+      const status = s._id.toLowerCase() as keyof typeof result;
+      if (status in result) {
+        result[status] = s.count;
+      }
+      result.total += s.count;
     });
 
-    // Count by status
-    invites.forEach((invite) => {
-      const status = invite.status || "UNKNOWN";
-      stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
-    });
-
-    return stats;
+    return result;
   }
 }

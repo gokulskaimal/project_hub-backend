@@ -3,6 +3,7 @@ import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/IComple
 import { IHashService } from "../../domain/interfaces/services/IHashService";
 import { IJwtService } from "../../domain/interfaces/services/IJwtService";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { User } from "../../domain/entities/User";
 export declare class CompleteSignupUseCase implements ICompleteSignupUseCase {
     private readonly _userRepo;
     private readonly _logger;
@@ -22,8 +23,8 @@ export declare class CompleteSignupUseCase implements ICompleteSignupUseCase {
      * @param password - User password
      * @returns Updated user data
      */
-    execute(email: string, password: string, firstName: string, lastName: string, additionalData?: Record<string, any>): Promise<{
-        user: any;
+    execute(email: string, password: string, firstName: string, lastName: string, additionalData?: Record<string, unknown>): Promise<{
+        user: Partial<User>;
         tokens: {
             accessToken: string;
             refreshToken: string;

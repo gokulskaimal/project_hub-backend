@@ -32,7 +32,7 @@ const UserSchema = new mongoose.Schema<IUserDoc>(
     password: { type: String },
     role: { type: String, enum: Object.values(UserRole), required: true },
     provider: { type: String, dafault: "local" },
-    googleId: { type: String, index: true, unique: true },
+    googleId: { type: String, index: true, unique: true, sparse: true },
     avatar: { type: String },
     orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" },
     emailVerified: { type: Boolean, default: false },

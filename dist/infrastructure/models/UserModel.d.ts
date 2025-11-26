@@ -8,6 +8,9 @@ export interface IUserDoc extends Document {
     lastName?: string;
     password?: string;
     role: UserRole;
+    provider?: string;
+    googleId?: string;
+    avatar?: string;
     orgId?: Types.ObjectId;
     emailVerified: boolean;
     emailVerifiedAt?: Date;

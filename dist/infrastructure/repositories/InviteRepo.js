@@ -5,164 +5,125 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteRepo = void 0;
 const inversify_1 = require("inversify");
-// ✅ KEEP YOUR EXISTING IN-MEMORY STORAGE
-const invites = [];
-let InviteRepo = class InviteRepo {
-    // ✅ KEEP YOUR EXISTING METHODS
-    async create(invite) {
-        const newInvite = {
-            ...invite,
-            id: Math.random().toString(36).slice(2),
-            status: "PENDING",
-            createdAt: new Date(),
-            expiry: invite.expiry || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days default
+const BaseRepository_1 = require("./BaseRepository");
+const InviteModel_1 = __importDefault(require("../models/InviteModel"));
+let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
+    constructor() {
+        // Cast to unknown first to resolve strict Mongoose type incompatibilities
+        super(InviteModel_1.default);
+    }
+    toDomain(doc) {
+        const obj = doc.toObject();
+        return {
+            id: obj._id.toString(),
+            email: obj.email,
+            orgId: obj.orgId,
+            token: obj.token,
+            status: obj.status,
+            expiry: obj.expiry,
+            assignedRole: obj.role,
+            createdAt: obj.createdAt,
+            updatedAt: obj.updatedAt,
+            acceptedAt: obj.acceptedAt,
+            cancelledAt: obj.cancelledAt,
         };
-        invites.push(newInvite);
-        return newInvite;
     }
     async findByToken(token) {
-        return invites.find((i) => i.token === token) || null;
+        const doc = await this.model.findOne({ token });
+        return doc ? this.toDomain(doc) : null;
     }
     async markAccepted(token) {
-        const invite = invites.find((i) => i.token === token);
-        if (invite) {
-            invite.status = "ACCEPTED";
-            invite.acceptedAt = new Date();
-        }
+        await this.model.findOneAndUpdate({ token }, { status: "ACCEPTED", acceptedAt: new Date() });
     }
     async expire(token) {
-        const invite = invites.find((i) => i.token === token);
-        if (invite) {
-            invite.status = "EXPIRED";
-            // ✅ NOTE: Using updatedAt since expiredAt doesn't exist in interface
-            invite.updatedAt = new Date();
-        }
+        await this.model.findOneAndUpdate({ token }, { status: "EXPIRED", updatedAt: new Date() });
     }
-    // ✅ IMPLEMENT MISSING INTERFACE METHODS WITH CORRECT SIGNATURES
-    // ✅ FIX: Interface expects (email: string, orgId: string) => Promise<Invite | null>
     async findPendingByEmail(email, orgId) {
-        return (invites.find((invite) => invite.email === email &&
-            invite.orgId === orgId &&
-            invite.status === "PENDING") || null);
+        const doc = await this.model.findOne({
+            email,
+            orgId,
+            status: "PENDING",
+            expiry: { $gt: new Date() }
+        });
+        return doc ? this.toDomain(doc) : null;
     }
     async findByOrganization(orgId) {
-        return invites.filter((invite) => invite.orgId === orgId);
+        const docs = await this.model.find({ orgId }).sort({ createdAt: -1 });
+        return docs.map(d => this.toDomain(d));
     }
     async findPendingByOrganization(orgId) {
-        return invites.filter((invite) => invite.orgId === orgId && invite.status === "PENDING");
+        const docs = await this.model.find({
+            orgId,
+            status: "PENDING",
+            expiry: { $gt: new Date() }
+        });
+        return docs.map(d => this.toDomain(d));
     }
     async markCancelled(token) {
-        const invite = invites.find((i) => i.token === token);
-        if (invite) {
-            invite.status = "CANCELLED";
-            invite.cancelledAt = new Date();
-        }
+        await this.model.findOneAndUpdate({ token }, { status: "CANCELLED", cancelledAt: new Date() });
     }
     async expireOldInvitations() {
-        const now = new Date();
-        let expiredCount = 0;
-        for (const invite of invites) {
-            if (invite.status === "PENDING" && invite.expiry && invite.expiry < now) {
-                invite.status = "EXPIRED";
-                invite.updatedAt = new Date();
-                expiredCount++;
-            }
-        }
-        return expiredCount;
+        const result = await this.model.updateMany({
+            status: "PENDING",
+            expiry: { $lt: new Date() }
+        }, {
+            status: "EXPIRED",
+            updatedAt: new Date()
+        });
+        return result.modifiedCount;
     }
-    async delete(token) {
-        const index = invites.findIndex((i) => i.token === token);
-        if (index !== -1) {
-            invites.splice(index, 1);
-        }
-    }
-    async update(token, updateData) {
-        const invite = invites.find((i) => i.token === token);
-        if (!invite)
-            throw new Error("Invite not found");
-        Object.assign(invite, updateData, { updatedAt: new Date() });
-        return invite;
-    }
+    // --- Implemented Missing Interface Methods ---
     async isValidInvitation(token) {
-        const invite = await this.findByToken(token);
-        if (!invite)
+        const doc = await this.model.findOne({ token, status: "PENDING" });
+        if (!doc)
             return false;
-        if (invite.status !== "PENDING")
-            return false;
-        if (invite.expiry && invite.expiry < new Date()) {
-            // Auto-expire if expired
+        if (doc.expiry < new Date()) {
+            // It's expired but wasn't marked yet. Mark it now.
             await this.expire(token);
             return false;
         }
         return true;
     }
     async getInvitationStats(orgId) {
-        const orgInvites = invites.filter((i) => i.orgId === orgId);
-        return {
-            total: orgInvites.length,
-            pending: orgInvites.filter((i) => i.status === "PENDING").length,
-            accepted: orgInvites.filter((i) => i.status === "ACCEPTED").length,
-            expired: orgInvites.filter((i) => i.status === "EXPIRED").length,
-            cancelled: orgInvites.filter((i) => i.status === "CANCELLED").length,
+        const stats = await this.model.aggregate([
+            { $match: { orgId } },
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+        // Convert array of {_id: "PENDING", count: 5} to object
+        const result = {
+            total: 0,
+            pending: 0,
+            accepted: 0,
+            expired: 0,
+            cancelled: 0
         };
-    }
-    async findAll() {
-        return [...invites]; // Return a copy
-    }
-    async findById(id) {
-        return invites.find((i) => i.id === id) || null;
-    }
-    async cleanup() {
-        return await this.expireOldInvitations();
-    }
-    async count() {
-        return invites.length;
-    }
-    async findByEmail(email) {
-        return invites.filter((invite) => invite.email === email);
-    }
-    async findByStatus(status) {
-        return invites.filter((invite) => invite.status === status);
-    }
-    async clearAll() {
-        invites.length = 0;
-    }
-    async performMaintenance() {
-        const cleanedCount = await this.cleanup();
-        if (cleanedCount > 0) {
-            console.log(`🧹 InviteRepo: Cleaned up ${cleanedCount} expired invitations`);
-        }
-    }
-    async getStats() {
-        const stats = {
-            total: invites.length,
-            pending: invites.filter((invite) => invite.status === "PENDING").length,
-            accepted: invites.filter((invite) => invite.status === "ACCEPTED").length,
-            cancelled: invites.filter((invite) => invite.status === "CANCELLED")
-                .length,
-            expired: invites.filter((invite) => invite.status === "EXPIRED").length,
-            byOrg: {},
-            byStatus: {},
-            lastUpdated: new Date(),
-        };
-        // Count by organization
-        invites.forEach((invite) => {
-            const orgId = invite.orgId || "NO_ORG";
-            stats.byOrg[orgId] = (stats.byOrg[orgId] || 0) + 1;
+        stats.forEach(s => {
+            const status = s._id.toLowerCase();
+            if (status in result) {
+                result[status] = s.count;
+            }
+            result.total += s.count;
         });
-        // Count by status
-        invites.forEach((invite) => {
-            const status = invite.status || "UNKNOWN";
-            stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
-        });
-        return stats;
+        return result;
     }
 };
 exports.InviteRepo = InviteRepo;
 exports.InviteRepo = InviteRepo = __decorate([
-    (0, inversify_1.injectable)()
+    (0, inversify_1.injectable)(),
+    __metadata("design:paramtypes", [])
 ], InviteRepo);
 //# sourceMappingURL=InviteRepo.js.map

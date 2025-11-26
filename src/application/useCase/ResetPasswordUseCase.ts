@@ -6,6 +6,8 @@ import { IHashService } from "../../domain/interfaces/services/IHashService";
 import { IJwtService } from "../../domain/interfaces/services/IJwtService";
 import { IEmailService } from "../../domain/interfaces/services/IEmailService";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class ResetPasswordUseCase implements IResetPasswordUseCase {
@@ -74,7 +76,10 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
       this._logger.error("Password reset request failed", error as Error, {
         email,
       });
-      throw new Error("Failed to process password reset request");
+      throw new HttpError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        "Failed to process password reset request",
+      );
     }
   }
 
@@ -91,13 +96,19 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
       // Business Rule: Verify reset token
       const payload = this._jwtService.verifyResetToken(token);
       if (!payload) {
-        throw new Error("Invalid or expired reset token");
+        throw new HttpError(
+          StatusCodes.BAD_REQUEST,
+          "Invalid or expired reset token",
+        );
       }
 
       // Business Rule: Find user by reset token
       const user = await this._userRepo.findByResetToken(token);
       if (!user) {
-        throw new Error("Invalid or expired reset token");
+        throw new HttpError(
+          StatusCodes.BAD_REQUEST,
+          "Invalid or expired reset token",
+        );
       }
 
       // Business Rule: Validate new password
@@ -155,21 +166,28 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
    */
   private _validatePassword(password: string): void {
     if (!password || typeof password !== "string") {
-      throw new Error("Password is required");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Password is required");
     }
 
     if (password.length < 8) {
-      throw new Error("Password must be at least 8 characters long");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must be at least 8 characters long",
+      );
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      throw new Error(
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
         "Password must contain at least one lowercase letter, one uppercase letter, and one number",
       );
     }
 
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new Error("Password must contain at least one special character");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Password must contain at least one special character",
+      );
     }
   }
 }

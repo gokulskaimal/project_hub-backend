@@ -14,12 +14,19 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const inversify_1 = require("inversify");
-const zod_1 = require("zod");
 const types_1 = require("../../infrastructure/container/types");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const common_constants_1 = require("../../infrastructure/config/common.constants");
+const asyncHandler_1 = require("../../utils/asyncHandler");
 let AuthController = class AuthController {
-    constructor(logger, authUseCases, registerManagerUC, sendOtpUC, verifyOtpUC, completeSignupUC, inviteMemberUC, acceptUC, resetPasswordUC) {
+    constructor(logger, loginUC, registerUC, googleSignInUC, tokenRefreshUC, logoutUC, verifyEmailUC, registerManagerUC, sendOtpUC, verifyOtpUC, completeSignupUC, inviteMemberUC, acceptUC, resetPasswordUC) {
         this.logger = logger;
-        this.authUseCases = authUseCases;
+        this.loginUC = loginUC;
+        this.registerUC = registerUC;
+        this.googleSignInUC = googleSignInUC;
+        this.tokenRefreshUC = tokenRefreshUC;
+        this.logoutUC = logoutUC;
+        this.verifyEmailUC = verifyEmailUC;
         this.registerManagerUC = registerManagerUC;
         this.sendOtpUC = sendOtpUC;
         this.verifyOtpUC = verifyOtpUC;
@@ -27,7 +34,6 @@ let AuthController = class AuthController {
         this.inviteMemberUC = inviteMemberUC;
         this.acceptUC = acceptUC;
         this.resetPasswordUC = resetPasswordUC;
-        // Keep cookie options centralized
         this.refreshCookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -35,251 +41,158 @@ let AuthController = class AuthController {
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         };
-        // Schemas
-        this.registerSchema = zod_1.z.object({
-            email: zod_1.z.string().email(),
-            password: zod_1.z.string().min(6),
-            name: zod_1.z.string().optional(),
+        this.register = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            // Input already validated by middleware
+            const { email, password, name } = req.body;
+            this.logger.info("Registering new user", { email, name });
+            const created = await this.registerUC.execute(email, password, name);
+            this.sendSuccess(res, created, common_constants_1.COMMON_MESSAGES.SIGNUP_COMPLETE, statusCodes_enum_1.StatusCodes.CREATED);
         });
-        this.loginSchema = zod_1.z.object({
-            email: zod_1.z.string().email(),
-            password: zod_1.z.string().min(1),
+        this.login = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email, password } = req.body;
+            this.logger.info("Login attempt", { email });
+            const result = await this.loginUC.execute(email, password);
+            if (result.tokens.refreshToken) {
+                res.cookie("refreshToken", result.tokens.refreshToken, this.refreshCookieOptions);
+            }
+            this.logger.info("User logged in successfully", { userId: result.user.id });
+            this.sendSuccess(res, { accessToken: result.tokens.accessToken, user: result.user }, common_constants_1.COMMON_MESSAGES.LOGIN_SUCCESS);
         });
-        // Methods exposed as arrow functions so routing can pass them directly
-        this.register = async (req, res, next) => {
-            try {
-                const parsed = this.registerSchema.safeParse(req.body);
-                if (!parsed.success) {
-                    return res.status(400).json({ error: "Invalid input", details: parsed.error.format() });
+        this.refreshToken = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const refreshToken = req.cookies?.refreshToken;
+            this.logger.info("Refresh token attempt");
+            if (!refreshToken) {
+                this.logger.warn("Refresh token missing");
+                res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({ success: false, error: "Missing refresh token" });
+                return;
+            }
+            const tokens = await this.tokenRefreshUC.execute(refreshToken);
+            if (tokens.refreshToken) {
+                res.cookie("refreshToken", tokens.refreshToken, this.refreshCookieOptions);
+            }
+            this.sendSuccess(res, { accessToken: tokens.accessToken }, common_constants_1.COMMON_MESSAGES.TOKEN_REFRESHED);
+        });
+        this.logout = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const refreshToken = req.cookies?.refreshToken;
+            this.logger.info("Logout attempt");
+            if (refreshToken) {
+                try {
+                    await this.logoutUC.execute(refreshToken);
                 }
-                const { email, password, name } = parsed.data;
-                const created = await this.authUseCases.register(email, password, name);
-                // created should be a DTO with public user fields (no password)
-                return res.status(201).json({ data: created });
-            }
-            catch (err) {
-                this.logger?.error?.("Error in register controller", err);
-                return next(err);
-            }
-        };
-        this.login = async (req, res, next) => {
-            try {
-                const parsed = this.loginSchema.safeParse(req.body);
-                if (!parsed.success) {
-                    return res.status(400).json({ error: "Invalid input", details: parsed.error.format() });
+                catch (err) {
+                    this.logger.warn("Logout revocation failed", { error: err?.message ?? String(err) });
                 }
-                const { email, password } = parsed.data;
-                const result = await this.authUseCases.login(email, password);
-                const tokens = result.tokens;
-                const user = result.user;
-                if (tokens.refreshToken) {
-                    res.cookie("refreshToken", tokens.refreshToken, this.refreshCookieOptions);
+            }
+            res.clearCookie("refreshToken", { path: "/" });
+            this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.LOGOUT_SUCCESS);
+        });
+        this.registerManager = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email, organizationName } = req.body;
+            this.logger.info("Registering manager", { email, organizationName });
+            const result = await this.registerManagerUC.execute(email, organizationName);
+            this.sendSuccess(res, result, "Manager registration initiated", statusCodes_enum_1.StatusCodes.CREATED);
+        });
+        this.sendOtp = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email } = req.body;
+            this.logger.info("Sending OTP", { email });
+            const result = await this.sendOtpUC.execute(email);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.OTP_SENT);
+        });
+        this.verifyOtp = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email, otp } = req.body;
+            this.logger.info("Verifying OTP", { email });
+            const result = await this.verifyOtpUC.execute(email, otp);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.OTP_VERIFIED);
+        });
+        this.completeSignup = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email, password, firstName, lastName } = req.body;
+            this.logger.info("Completing signup", { email, firstName, lastName });
+            const result = await this.completeSignupUC.execute(email, password, firstName, lastName);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.SIGNUP_COMPLETE);
+        });
+        this.inviteMember = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email, orgId, role } = req.body;
+            this.logger.info("Inviting member", { email, orgId, role });
+            const result = await this.inviteMemberUC.execute(email, orgId, role);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.INVITATION_SENT, statusCodes_enum_1.StatusCodes.CREATED);
+        });
+        this.acceptInvite = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { token, password, firstName, lastName } = req.body;
+            this.logger.info("Accepting invite", { token: "REDACTED", firstName, lastName });
+            const result = await this.acceptUC.execute(token, password, firstName, lastName);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.ACCEPTED);
+        });
+        this.validateInviteToken = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { token } = req.params;
+            this.logger.info("Validating invite token", { token: "REDACTED" });
+            const result = await this.acceptUC.validateInvitationToken(token);
+            this.sendSuccess(res, result, "Token validation result");
+        });
+        this.resetPasswordReq = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { email } = req.body;
+            this.logger.info("Requesting password reset", { email });
+            const result = await this.resetPasswordUC.requestReset(email);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.RESET_SENT);
+        });
+        this.resetPassword = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { token, password } = req.body;
+            this.logger.info("Resetting password", { token: "REDACTED" });
+            const result = await this.resetPasswordUC.resetWithToken(token, password);
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.RESET_SUCCESS);
+        });
+        this.verifyEmail = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const token = req.body?.token || req.headers["x-verification-token"];
+            this.logger.info("Verifying email", { token: "REDACTED" });
+            const result = await this.verifyEmailUC.execute(String(token));
+            this.sendSuccess(res, result, common_constants_1.COMMON_MESSAGES.EMAIL_VERIFIED);
+        });
+        this.googleSignIn = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { idToken, inviteToken, orgName } = req.body;
+            this.logger.info("Google Sign-In attempt", { hasInviteToken: !!inviteToken, orgName });
+            try {
+                const result = await this.googleSignInUC.execute(idToken, inviteToken, orgName);
+                if (result.tokens.refreshToken) {
+                    res.cookie("refreshToken", result.tokens.refreshToken, this.refreshCookieOptions);
                 }
-                // Return access token and user info (no sensitive fields)
-                return res.json({ accessToken: tokens.accessToken, user });
+                this.logger.info("Google Sign-In successful", { userId: result.user.id });
+                this.sendSuccess(res, { accessToken: result.tokens.accessToken, user: result.user }, common_constants_1.COMMON_MESSAGES.LOGIN_SUCCESS);
             }
-            catch (err) {
-                this.logger?.warn?.("Login failed", err);
-                return next(err);
-            }
-        };
-        this.refreshToken = async (req, res, next) => {
-            try {
-                // read cookie (ensure cookie-parser middleware is used globally)
-                const refreshToken = req.cookies?.refreshToken;
-                if (!refreshToken) {
-                    return res.status(401).json({ error: "Missing refresh token" });
+            catch (error) {
+                const msg = error?.message ?? String(error);
+                if (msg === "Organization Name Required") {
+                    throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization Name Required");
                 }
-                // Expect the use-case to return { accessToken, refreshToken } (rotated)
-                const tokens = await this.authUseCases.refresh(refreshToken);
-                // rotate cookie
-                if (tokens.refreshToken) {
-                    res.cookie("refreshToken", tokens.refreshToken, this.refreshCookieOptions);
-                }
-                return res.json({ accessToken: tokens.accessToken });
+                throw error;
             }
-            catch (err) {
-                this.logger?.warn?.("Refresh token failed", err);
-                return next(err);
-            }
-        };
-        this.logout = async (req, res, next) => {
-            try {
-                const refreshToken = req.cookies?.refreshToken;
-                if (refreshToken) {
-                    // logout use-case should revoke the provided refresh token
-                    try {
-                        await this.authUseCases.logout(refreshToken);
-                    }
-                    catch (err) {
-                        // log and continue to clear cookie; revocation failure shouldn't block logout response
-                        this.logger?.warn?.("Failed to revoke refresh token during logout", err);
-                    }
-                }
-                // clear cookie
-                res.clearCookie("refreshToken", {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                    sameSite: "lax",
-                    path: "/",
-                });
-                return res.json({ ok: true });
-            }
-            catch (err) {
-                this.logger?.error?.("Logout failed", err);
-                return next(err);
-            }
-        };
-        this.registerManager = async (req, res, next) => {
-            try {
-                const { email, organizationName } = req.body;
-                if (!email || !organizationName)
-                    return res.status(400).json({ error: 'Missing Fields' });
-                const result = await this.registerManagerUC.execute(email, organizationName);
-                return res.status(201).json(result);
-            }
-            catch (err) {
-                this.logger?.error?.('Registering Manager Failed', err);
-                return next(err);
-            }
-        };
-        this.sendOtp = async (req, res, next) => {
-            try {
-                const { email } = req.body;
-                if (!email)
-                    return res.status(400).json({ error: 'Missing Email' });
-                const result = await this.sendOtpUC.execute(email);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("Send Otp Failed", err);
-                return next(err);
-            }
-        };
-        this.verifyOtp = async (req, res, next) => {
-            try {
-                const { email, otp } = req.body;
-                if (!email || !otp)
-                    return res.status(400).json({ error: 'Missing fields' });
-                const result = await this.verifyOtpUC.execute(email, otp);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.('Verify Otp Failed', err);
-                return next(err);
-            }
-        };
-        this.completeSignup = async (req, res, next) => {
-            try {
-                const { email, password, firstName, lastName } = req.body;
-                if (!email || !password || !firstName || !lastName)
-                    return res.status(400).json({ error: 'Missing Fields' });
-                const result = await this.completeSignupUC.execute(email, password, firstName, lastName);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.('Signup failed', err);
-                return next(err);
-            }
-        };
-        this.inviteMember = async (req, res, next) => {
-            try {
-                const { email, orgId, role } = req.body;
-                if (!email || !orgId)
-                    return res.status(400).json({ error: "Missing fields" });
-                const result = await this.inviteMemberUC.execute(email, orgId, role);
-                return res.status(201).json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("inviteMember failed", err);
-                return next(err);
-            }
-        };
-        this.acceptInvite = async (req, res, next) => {
-            try {
-                const { token, password, firstName, lastName } = req.body;
-                if (!token || !password || !firstName || !lastName)
-                    return res.status(400).json({ error: "Missing fields" });
-                const result = await this.acceptUC.execute(token, password, firstName, lastName);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("acceptInvite failed", err);
-                return next(err);
-            }
-        };
-        this.validateInviteToken = async (req, res, next) => {
-            try {
-                const { token } = req.params;
-                if (!token)
-                    return res.status(400).json({ error: "Missing token" });
-                const result = await this.acceptUC.validateInvitationToken(token);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("validateInviteToken failed", err);
-                return next(err);
-            }
-        };
-        // -----------------------
-        // Password reset
-        // -----------------------
-        this.resetPasswordReq = async (req, res, next) => {
-            try {
-                const { email } = req.body;
-                if (!email)
-                    return res.status(400).json({ error: "Missing email" });
-                const result = await this.resetPasswordUC.requestReset(email);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("resetPasswordReq failed", err);
-                return next(err);
-            }
-        };
-        this.resetPassword = async (req, res, next) => {
-            try {
-                const { token, password } = req.body;
-                if (!token || !password)
-                    return res.status(400).json({ error: "Missing fields" });
-                const result = await this.resetPasswordUC.resetWithToken(token, password);
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("resetPassword failed", err);
-                return next(err);
-            }
-        };
-        // -----------------------
-        // Verify email (token may be body or header)
-        // -----------------------
-        this.verifyEmail = async (req, res, next) => {
-            try {
-                const token = req.body?.token ?? req.headers["x-verification-token"];
-                if (!token)
-                    return res.status(400).json({ error: "Missing verification token" });
-                const result = await this.authUseCases.verifyEmail(String(token));
-                return res.json(result);
-            }
-            catch (err) {
-                this.logger?.error?.("verifyEmail failed", err);
-                return next(err);
-            }
-        };
+        });
+    }
+    // Helper to send standard success response
+    sendSuccess(res, data, message = "Success", status = statusCodes_enum_1.StatusCodes.OK) {
+        res.status(status).json({
+            success: true,
+            message,
+            data,
+            timestamp: new Date().toISOString(),
+        });
     }
 };
 exports.AuthController = AuthController;
 exports.AuthController = AuthController = __decorate([
     (0, inversify_1.injectable)(),
     __param(0, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
-    __param(1, (0, inversify_1.inject)(types_1.TYPES.IAuthUseCases)),
-    __param(2, (0, inversify_1.inject)(types_1.TYPES.IRegisterManagerUseCase)),
-    __param(3, (0, inversify_1.inject)(types_1.TYPES.ISendOtpUseCase)),
-    __param(4, (0, inversify_1.inject)(types_1.TYPES.IVerifyOtpUseCase)),
-    __param(5, (0, inversify_1.inject)(types_1.TYPES.ICompleteSignupUseCase)),
-    __param(6, (0, inversify_1.inject)(types_1.TYPES.IInviteMemberUseCase)),
-    __param(7, (0, inversify_1.inject)(types_1.TYPES.IAcceptUseCase)),
-    __param(8, (0, inversify_1.inject)(types_1.TYPES.IResetPasswordUseCase)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object, Object, Object])
+    __param(1, (0, inversify_1.inject)(types_1.TYPES.ILoginUseCase)),
+    __param(2, (0, inversify_1.inject)(types_1.TYPES.IRegisterUseCase)),
+    __param(3, (0, inversify_1.inject)(types_1.TYPES.IGoogleSignInUseCase)),
+    __param(4, (0, inversify_1.inject)(types_1.TYPES.ITokenRefreshUseCase)),
+    __param(5, (0, inversify_1.inject)(types_1.TYPES.ILogoutUseCase)),
+    __param(6, (0, inversify_1.inject)(types_1.TYPES.IVerifyEmailUseCase)),
+    __param(7, (0, inversify_1.inject)(types_1.TYPES.IRegisterManagerUseCase)),
+    __param(8, (0, inversify_1.inject)(types_1.TYPES.ISendOtpUseCase)),
+    __param(9, (0, inversify_1.inject)(types_1.TYPES.IVerifyOtpUseCase)),
+    __param(10, (0, inversify_1.inject)(types_1.TYPES.ICompleteSignupUseCase)),
+    __param(11, (0, inversify_1.inject)(types_1.TYPES.IInviteMemberUseCase)),
+    __param(12, (0, inversify_1.inject)(types_1.TYPES.IAcceptUseCase)),
+    __param(13, (0, inversify_1.inject)(types_1.TYPES.IResetPasswordUseCase)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object])
 ], AuthController);
 //# sourceMappingURL=AuthController.js.map

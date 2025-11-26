@@ -1,59 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.errorInterceptor = exports.ApiError = void 0;
-const HttpStatus_1 = require("../../domain/enums/HttpStatus");
-const Logger_1 = require("../../infrastructure/services/Logger");
-class ApiError extends Error {
-    constructor(statusCode, message, details) {
-        super(message);
-        this.statusCode = statusCode;
-        this.details = details;
-    }
+exports.createManagerRoutes = createManagerRoutes;
+const express_1 = require("express");
+const types_1 = require("../../infrastructure/container/types");
+const AuthMiddleware_1 = require("../middleware/AuthMiddleware");
+const RoleMiddleware_1 = require("../middleware/RoleMiddleware");
+const UserRole_1 = require("../../domain/enums/UserRole");
+const constants_1 = require("./constants");
+function createManagerRoutes(container) {
+    const router = (0, express_1.Router)();
+    const controller = container.get(types_1.TYPES.ManagerController);
+    // Protect all manager routes
+    router.use('/manager', AuthMiddleware_1.authMiddleware, (0, RoleMiddleware_1.roleMiddleware)(UserRole_1.UserRole.ORG_MANAGER));
+    router.get(constants_1.API_ROUTES.MANAGER.MEMBERS, (req, res, next) => controller.listMembers(req, res, next));
+    router.delete(`${constants_1.API_ROUTES.MANAGER.MEMBERS}/:id`, (req, res, next) => controller.removeMember(req, res, next));
+    router.put(`${constants_1.API_ROUTES.MANAGER.MEMBERS}/:id/status`, (req, res, next) => controller.updateMemberStatus(req, res, next));
+    router.post(constants_1.API_ROUTES.MANAGER.INVITE, (req, res, next) => controller.inviteMember(req, res, next));
+    router.post(constants_1.API_ROUTES.MANAGER.BULK_INVITE, (req, res, next) => controller.bulkInvite(req, res, next));
+    router.get(constants_1.API_ROUTES.MANAGER.INVITATIONS, (req, res, next) => controller.listInvitations(req, res, next));
+    router.delete(`${constants_1.API_ROUTES.MANAGER.INVITATIONS}/:token`, (req, res, next) => controller.cancelInvitation(req, res, next));
+    return router;
 }
-exports.ApiError = ApiError;
-const errorInterceptor = (err, req, res, _next) => {
-    // ✅ USE YOUR LOGGER'S ERROR METHOD CORRECTLY
-    try {
-        // Create a logger instance since you export both class and default instance
-        const logger = new Logger_1.Logger();
-        logger.error('API Error occurred', err, {
-            path: req.path,
-            method: req.method,
-            timestamp: new Date().toISOString(),
-            statusCode: err instanceof ApiError ? err.statusCode : HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR,
-            userAgent: req.get('User-Agent'),
-            ip: req.ip,
-            body: req.body,
-            params: req.params,
-            query: req.query
-        });
-    }
-    catch (logError) {
-        // If logging fails, fallback to console
-        console.error('Logging failed:', logError);
-        console.error('Original error:', {
-            message: err.message,
-            stack: err.stack,
-            path: req.path,
-            method: req.method
-        });
-    }
-    if (err instanceof ApiError) {
-        return res.status(err.statusCode).json({
-            status: 'error',
-            message: err.message,
-            details: err.details,
-            timestamp: new Date().toISOString()
-        });
-    }
-    // For non-API errors, don't expose internal details in production
-    const isProduction = process.env.NODE_ENV === 'production';
-    return res.status(HttpStatus_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
-        status: 'error',
-        message: isProduction ? 'Internal Server Error' : err.message,
-        timestamp: new Date().toISOString(),
-        ...(isProduction ? {} : { stack: err.stack })
-    });
-};
-exports.errorInterceptor = errorInterceptor;
 //# sourceMappingURL=managerRoutes.js.map

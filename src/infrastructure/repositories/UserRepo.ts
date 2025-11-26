@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepository";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { User } from "../../domain/entities/User";
+import { Organization } from "../../domain/entities/Organization";
 import UserModel, { IUserDoc } from "../models/UserModel";
 import { UserRole } from "../../domain/enums/UserRole";
 import OrgModel from "../models/OrgModel";
@@ -70,10 +69,10 @@ export class UserRepo
       throw new Error(`Failed to get OTP: ${(error as Error).message}`);
     }
   }
-  async findOrganizationById?(orgId: string): Promise<unknown | null> {
+  async findOrganizationById?(orgId: string): Promise<Organization | null> {
     try {
       const org = await OrgModel.findById(orgId);
-      return org ? org.toObject() : null;
+      return org ? (org.toObject() as Organization) : null;
     } catch (error) {
       throw new Error(
         `Failed to find organization by id: ${(error as Error).message}`,
@@ -262,6 +261,7 @@ export class UserRepo
   //   }
   // }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async removeFromOrg(userId: string, _orgId: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(userId, {
@@ -301,7 +301,7 @@ export class UserRepo
     hasMore: boolean;
   }> {
     try {
-      const query: any = {
+      const query: Record<string, unknown> = {
         // Exclude super admins from listing
         role: { $ne: UserRole.SUPER_ADMIN },
       };
@@ -408,7 +408,7 @@ export class UserRepo
 
   async emailExists(email: string, excludeUserId?: string): Promise<boolean> {
     try {
-      const query: any = { email };
+      const query: Record<string, unknown> = { email };
       if (excludeUserId) {
         query._id = { $ne: excludeUserId };
       }

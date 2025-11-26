@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import winston from "winston";
 import path from "path";
 import { injectable } from "inversify";
@@ -22,7 +21,7 @@ export class Logger implements ILogger {
    * @param message - Log message
    * @param meta - Additional metadata (optional)
    */
-  public info(message: string, meta?: any): void {
+  public info(message: string, meta?: Record<string, unknown>): void {
     this._logger.info(message, meta);
   }
 
@@ -32,9 +31,13 @@ export class Logger implements ILogger {
    * @param error - Error object (optional)
    * @param meta - Additional metadata (optional)
    */
-  public error(message: string, error?: Error, meta?: any): void {
-    const logData = {
-      ...meta,
+  public error(
+    message: string,
+    error?: Error,
+    meta?: Record<string, unknown>,
+  ): void {
+    const logData: Record<string, unknown> = {
+      ...(meta || {}),
       error: error
         ? {
             message: error.message,
@@ -52,7 +55,7 @@ export class Logger implements ILogger {
    * @param message - Warning message
    * @param meta - Additional metadata (optional)
    */
-  public warn(message: string, meta?: any): void {
+  public warn(message: string, meta?: Record<string, unknown>): void {
     this._logger.warn(message, meta);
   }
 
@@ -61,7 +64,7 @@ export class Logger implements ILogger {
    * @param message - Debug message
    * @param meta - Additional metadata (optional)
    */
-  public debug(message: string, meta?: any): void {
+  public debug(message: string, meta?: Record<string, unknown>): void {
     this._logger.debug(message, meta);
   }
 

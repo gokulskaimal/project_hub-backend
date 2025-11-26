@@ -1,4 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { User } from "../../entities/User";
+import { Organization } from "../../entities/Organization";
+import { Invite } from "../../entities/Invite";
+
 export interface IAcceptUseCase {
   /**
    * Accept organization invitation
@@ -8,10 +11,10 @@ export interface IAcceptUseCase {
     password: string,
     firstName: string,
     lastName: string,
-    additionalData?: Record<string, any>,
+    additionalData?: Record<string, unknown>,
   ): Promise<{
-    user: any;
-    organization: any;
+    user: Partial<User>;
+    organization: Partial<Organization>;
     tokens: {
       accessToken: string;
       refreshToken: string;
@@ -24,7 +27,7 @@ export interface IAcceptUseCase {
    */
   validateInvitationToken(token: string): Promise<{
     valid: boolean;
-    invitation?: any;
+    invitation?: Partial<Invite>;
     expired?: boolean;
   }>;
 }

@@ -13,8 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRepo = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 const inversify_1 = require("inversify");
 const BaseRepository_1 = require("./BaseRepository");
 const UserModel_1 = __importDefault(require("../models/UserModel"));
@@ -43,36 +41,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             createdAt: plain.createdAt,
             updatedAt: plain.updatedAt,
             lastLoginAt: plain.lastLoginAt,
-            joinedAt: plain.joinedAt,
-            signupMethod: plain.signupMethod,
-            invitedAt: plain.invitedAt,
-            invitedBy: plain.invitedBy,
-            phone: plain.phone,
-            phoneVerified: plain.phoneVerified,
-            timezone: plain.timezone,
-            language: plain.language,
-            title: plain.title,
-            department: plain.department,
-            bio: plain.bio,
-            dateOfBirth: plain.dateOfBirth,
-            preferences: plain.preferences,
-            permissions: plain.permissions,
-            failedLoginAttempts: plain.failedLoginAttempts,
-            lockedAt: plain.lockedAt,
-            lockExpiresAt: plain.lockExpiresAt,
-            twoFactorEnabled: plain.twoFactorEnabled,
-            twoFactorSecret: plain.twoFactorSecret,
-            backupCodes: plain.backupCodes,
-            sessionTokens: plain.sessionTokens,
-            tosAcceptedAt: plain.tosAcceptedAt,
-            privacyAcceptedAt: plain.privacyAcceptedAt,
-            registrationIp: plain.registrationIp,
-            registrationUserAgent: plain.registrationUserAgent,
-            lastKnownIp: plain.lastKnownIp,
-            isDeleted: plain.isDeleted,
-            deletedAt: plain.deletedAt,
-            deletionReason: plain.deletionReason,
-            metadata: plain.metadata,
+            resetPasswordToken: plain.resetPasswordToken,
+            resetPasswordExpires: plain.resetPasswordExpires,
         };
     }
     async storeOtp(email, otp, expiry) {
@@ -254,6 +224,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
     //     throw new Error("Failed to hard delete user: Unknown error");
     //   }
     // }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async removeFromOrg(userId, _orgId) {
         try {
             await UserModel_1.default.findByIdAndUpdate(userId, {

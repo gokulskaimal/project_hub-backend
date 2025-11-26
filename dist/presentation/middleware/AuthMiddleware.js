@@ -27,23 +27,31 @@ async function authMiddleware(req, res, next) {
             // Fetch latest user state from DB to ensure status/org checks
             const userDoc = await UserModel_1.default.findById(payload.id);
             if (!userDoc) {
-                res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({ error: common_constants_1.COMMON_MESSAGES.UNAUTHORIZED });
+                res
+                    .status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED)
+                    .json({ error: common_constants_1.COMMON_MESSAGES.UNAUTHORIZED });
                 return;
             }
             // If user is not ACTIVE, deny access
             if (userDoc.status !== "ACTIVE") {
-                res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({ error: "User account suspended or disabled" });
+                res
+                    .status(statusCodes_enum_1.StatusCodes.FORBIDDEN)
+                    .json({ error: "User account suspended or disabled" });
                 return;
             }
             // If user's organization exists and is not ACTIVE, deny access
             if (userDoc.orgId) {
                 const orgDoc = await OrgModel_1.default.findById(userDoc.orgId);
                 if (!orgDoc) {
-                    res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({ error: "Organization not found" });
+                    res
+                        .status(statusCodes_enum_1.StatusCodes.FORBIDDEN)
+                        .json({ error: "Organization not found" });
                     return;
                 }
                 if (orgDoc.status !== Organization_1.OrganizationStatus.ACTIVE) {
-                    res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({ error: "Organization suspended or disabled" });
+                    res
+                        .status(statusCodes_enum_1.StatusCodes.FORBIDDEN)
+                        .json({ error: "Organization suspended or disabled" });
                     return;
                 }
             }
@@ -56,7 +64,7 @@ async function authMiddleware(req, res, next) {
         if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
             res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({
                 error: "JWT token expired",
-                code: "TOKEN_EXPIRED"
+                code: "TOKEN_EXPIRED",
             });
             return;
         }

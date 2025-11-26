@@ -1,5 +1,6 @@
 import { IAuthUseCases } from "../../domain/interfaces/useCases/IAuthUseCases";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IGoogleAuthService } from "../../domain/interfaces/services/IGoogleAuthService ";
 import { IHashService } from "../../domain/interfaces/services/IHashService";
 import { IJwtService } from "../../domain/interfaces/services/IJwtService";
 import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
@@ -11,10 +12,11 @@ export declare class AuthUseCases implements IAuthUseCases {
     private readonly _userRepo;
     private readonly _hashService;
     private readonly _jwtService;
+    private readonly _googleAuthService;
     private readonly _resetPasswordUseCase;
     private readonly _logger;
     private readonly _orgRepo;
-    constructor(_userRepo: IUserRepo, _hashService: IHashService, _jwtService: IJwtService, _resetPasswordUseCase: IResetPasswordUseCase, _logger: ILogger, _orgRepo: IOrgRepo);
+    constructor(_userRepo: IUserRepo, _hashService: IHashService, _jwtService: IJwtService, _googleAuthService: IGoogleAuthService, _resetPasswordUseCase: IResetPasswordUseCase, _logger: ILogger, _orgRepo: IOrgRepo);
     /**
      * Helper: normalize args for login
      */
@@ -25,6 +27,10 @@ export declare class AuthUseCases implements IAuthUseCases {
      * Creates a new user, hashes password, returns a public user view and tokens.
      */
     register(email: string, password: string, name?: string): Promise<AuthResult>;
+    googleSignIn(idToken: string, inviteToken?: string, orgName?: string): Promise<{
+        user: UserDTO;
+        tokens: AuthTokens;
+    }>;
     /**
      * LOGIN - accepts either (email, password) or {email, password}
      * Returns shape expected by controller: { user, accessToken, refreshToken }

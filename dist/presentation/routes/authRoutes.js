@@ -1,144 +1,56 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const UserRepo_1 = require("../../infrastructure/repositories/UserRepo");
-const OrgRepo_1 = require("../../infrastructure/repositories/OrgRepo");
-const InviteRepo_1 = require("../../infrastructure/repositories/InviteRepo");
-const OTPService_1 = require("../../infrastructure/services/OTPService");
-const EmailService_1 = require("../../infrastructure/services/EmailService");
-const HashService_1 = require("../../infrastructure/services/HashService");
-const Logger_1 = require("../../infrastructure/services/Logger");
-const JsonWebTokenProvider_1 = require("../../infrastructure/services/providers/JsonWebTokenProvider");
-const JwtService_1 = require("../../infrastructure/services/JwtService");
-const RedisCacheService_1 = require("../../infrastructure/services/RedisCacheService");
-const RegisterManagerUseCase_1 = require("../../application/useCase/RegisterManagerUseCase");
-const SendOtpUseCase_1 = require("../../application/useCase/SendOtpUseCase");
-const VerifyOtpUseCase_1 = require("../../application/useCase/VerifyOtpUseCase");
-const CompleteSignupUseCase_1 = require("../../application/useCase/CompleteSignupUseCase");
-const InviteMemberUseCase_1 = require("../../application/useCase/InviteMemberUseCase");
-const AcceptUseCase_1 = require("../../application/useCase/AcceptUseCase");
-const AuthUseCase_1 = require("../../application/useCase/AuthUseCase");
-const ResetPasswordUseCase_1 = require("../../application/useCase/ResetPasswordUseCase");
+exports.createAuthRoutes = createAuthRoutes;
+const express_1 = require("express");
+const types_1 = require("../../infrastructure/container/types");
+const ValidationMiddleware_1 = require("../middleware/ValidationMiddleware");
 const constants_1 = require("./constants");
-const AuthController_1 = require("../controllers/AuthController");
-const AuthMiddleware_1 = require("../middleware/AuthMiddleware");
-const userRepo = new UserRepo_1.UserRepo();
-const orgRepo = new OrgRepo_1.OrgRepo();
-const otpService = new OTPService_1.OtpService();
-const emailService = new EmailService_1.EmailService();
-const cache = new RedisCacheService_1.RedisCacheService();
-const inviteRepo = new InviteRepo_1.InviteRepo();
-const hashService = new HashService_1.HashService();
-const jwtProvider = new JsonWebTokenProvider_1.JsonWebTokenProvider();
-const jwtService = new JwtService_1.JwtService(jwtProvider);
-const logger = new Logger_1.Logger();
-const resetPasswordUC = new ResetPasswordUseCase_1.ResetPasswordUseCase(userRepo, hashService, jwtService, emailService, logger);
-const authUseCase = new AuthUseCase_1.AuthUseCases(userRepo, hashService, jwtService, resetPasswordUC, logger, orgRepo);
-const registerManagerUC = new RegisterManagerUseCase_1.RegisterManagerUseCase(userRepo, otpService, emailService, logger, orgRepo);
-const sendOtpUC = new SendOtpUseCase_1.SendOtpUseCase(userRepo, otpService, emailService, logger, cache);
-const verifyOtpUC = new VerifyOtpUseCase_1.VerifyOtpUseCase(userRepo, logger, cache);
-const completeSignupUC = new CompleteSignupUseCase_1.CompleteSignupUseCase(userRepo, logger, hashService, jwtService);
-const inviteMemberUC = new InviteMemberUseCase_1.InviteMemberUseCase(inviteRepo, emailService, logger, orgRepo, userRepo);
-const acceptUC = new AcceptUseCase_1.AcceptUseCase(inviteRepo, userRepo, logger, hashService, jwtService);
-const authController = new AuthController_1.AuthController(logger, authUseCase, registerManagerUC, sendOtpUC, verifyOtpUC, completeSignupUC, inviteMemberUC, acceptUC, resetPasswordUC);
-const router = express_1.default.Router();
-//AUTH_ROUTES constants
-router.post(constants_1.AUTH_ROUTES.LOGIN, (req, res, next) => authController.login(req, res, next));
-router.post(constants_1.AUTH_ROUTES.REFRESH, (req, res, next) => authController.refreshToken(req, res, next));
-router.post(constants_1.AUTH_ROUTES.RESET_PASSWORD_REQUEST, async (req, res, next) => {
-    try {
-        const { email } = req.body;
-        const result = await resetPasswordUC.requestReset(email);
-        return res.json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.RESET_PASSWORD, async (req, res, next) => {
-    try {
-        const { token, password } = req.body;
-        const result = await resetPasswordUC.resetWithToken(token, password);
-        return res.json(result);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.VERIFY_EMAIL, AuthMiddleware_1.authMiddleware, async (req, res, next) => {
-    try {
-        const token = req.body?.token ?? req.headers["x-verification-token"];
-        if (!token)
-            return res.status(400).json({ error: 'Verification token missing' });
-        const result = await authUseCase.verifyEmail(token);
-        return res.json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.REGISTER_MANAGER, async (req, res, next) => {
-    try {
-        const { email, organizationName } = req.body;
-        const result = await registerManagerUC.execute(email, organizationName);
-        return res.status(201).json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.SEND_OTP, async (req, res, next) => {
-    try {
-        const { email } = req.body;
-        const result = await sendOtpUC.execute(email);
-        return res.json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.VERIFY_OTP, async (req, res, next) => {
-    try {
-        const { email, otp } = req.body;
-        const result = await verifyOtpUC.execute(email, otp);
-        return res.json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.COMPLETE_SIGNUP, async (req, res, next) => {
-    try {
-        const { email, password, firstName, lastName } = req.body;
-        const result = await completeSignupUC.execute(email, password, firstName, lastName);
-        return res.json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.INVITE_MEMBER, async (req, res, next) => {
-    try {
-        const { email, orgId, role } = req.body;
-        const result = await inviteMemberUC.execute(email, orgId, role);
-        return res.status(201).json(result);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-router.post(constants_1.AUTH_ROUTES.ACCEPT_INVITE, async (req, res, next) => {
-    try {
-        const { token, password, firstName, lastName } = req.body;
-        const result = await acceptUC.execute(token, password, firstName, lastName);
-        return res.json(result);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-exports.default = router;
+// Import Schemas
+// Ensure these match the exports in your schemas file
+const authSchemas_1 = require("../validation/authSchemas");
+function createAuthRoutes(container) {
+    const router = (0, express_1.Router)();
+    // Resolve the controller from the DI container
+    const controller = container.get(types_1.TYPES.AuthController);
+    // --- Standard Auth ---
+    // POST /auth/login
+    router.post(constants_1.API_ROUTES.AUTH.LOGIN, (0, ValidationMiddleware_1.validate)(authSchemas_1.loginSchema), (req, res, next) => controller.login(req, res, next));
+    // POST /auth/register (Standard User)
+    router.post(constants_1.API_ROUTES.AUTH.REGISTER, (0, ValidationMiddleware_1.validate)(authSchemas_1.registerSchema), (req, res, next) => controller.register(req, res, next));
+    // POST /auth/register-manager (Organization Manager)
+    // Note: You might need a schema for this if not generic registerSchema
+    router.post(constants_1.API_ROUTES.AUTH.REGISTER_MANAGER, (0, ValidationMiddleware_1.validate)(authSchemas_1.registerSchema), (req, res, next) => controller.registerManager(req, res, next));
+    // --- OTP & Verification ---
+    // POST /auth/send-otp
+    router.post(constants_1.API_ROUTES.AUTH.SEND_OTP, (0, ValidationMiddleware_1.validate)(authSchemas_1.sendOtpSchema), (req, res, next) => controller.sendOtp(req, res, next));
+    // POST /auth/verify-otp
+    router.post(constants_1.API_ROUTES.AUTH.VERIFY_OTP, (0, ValidationMiddleware_1.validate)(authSchemas_1.verifyOtpSchema), (req, res, next) => controller.verifyOtp(req, res, next));
+    // POST /auth/verify-email
+    router.post(constants_1.API_ROUTES.AUTH.VERIFY_EMAIL, (req, res, next) => controller.verifyEmail(req, res, next));
+    // --- Signup Completion ---
+    // POST /auth/complete-signup
+    router.post(constants_1.API_ROUTES.AUTH.COMPLETE_SIGNUP, (0, ValidationMiddleware_1.validate)(authSchemas_1.completeSignupSchema), (req, res, next) => controller.completeSignup(req, res, next));
+    // --- Password Reset ---
+    // POST /auth/reset-password-request
+    router.post(constants_1.API_ROUTES.AUTH.RESET_PASSWORD_REQUEST, (req, res, next) => controller.resetPasswordReq(req, res, next));
+    // POST /auth/reset-password (Complete the reset)
+    router.post(constants_1.API_ROUTES.AUTH.RESET_PASSWORD, (req, res, next) => controller.resetPassword(req, res, next));
+    // --- Invitations ---
+    // POST /auth/invite-member
+    router.post(constants_1.API_ROUTES.AUTH.INVITE_MEMBER, (req, res, next) => controller.inviteMember(req, res, next));
+    // POST /auth/accept-invite
+    router.post(constants_1.API_ROUTES.AUTH.ACCEPT_INVITE, (req, res, next) => controller.acceptInvite(req, res, next));
+    // GET /auth/invite/:token (Validate token for UI)
+    // Note: This is often a dynamic route, so we handle it specifically if defined in API_ROUTES or manually
+    router.get("/invite/:token", (req, res, next) => controller.validateInviteToken(req, res, next));
+    // --- OAuth & Session ---
+    // POST /auth/google-signin
+    router.post(constants_1.API_ROUTES.AUTH.GOOGLE_SIGNIN, (req, res, next) => controller.googleSignIn(req, res, next));
+    // POST /auth/refresh-token
+    router.post(constants_1.API_ROUTES.AUTH.REFRESH, (req, res, next) => controller.refreshToken(req, res, next));
+    // POST /auth/logout
+    router.post("/logout", // Often standardized
+    (req, res, next) => controller.logout(req, res, next));
+    return router;
+}
 //# sourceMappingURL=authRoutes.js.map

@@ -14,18 +14,26 @@ function notFoundHandler(_req, res) {
 }
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 exports.asyncHandler = asyncHandler;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function errorHandler(err, req, res, _next) {
     const status = err.status ?? statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR;
     const message = status === statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR
         ? common_constants_1.COMMON_MESSAGES.SERVER_ERROR
         : err.message;
-    Logger_1.default.error("Request failed", err, {
-        path: req.path,
-        status,
-        message,
-        stack: err.stack,
-    });
+    if (status >= 400 && status < 500) {
+        Logger_1.default.warn("Request validation failed", {
+            path: req.path,
+            status,
+            message,
+        });
+    }
+    else {
+        Logger_1.default.error("Request failed", err, {
+            path: req.path,
+            status,
+            message,
+            stack: err.stack,
+        });
+    }
     res.status(status).json({ error: message, code: err.code });
 }
 //# sourceMappingURL=ErrorMiddleware.js.map

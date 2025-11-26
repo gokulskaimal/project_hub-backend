@@ -29,11 +29,21 @@ export function errorHandler(
     status === StatusCodes.INTERNAL_SERVER_ERROR
       ? COMMON_MESSAGES.SERVER_ERROR
       : err.message;
-  logger.error("Request failed", err, {
-    path: req.path,
-    status,
-    message,
-    stack: err.stack,
-  });
+
+  if (status >= 400 && status < 500) {
+    logger.warn("Request validation failed", {
+      path: req.path,
+      status,
+      message,
+    });
+  } else {
+    logger.error("Request failed", err, {
+      path: req.path,
+      status,
+      message,
+      stack: err.stack,
+    });
+  }
+
   res.status(status).json({ error: message, code: err.code });
 }

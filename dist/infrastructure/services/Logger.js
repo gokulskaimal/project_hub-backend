@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Logger = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const winston_1 = __importDefault(require("winston"));
 const path_1 = __importDefault(require("path"));
 const inversify_1 = require("inversify");
@@ -42,7 +41,7 @@ let Logger = class Logger {
      */
     error(message, error, meta) {
         const logData = {
-            ...meta,
+            ...(meta || {}),
             error: error
                 ? {
                     message: error.message,

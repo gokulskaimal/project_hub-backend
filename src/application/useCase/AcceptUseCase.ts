@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
+import { OrganizationStatus } from "../../domain/entities/Organization";
 import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
@@ -46,10 +45,10 @@ export class AcceptUseCase implements IAcceptUseCase {
     password: string,
     firstName: string,
     lastName: string,
-    additionalData?: Record<string, any>,
+    additionalData?: Record<string, unknown>,
   ): Promise<{
-    user: any;
-    organization: any;
+    user: Record<string, unknown>;
+    organization: { id: string; name: string; status: OrganizationStatus };
     tokens: {
       accessToken: string;
       refreshToken: string;
@@ -89,11 +88,28 @@ export class AcceptUseCase implements IAcceptUseCase {
       }
 
       if (invite.status !== "PENDING") {
-        this._logger.warn("Invitation already processed", {
+        this._logger.warn("Invitation not available", {
           token: token.substring(0, 8) + "...",
           status: invite.status,
         });
-        throw new Error("Invitation has already been processed");
+
+        if (invite.status === "CANCELLED") {
+          throw new Error(
+            "This invitation has been cancelled by your organization administrator",
+          );
+        } else if (invite.status === "ACCEPTED") {
+          throw new Error(
+            "This invitation has already been used to create an account",
+          );
+        } else if (invite.status === "EXPIRED") {
+          throw new Error(
+            "This invitation has expired. Please request a new invitation",
+          );
+        } else {
+          throw new Error(
+            `Invitation is not available (status: ${invite.status})`,
+          );
+        }
       }
 
       // Business Rule: Check if user already exists
@@ -131,7 +147,7 @@ export class AcceptUseCase implements IAcceptUseCase {
         emailVerified: true, // Pre-verified through invitation
         status: "ACTIVE",
         createdAt: new Date(),
-        ...additionalData,
+        ...(additionalData as Record<string, unknown>),
       });
 
       // Generate authentication tokens
@@ -159,14 +175,14 @@ export class AcceptUseCase implements IAcceptUseCase {
       });
 
       // Return safe user data (exclude sensitive fields)
-      const {
-        password: _,
-        resetPasswordToken,
-        resetPasswordExpires,
-        otp,
-        otpExpiry,
-        ...safeUserData
-      } = newUser;
+      const safeUserData = {
+        ...(newUser as unknown as Record<string, unknown>),
+      } as Record<string, unknown>;
+      Reflect.deleteProperty(safeUserData, "password");
+      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
+      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
+      Reflect.deleteProperty(safeUserData, "otp");
+      Reflect.deleteProperty(safeUserData, "otpExpiry");
 
       return {
         user: safeUserData,
@@ -192,14 +208,15 @@ export class AcceptUseCase implements IAcceptUseCase {
   }
 
   /**
-   * ✅ ADDED: Validate invitation token
    * @param token - Invitation token
    * @returns Validation result
    */
   public async validateInvitationToken(token: string): Promise<{
     valid: boolean;
-    invitation?: any;
+    invitation?: Record<string, unknown>;
     expired?: boolean;
+    cancelled?: boolean;
+    accepted?: boolean;
   }> {
     try {
       if (!token) {
@@ -212,6 +229,8 @@ export class AcceptUseCase implements IAcceptUseCase {
       }
 
       const expired = invite.expiry < new Date();
+      const cancelled = invite.status === "CANCELLED";
+      const accepted = invite.status === "ACCEPTED";
       const processed = invite.status !== "PENDING";
 
       return {
@@ -221,8 +240,11 @@ export class AcceptUseCase implements IAcceptUseCase {
           orgId: invite.orgId,
           createdAt: invite.createdAt,
           expiry: invite.expiry,
-        },
+          status: invite.status,
+        } as Record<string, unknown>,
         expired,
+        cancelled,
+        accepted,
       };
     } catch (error) {
       this._logger.error("Token validation failed", error as Error);

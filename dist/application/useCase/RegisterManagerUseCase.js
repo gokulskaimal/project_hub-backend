@@ -17,6 +17,8 @@ const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const UserRole_1 = require("../../domain/enums/UserRole");
 const Organization_1 = require("../../domain/entities/Organization");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let RegisterManagerUseCase = class RegisterManagerUseCase {
     constructor(userRepo, otpService, emailService, logger, orgRepo) {
         this._userRepo = userRepo;
@@ -34,12 +36,12 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
             this._validateInput(email, organizationName);
             const isNameAvailable = await this.validateOrganizationName(organizationName);
             if (!isNameAvailable) {
-                throw new Error("Organization name is already taken");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "Organization name is already taken");
             }
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser && existingUser.emailVerified) {
                 this._logger.warn("Manager already exists and verified", { email });
-                throw new Error("User already exists and is verified");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "User already exists and is verified");
             }
             // ✅ FIXED: Use const assertion for organization status
             const organizationData = {
@@ -54,7 +56,7 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
             const organization = await this._orgRepo.create(organizationData);
             const invitationToken = this._generateInvitationToken();
             const otp = this._otpService.generateOtp(6);
-            const expiry = this._otpService.generateExpiry(10);
+            const expiry = this._otpService.generateExpiry(1);
             const userData = {
                 email,
                 orgId: organization.id,
@@ -126,24 +128,24 @@ let RegisterManagerUseCase = class RegisterManagerUseCase {
     }
     _validateInput(email, organizationName) {
         if (!email || typeof email !== "string") {
-            throw new Error("Email is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email is required");
         }
         if (!organizationName || typeof organizationName !== "string") {
-            throw new Error("Organization name is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization name is required");
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error("Invalid email format");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
         }
         if (email.length > 254) {
-            throw new Error("Email address is too long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email address is too long");
         }
         const trimmedName = organizationName.trim();
         if (trimmedName.length < 2) {
-            throw new Error("Organization name must be at least 2 characters long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization name must be at least 2 characters long");
         }
         if (trimmedName.length > 100) {
-            throw new Error("Organization name must be less than 100 characters");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization name must be less than 100 characters");
         }
     }
     _generateInvitationToken() {

@@ -17,6 +17,7 @@ exports.API_ROUTES = {
         COMPLETE_SIGNUP: "/auth/complete-signup",
         INVITE_MEMBER: "/auth/invite-member",
         ACCEPT_INVITE: "/auth/accept-invite",
+        GOOGLE_SIGNIN: "/auth/google-signin",
     },
     ADMIN: {
         ORGANIZATIONS: "/admin/organizations",
@@ -28,6 +29,7 @@ exports.API_ROUTES = {
         BULK_INVITE: "/manager/bulk-invite",
         MEMBERS: "/manager/members",
         ACTIVITY: "/manager/activity",
+        INVITATIONS: "/manager/invitations",
     },
     USER: {
         PROFILE: "/user/profile",

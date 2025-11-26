@@ -6,10 +6,17 @@ export declare const TYPES: {
     readonly IEmailService: symbol;
     readonly IOtpService: symbol;
     readonly ICacheService: symbol;
+    readonly IGoogleAuthService: symbol;
     readonly IUserRepo: symbol;
     readonly IOrgRepo: symbol;
     readonly IInviteRepo: symbol;
-    readonly IAuthUseCases: symbol;
+    readonly ILoginUseCase: symbol;
+    readonly IRegisterUseCase: symbol;
+    readonly IGoogleSignInUseCase: symbol;
+    readonly ITokenRefreshUseCase: symbol;
+    readonly ILogoutUseCase: symbol;
+    readonly IVerifyEmailUseCase: symbol;
+    readonly IValidateTokenUseCase: symbol;
     readonly IRegisterManagerUseCase: symbol;
     readonly ISendOtpUseCase: symbol;
     readonly IVerifyOtpUseCase: symbol;
@@ -32,6 +39,7 @@ export declare const TYPES: {
     readonly DatabaseConfig: symbol;
     readonly JwtConfig: symbol;
     readonly EmailConfig: symbol;
+    readonly IBootstrapService: symbol;
 };
 /**
  * Type guard to check if a type identifier exists

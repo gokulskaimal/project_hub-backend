@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
@@ -6,6 +5,8 @@ import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases/IOrganizationManagementUseCase";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class OrganizationManagementUseCase
@@ -27,7 +28,7 @@ export class OrganizationManagementUseCase
   async updateOrganizationStatus(
     orgId: string,
     newStatus: OrganizationStatus,
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       this.logger.info("Updating organization status with cascading effects", {
         orgId,
@@ -38,6 +39,10 @@ export class OrganizationManagementUseCase
       const updatedOrg = await this.orgRepo.update(orgId, {
         status: newStatus,
       });
+
+      if (!updatedOrg) {
+        throw new HttpError(StatusCodes.NOT_FOUND, "Organization not found");
+      }
 
       // Get all users in this organization
       const usersInOrg = await this.userRepo.findByOrg(orgId);
@@ -77,7 +82,7 @@ export class OrganizationManagementUseCase
         affectedUsers: usersInOrg?.length || 0,
       });
 
-      return updatedOrg;
+      return updatedOrg as unknown as Record<string, unknown>;
     } catch (error) {
       this.logger.error(
         "Failed to update organization status",

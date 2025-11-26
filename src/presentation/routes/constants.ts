@@ -27,6 +27,7 @@ export const API_ROUTES = {
     BULK_INVITE: "/manager/bulk-invite",
     MEMBERS: "/manager/members",
     ACTIVITY: "/manager/activity",
+    INVITATIONS: "/manager/invitations",
   },
   USER: {
     PROFILE: "/user/profile",

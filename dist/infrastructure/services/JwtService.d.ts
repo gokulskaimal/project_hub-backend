@@ -56,7 +56,7 @@ export declare class JwtService implements IJwtService {
      * @param expiresIn Optional override for token expiration
      * @returns Signed JWT reset token
      */
-    generateResetToken(payload: Record<string, any>, expiresIn?: string): string;
+    generateResetToken(payload: JwtPayload, expiresIn?: string): string;
     /**
      * Verify password reset token
      * @param token JWT token to verify

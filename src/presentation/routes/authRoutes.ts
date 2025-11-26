@@ -1,255 +1,124 @@
-import express from "express";
-import { Request, Response, NextFunction } from "express";
-import { UserRepo } from "../../infrastructure/repositories/UserRepo";
-import { OrgRepo } from "../../infrastructure/repositories/OrgRepo";
-import { InviteRepo } from "../../infrastructure/repositories/InviteRepo";
-import { OtpService } from "../../infrastructure/services/OTPService";
-import { EmailService } from "../../infrastructure/services/EmailService";
-import { HashService } from "../../infrastructure/services/HashService";
-import { Logger } from "../../infrastructure/services/Logger";
-import { JsonWebTokenProvider } from "../../infrastructure/services/providers/JsonWebTokenProvider";
-import { JwtService } from "../../infrastructure/services/JwtService";
-import { RedisCacheService } from "../../infrastructure/services/RedisCacheService";
-
-import { RegisterManagerUseCase } from "../../application/useCase/RegisterManagerUseCase";
-import { SendOtpUseCase } from "../../application/useCase/SendOtpUseCase";
-import { VerifyOtpUseCase } from "../../application/useCase/VerifyOtpUseCase";
-import { CompleteSignupUseCase } from "../../application/useCase/CompleteSignupUseCase";
-import { InviteMemberUseCase } from "../../application/useCase/InviteMemberUseCase";
-import { AcceptUseCase } from "../../application/useCase/AcceptUseCase";
-import { AuthUseCases } from "../../application/useCase/AuthUseCase";
-import { ResetPasswordUseCase } from "../../application/useCase/ResetPasswordUseCase";
-import { GoogleAuthService } from "../../infrastructure/services/GoogleAuthService";
-
-import { AUTH_ROUTES } from "./constants";
+import { Router } from "express";
+import { Container } from "inversify";
 import { AuthController } from "../controllers/AuthController";
-import { authMiddleware } from "../middleware/AuthMiddleware";
+import { TYPES } from "../../infrastructure/container/types";
+import { validate } from "../middleware/ValidationMiddleware";
+import { API_ROUTES } from "./constants";
 
-const userRepo = new UserRepo();
-const orgRepo = new OrgRepo();
-const otpService = new OtpService();
-const emailService = new EmailService();
-const cache = new RedisCacheService();
-const inviteRepo = new InviteRepo();
-const hashService = new HashService();
-const jwtProvider = new JsonWebTokenProvider();
-const jwtService = new JwtService(jwtProvider);
-const logger = new Logger();
-const googleAuthService = new GoogleAuthService();
-const resetPasswordUC = new ResetPasswordUseCase(
-  userRepo,
-  hashService,
-  jwtService,
-  emailService,
-  logger,
-);
-const authUseCase = new AuthUseCases(
-  userRepo,
-  hashService,
-  jwtService,
-  googleAuthService,
-  resetPasswordUC,
-  logger,
-  orgRepo,
-);
+// Import Schemas
+// Ensure these match the exports in your schemas file
+import {
+  loginSchema,
+  registerSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+  completeSignupSchema,
+} from "../validation/authSchemas";
 
-const registerManagerUC = new RegisterManagerUseCase(
-  userRepo,
-  otpService,
-  emailService,
-  logger,
-  orgRepo,
-);
-const sendOtpUC = new SendOtpUseCase(
-  userRepo,
-  otpService,
-  emailService,
-  logger,
-  cache,
-);
-const verifyOtpUC = new VerifyOtpUseCase(userRepo, logger, cache);
+export function createAuthRoutes(container: Container): Router {
+  const router = Router();
+  // Resolve the controller from the DI container
+  const controller = container.get<AuthController>(TYPES.AuthController);
 
-const completeSignupUC = new CompleteSignupUseCase(
-  userRepo,
-  logger,
-  hashService,
-  jwtService,
-);
-const inviteMemberUC = new InviteMemberUseCase(
-  inviteRepo,
-  emailService,
-  logger,
-  orgRepo,
-  userRepo,
-);
-const acceptUC = new AcceptUseCase(
-  inviteRepo,
-  userRepo,
-  logger,
-  hashService,
-  jwtService,
-);
+  // --- Standard Auth ---
 
-const authController = new AuthController(
-  logger,
-  authUseCase,
-  registerManagerUC,
-  sendOtpUC,
-  verifyOtpUC,
-  completeSignupUC,
-  inviteMemberUC,
-  acceptUC,
-  resetPasswordUC,
-);
+  // POST /auth/login
+  router.post(API_ROUTES.AUTH.LOGIN, validate(loginSchema), (req, res, next) =>
+    controller.login(req, res, next),
+  );
 
-const router = express.Router();
+  // POST /auth/register (Standard User)
+  router.post(
+    API_ROUTES.AUTH.REGISTER,
+    validate(registerSchema),
+    (req, res, next) => controller.register(req, res, next),
+  );
 
-//AUTH_ROUTES constants
+  // POST /auth/register-manager (Organization Manager)
+  // Note: You might need a schema for this if not generic registerSchema
+  router.post(
+    API_ROUTES.AUTH.REGISTER_MANAGER,
+    validate(registerSchema),
+    (req, res, next) => controller.registerManager(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.LOGIN,
-  (req: Request, res: Response, next: NextFunction) =>
-    authController.login(req, res, next),
-);
+  // --- OTP & Verification ---
 
-router.post(AUTH_ROUTES.REFRESH, (req, res, next) =>
-  authController.refreshToken(req, res, next),
-);
+  // POST /auth/send-otp
+  router.post(
+    API_ROUTES.AUTH.SEND_OTP,
+    validate(sendOtpSchema),
+    (req, res, next) => controller.sendOtp(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.RESET_PASSWORD_REQUEST,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email } = req.body;
-      const result = await resetPasswordUC.requestReset(email);
-      return res.json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // POST /auth/verify-otp
+  router.post(
+    API_ROUTES.AUTH.VERIFY_OTP,
+    validate(verifyOtpSchema),
+    (req, res, next) => controller.verifyOtp(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.RESET_PASSWORD,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { token, password } = req.body;
-      const result = await resetPasswordUC.resetWithToken(token, password);
-      return res.json(result);
-    } catch (err) {
-      next(err);
-    }
-  },
-);
-router.post(
-  AUTH_ROUTES.VERIFY_EMAIL,
-  authMiddleware,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const token = req.body?.token ?? req.headers["x-verification-token"];
-      if (!token)
-        return res.status(400).json({ error: "Verification token missing" });
+  // POST /auth/verify-email
+  router.post(API_ROUTES.AUTH.VERIFY_EMAIL, (req, res, next) =>
+    controller.verifyEmail(req, res, next),
+  );
 
-      const result = await authUseCase.verifyEmail(token);
-      return res.json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // --- Signup Completion ---
 
-router.post(
-  AUTH_ROUTES.REGISTER_MANAGER,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, organizationName } = req.body;
-      const result = await registerManagerUC.execute(email, organizationName);
-      return res.status(201).json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // POST /auth/complete-signup
+  router.post(
+    API_ROUTES.AUTH.COMPLETE_SIGNUP,
+    validate(completeSignupSchema),
+    (req, res, next) => controller.completeSignup(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.SEND_OTP,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email } = req.body;
-      const result = await sendOtpUC.execute(email);
-      return res.json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // --- Password Reset ---
 
-router.post(
-  AUTH_ROUTES.VERIFY_OTP,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, otp } = req.body;
-      const result = await verifyOtpUC.execute(email, otp);
-      return res.json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // POST /auth/reset-password-request
+  router.post(API_ROUTES.AUTH.RESET_PASSWORD_REQUEST, (req, res, next) =>
+    controller.resetPasswordReq(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.COMPLETE_SIGNUP,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, password, firstName, lastName } = req.body;
-      const result = await completeSignupUC.execute(
-        email,
-        password,
-        firstName,
-        lastName,
-      );
-      return res.json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // POST /auth/reset-password (Complete the reset)
+  router.post(API_ROUTES.AUTH.RESET_PASSWORD, (req, res, next) =>
+    controller.resetPassword(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.INVITE_MEMBER,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, orgId, role } = req.body;
-      const result = await inviteMemberUC.execute(email, orgId, role);
-      return res.status(201).json(result);
-    } catch (err) {
-      return next(err);
-    }
-  },
-);
+  // --- Invitations ---
 
-router.post(
-  AUTH_ROUTES.ACCEPT_INVITE,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { token, password, firstName, lastName } = req.body;
-      const result = await acceptUC.execute(
-        token,
-        password,
-        firstName,
-        lastName,
-      );
-      return res.json(result);
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+  // POST /auth/invite-member
+  router.post(API_ROUTES.AUTH.INVITE_MEMBER, (req, res, next) =>
+    controller.inviteMember(req, res, next),
+  );
 
-router.post(
-  AUTH_ROUTES.GOOGLE_SIGNIN,
-  (req: Request, res: Response, next: NextFunction) =>
-    authController.googleSignIn(req, res, next),
-);
+  // POST /auth/accept-invite
+  router.post(API_ROUTES.AUTH.ACCEPT_INVITE, (req, res, next) =>
+    controller.acceptInvite(req, res, next),
+  );
 
-export default router;
+  // GET /auth/invite/:token (Validate token for UI)
+  // Note: This is often a dynamic route, so we handle it specifically if defined in API_ROUTES or manually
+  router.get("/invite/:token", (req, res, next) =>
+    controller.validateInviteToken(req, res, next),
+  );
+
+  // --- OAuth & Session ---
+
+  // POST /auth/google-signin
+  router.post(API_ROUTES.AUTH.GOOGLE_SIGNIN, (req, res, next) =>
+    controller.googleSignIn(req, res, next),
+  );
+
+  // POST /auth/refresh-token
+  router.post(API_ROUTES.AUTH.REFRESH, (req, res, next) =>
+    controller.refreshToken(req, res, next),
+  );
+
+  // POST /auth/logout
+  router.post(
+    "/logout", // Often standardized
+    (req, res, next) => controller.logout(req, res, next),
+  );
+
+  return router;
+}

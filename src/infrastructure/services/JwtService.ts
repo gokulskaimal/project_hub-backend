@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable, inject } from "inversify";
 import {
   IJwtService,
@@ -202,7 +201,7 @@ export class JwtService implements IJwtService {
    * @param expiresIn Optional override for token expiration
    * @returns Signed JWT reset token
    */
-  generateResetToken(payload: Record<string, any>, expiresIn?: string): string {
+  generateResetToken(payload: JwtPayload, expiresIn?: string): string {
     try {
       const options = {
         expiresIn: expiresIn || this._resetTokenExpiry,

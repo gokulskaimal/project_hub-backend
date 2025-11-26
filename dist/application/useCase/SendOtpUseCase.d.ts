@@ -12,7 +12,7 @@ export declare class SendOtpUseCase implements ISendOtpUseCase {
     private readonly _cache;
     constructor(userRepo: IUserRepo, otpService: IOtpService, emailService: IEmailService, logger: ILogger, cache: ICacheService);
     /**
-     * ✅ FIXED: Send OTP with correct return type
+     * Send OTP
      */
     execute(email: string): Promise<{
         message: string;
@@ -20,7 +20,7 @@ export declare class SendOtpUseCase implements ISendOtpUseCase {
         attemptsRemaining: number;
     }>;
     /**
-     * ✅ ADDED: Resend OTP if previous one expired
+     * Resend OTP if previous one expired
      */
     resendOtp(email: string): Promise<{
         message: string;

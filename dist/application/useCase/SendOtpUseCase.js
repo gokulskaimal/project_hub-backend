@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SendOtpUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let SendOtpUseCase = class SendOtpUseCase {
     constructor(userRepo, otpService, emailService, logger, cache) {
         this._userRepo = userRepo;
@@ -24,24 +26,22 @@ let SendOtpUseCase = class SendOtpUseCase {
         this._cache = cache;
     }
     /**
-     * ✅ FIXED: Send OTP with correct return type
+     * Send OTP
      */
     async execute(email) {
         this._logger.info("Sending OTP", { email });
         try {
             // Business Rule: Validate email format
             if (!this._isValidEmail(email)) {
-                throw new Error("Invalid email format");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
             }
             // Business Rule: Check rate limiting
             const attemptsRemaining = await this._checkRateLimit(email);
             if (attemptsRemaining <= 0) {
-                throw new Error("Too many OTP requests. Please wait before requesting again.");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.TOO_MANY_REQUESTS, "Too many OTP requests. Please wait before requesting again.");
             }
-            // Business Rule: Generate OTP - ✅ FIXED: Use generateOtp instead of generate
             const otp = this._otpService.generateOtp(6); // 6-digit OTP
-            const expiresAt = this._otpService.generateExpiry(10); // 10 minutes from now
-            // ✅ Ensure a user record exists and store OTP (create if missing)
+            const expiresAt = this._otpService.generateExpiry(1); // 1 minute from now
             await this._userRepo.ensureUserWithOtp(email, otp, expiresAt);
             // Send OTP via email
             await this._emailService.sendOtpEmail(email, otp, "Email verification");
@@ -58,7 +58,7 @@ let SendOtpUseCase = class SendOtpUseCase {
         }
     }
     /**
-     * ✅ ADDED: Resend OTP if previous one expired
+     * Resend OTP if previous one expired
      */
     async resendOtp(email) {
         this._logger.info("Resending OTP", { email });
@@ -67,7 +67,7 @@ let SendOtpUseCase = class SendOtpUseCase {
             const existingOtp = await this._userRepo.getOtp(email);
             if (existingOtp && existingOtp.expiresAt > new Date()) {
                 const remainingTime = Math.ceil((existingOtp.expiresAt.getTime() - Date.now()) / 1000 / 60);
-                throw new Error(`OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`);
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, `OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`);
             }
             // Use the same logic as execute
             return this.execute(email);

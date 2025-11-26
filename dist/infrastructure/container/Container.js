@@ -7,8 +7,10 @@ const inversify_1 = require("inversify");
 const types_1 = require("./types");
 // Infrastructure Implementations - Services
 const Logger_1 = require("../services/Logger");
+const BootstrapService_1 = require("../services/BootstrapService");
 const HashService_1 = require("../services/HashService");
 const JwtService_1 = require("../services/JwtService");
+const GoogleAuthService_1 = require("../services/GoogleAuthService");
 const EmailService_1 = require("../services/EmailService");
 const OTPService_1 = require("../services/OTPService");
 const JsonWebTokenProvider_1 = require("../services/providers/JsonWebTokenProvider");
@@ -19,7 +21,13 @@ const UserRepo_1 = require("../repositories/UserRepo");
 const OrgRepo_1 = require("../repositories/OrgRepo");
 const InviteRepo_1 = require("../repositories/InviteRepo");
 // Application Use Cases
-const AuthUseCase_1 = require("../../application/useCase/AuthUseCase");
+const LoginUseCase_1 = require("../../application/useCase/LoginUseCase");
+const RegisterUseCase_1 = require("../../application/useCase/RegisterUseCase");
+const GoogleSignInUseCase_1 = require("../../application/useCase/GoogleSignInUseCase");
+const TokenRefreshUseCase_1 = require("../../application/useCase/TokenRefreshUseCase");
+const LogoutUseCase_1 = require("../../application/useCase/LogoutUseCase");
+const VerifyEmailUseCase_1 = require("../../application/useCase/VerifyEmailUseCase");
+const ValidateTokenUseCase_1 = require("../../application/useCase/ValidateTokenUseCase");
 const RegisterManagerUseCase_1 = require("../../application/useCase/RegisterManagerUseCase");
 const SendOtpUseCase_1 = require("../../application/useCase/SendOtpUseCase");
 const VerifyOtpUseCase_1 = require("../../application/useCase/VerifyOtpUseCase");
@@ -59,6 +67,10 @@ class DIContainer {
     _bindServices() {
         this._container.bind(types_1.TYPES.ILogger).to(Logger_1.Logger).inSingletonScope();
         this._container
+            .bind(types_1.TYPES.IBootstrapService)
+            .to(BootstrapService_1.BootstrapService)
+            .inSingletonScope();
+        this._container
             .bind(types_1.TYPES.IHashService)
             .to(HashService_1.HashService)
             .inSingletonScope();
@@ -77,6 +89,10 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.IOtpService)
             .to(OTPService_1.OtpService)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IGoogleAuthService)
+            .to(GoogleAuthService_1.GoogleAuthService)
             .inSingletonScope();
         const useRedis = String(process.env.USE_REDIS || "").toLowerCase() === "true";
         if (useRedis) {
@@ -108,8 +124,32 @@ class DIContainer {
     }
     _bindUseCases() {
         this._container
-            .bind(types_1.TYPES.IAuthUseCases)
-            .to(AuthUseCase_1.AuthUseCases)
+            .bind(types_1.TYPES.ILoginUseCase)
+            .to(LoginUseCase_1.LoginUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IRegisterUseCase)
+            .to(RegisterUseCase_1.RegisterUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGoogleSignInUseCase)
+            .to(GoogleSignInUseCase_1.GoogleSignInUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ITokenRefreshUseCase)
+            .to(TokenRefreshUseCase_1.TokenRefreshUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ILogoutUseCase)
+            .to(LogoutUseCase_1.LogoutUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IVerifyEmailUseCase)
+            .to(VerifyEmailUseCase_1.VerifyEmailUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IValidateTokenUseCase)
+            .to(ValidateTokenUseCase_1.ValidateTokenUseCase)
             .inTransientScope();
         this._container
             .bind(types_1.TYPES.IRegisterManagerUseCase)

@@ -1,3 +1,4 @@
+import { OrganizationStatus } from "../../domain/entities/Organization";
 import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
 import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
@@ -20,9 +21,13 @@ export declare class AcceptUseCase implements IAcceptUseCase {
      * @param additionalData - Optional additional data
      * @returns User, organization, and tokens
      */
-    execute(token: string, password: string, firstName: string, lastName: string, additionalData?: Record<string, any>): Promise<{
-        user: any;
-        organization: any;
+    execute(token: string, password: string, firstName: string, lastName: string, additionalData?: Record<string, unknown>): Promise<{
+        user: Record<string, unknown>;
+        organization: {
+            id: string;
+            name: string;
+            status: OrganizationStatus;
+        };
         tokens: {
             accessToken: string;
             refreshToken: string;
@@ -30,14 +35,15 @@ export declare class AcceptUseCase implements IAcceptUseCase {
         };
     }>;
     /**
-     * ✅ ADDED: Validate invitation token
      * @param token - Invitation token
      * @returns Validation result
      */
     validateInvitationToken(token: string): Promise<{
         valid: boolean;
-        invitation?: any;
+        invitation?: Record<string, unknown>;
         expired?: boolean;
+        cancelled?: boolean;
+        accepted?: boolean;
     }>;
     /**
      * Validate password strength

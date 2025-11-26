@@ -6,6 +6,8 @@ import { IOtpService } from "../../domain/interfaces/services/IOtpService";
 import { IEmailService } from "../../domain/interfaces/services/IEmailService";
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { ICacheService } from "../../domain/interfaces/services/ICacheService";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class SendOtpUseCase implements ISendOtpUseCase {
@@ -30,7 +32,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
   }
 
   /**
-   * ✅ FIXED: Send OTP with correct return type
+   * Send OTP
    */
   public async execute(email: string): Promise<{
     message: string;
@@ -42,13 +44,14 @@ export class SendOtpUseCase implements ISendOtpUseCase {
     try {
       // Business Rule: Validate email format
       if (!this._isValidEmail(email)) {
-        throw new Error("Invalid email format");
+        throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
       }
 
       // Business Rule: Check rate limiting
       const attemptsRemaining = await this._checkRateLimit(email);
       if (attemptsRemaining <= 0) {
-        throw new Error(
+        throw new HttpError(
+          StatusCodes.TOO_MANY_REQUESTS,
           "Too many OTP requests. Please wait before requesting again.",
         );
       }
@@ -75,7 +78,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
   }
 
   /**
-   * ✅ ADDED: Resend OTP if previous one expired
+   * Resend OTP if previous one expired
    */
   public async resendOtp(email: string): Promise<{
     message: string;
@@ -91,7 +94,8 @@ export class SendOtpUseCase implements ISendOtpUseCase {
         const remainingTime = Math.ceil(
           (existingOtp.expiresAt.getTime() - Date.now()) / 1000 / 60,
         );
-        throw new Error(
+        throw new HttpError(
+          StatusCodes.BAD_REQUEST,
           `OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`,
         );
       }

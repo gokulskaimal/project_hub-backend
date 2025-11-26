@@ -27,6 +27,7 @@ class BaseRepository {
      * @returns The created domain entity
      */
     async create(data) {
+        // Cast via unknown to avoid unsafe `any` while satisfying Mongoose model typing
         const doc = await this.model.create(data);
         return this.toDomain(doc);
     }
@@ -59,7 +60,12 @@ class BaseRepository {
      * @throws Error if the document is not found
      */
     async update(id, data) {
-        const doc = await this.model.findByIdAndUpdate(id, { ...data, updatedAt: new Date() }, { new: true, runValidators: true });
+        // Merge update payload and cast safely for Mongoose
+        const updatePayload = { ...data, updatedAt: new Date() };
+        const doc = await this.model.findByIdAndUpdate(id, updatePayload, {
+            new: true,
+            runValidators: true,
+        });
         if (!doc)
             throw new Error("Document not found");
         return this.toDomain(doc);

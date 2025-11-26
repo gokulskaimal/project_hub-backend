@@ -34,7 +34,7 @@ export interface IOrgDOc extends Document {
         currency?: string;
         paymentMethod?: string;
     };
-    settings?: Record<string, any>;
+    settings?: Record<string, unknown>;
     features?: string[];
     timezone?: string;
     locale?: string;
@@ -47,7 +47,7 @@ export interface IOrgDOc extends Document {
     isDeleted?: boolean;
     deletedAt?: Date;
     deletionReason?: string;
-    customFields?: Record<string, any>;
+    customFields?: Record<string, unknown>;
     tags?: string[];
     priority?: string;
     onboardingStatus?: {
@@ -58,7 +58,7 @@ export interface IOrgDOc extends Document {
     };
     integrations?: Record<string, {
         enabled: boolean;
-        config?: Record<string, any>;
+        config?: Record<string, unknown>;
         connectedAt?: Date;
     }>;
     usage?: {
@@ -68,7 +68,7 @@ export interface IOrgDOc extends Document {
         apiCallsLimit?: number;
         lastResetAt?: Date;
     };
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 declare const _default: mongoose.Model<IOrgDOc, {}, {}, {}, mongoose.Document<unknown, {}, IOrgDOc, {}, {}> & IOrgDOc & Required<{
     _id: Types.ObjectId;

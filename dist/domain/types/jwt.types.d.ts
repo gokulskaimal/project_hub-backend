@@ -1,7 +1,4 @@
 /**
- * JWT-related type definitions
- */
-/**
  * Represents the payload of a JWT token
  * This is a more specific type than using Record<string, any>
  */

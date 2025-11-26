@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteMemberUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let InviteMemberUseCase = class InviteMemberUseCase {
     constructor(inviteRepo, emailService, logger, orgRepo, userRepo) {
         this._inviteRepo = inviteRepo;
@@ -30,12 +32,12 @@ let InviteMemberUseCase = class InviteMemberUseCase {
             const organization = await this._orgRepo.findById(orgId);
             if (!organization) {
                 this._logger.warn("Organization not found for invitation", { orgId });
-                throw new Error("Organization not found");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "Organization not found");
             }
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser) {
                 this._logger.warn("User already exists", { email });
-                throw new Error("User with this email already exists");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "User with this email already exists");
             }
             const existingInvite = await this._inviteRepo.findPendingByEmail(email, orgId);
             if (existingInvite) {
@@ -43,7 +45,7 @@ let InviteMemberUseCase = class InviteMemberUseCase {
                     email,
                     orgId,
                 });
-                throw new Error("An invitation to this email is already pending");
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "An invitation to this email is already pending");
             }
             const token = this._generateInvitationToken();
             const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -124,17 +126,17 @@ let InviteMemberUseCase = class InviteMemberUseCase {
     }
     _validateInput(email, orgId) {
         if (!email || typeof email !== "string") {
-            throw new Error("Email is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email is required");
         }
         if (!orgId || typeof orgId !== "string") {
-            throw new Error("Organization ID is required");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization ID is required");
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Error("Invalid email format");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
         }
         if (email.length > 254) {
-            throw new Error("Email address is too long");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email address is too long");
         }
     }
     _generateInvitationToken() {
@@ -155,7 +157,7 @@ let InviteMemberUseCase = class InviteMemberUseCase {
                 email,
                 orgName,
             });
-            throw new Error("Failed to send invitation email");
+            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR, "Failed to send invitation email");
         }
     }
 };

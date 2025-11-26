@@ -1,5 +1,4 @@
 "use strict";
-/* eslint-disable @typescript-eslint/no-unused-vars */
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -19,285 +18,53 @@ const types_1 = require("../../infrastructure/container/types");
 const UserDTO_1 = require("../../application/dto/UserDTO");
 const common_constants_1 = require("../../infrastructure/config/common.constants");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
-/**
- * User Controller
- *
- * Handles all user-related HTTP requests including profile management
- * Implements the presentation layer of the application architecture
- */
+const asyncHandler_1 = require("../../utils/asyncHandler");
 let UserController = class UserController {
-    /**
-     * Creates a new UserController instance with dependency injection
-     *
-     * @param logger - Logging service
-     * @param userProfileUseCase - User profile management use case
-     */
     constructor(logger, userProfileUseCase) {
-        this._logger = logger;
-        this._userProfileUseCase = userProfileUseCase;
-    }
-    /**
-     * Retrieves the profile information for the authenticated user
-     *
-     * @param req - Express request object with authenticated user
-     * @param res - Express response object
-     */
-    async getProfile(req, res) {
-        try {
+        this.logger = logger;
+        this.userProfileUseCase = userProfileUseCase;
+        this.getProfile = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
-            this._logger.info("User getting profile", {
-                userId,
-                ip: req.ip,
-            });
-            const profile = await this._userProfileUseCase.getProfile(userId);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.PROFILE_RETRIEVED,
-                data: (0, UserDTO_1.toUserDTO)(profile),
-                timestamp: new Date().toISOString(),
-            });
-        }
-        catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to retrieve profile";
-            this._logger.error("Failed to get user profile", err, {
-                userId: req.user?.id,
-                ip: req.ip,
-            });
-            // Determine appropriate status code based on error
-            const statusCode = err instanceof Error && err.message.includes("not found")
-                ? statusCodes_enum_1.StatusCodes.NOT_FOUND
-                : statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR;
-            res.status(statusCode).json({
-                success: false,
-                error: message,
-                timestamp: new Date().toISOString(),
-            });
-        }
-    }
-    /**
-     * Updates the profile information for the authenticated user
-     *
-     * @param req - Express request object with authenticated user and update data
-     * @param res - Express response object
-     */
-    async updateProfile(req, res) {
-        try {
+            this.logger.info("Fetching user profile", { userId });
+            const profile = await this.userProfileUseCase.getProfile(userId);
+            this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(profile), common_constants_1.COMMON_MESSAGES.PROFILE_RETRIEVED);
+        });
+        this.updateProfile = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
             const updateData = req.body;
-            // Basic validation
+            this.logger.info("Updating user profile", { userId, updatedFields: Object.keys(updateData || {}) });
             if (!updateData || Object.keys(updateData).length === 0) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    error: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD,
-                    timestamp: new Date().toISOString(),
-                });
-                return;
+                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD };
             }
-            this._logger.info("User updating profile", {
-                userId,
-                updateFields: Object.keys(updateData),
-                ip: req.ip,
-            });
-            const updatedProfile = await this._userProfileUseCase.updateProfile(userId, updateData);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.PROFILE_UPDATED,
-                data: (0, UserDTO_1.toUserDTO)(updatedProfile),
-                timestamp: new Date().toISOString(),
-            });
-        }
-        catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to update profile";
-            this._logger.error("Failed to update user profile", err, {
-                userId: req.user?.id,
-                updateData: req.body,
-                ip: req.ip,
-            });
-            let statusCode = statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR;
-            if (err instanceof Error) {
-                if (err.message.includes("not found")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.NOT_FOUND;
-                }
-                else if (err.message.includes("validation") ||
-                    err.message.includes("invalid")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.BAD_REQUEST;
-                }
-                else if (err.message.includes("unauthorized") ||
-                    err.message.includes("permission")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.FORBIDDEN;
-                }
-            }
-            res.status(statusCode).json({
-                success: false,
-                error: message,
-                timestamp: new Date().toISOString(),
-            });
-        }
-    }
-    /**
-     * Changes the password for the authenticated user
-     *
-     * @param req - Express request object with authenticated user and password data
-     * @param res - Express response object
-     */
-    async changePassword(req, res) {
-        try {
+            const updatedProfile = await this.userProfileUseCase.updateProfile(userId, updateData);
+            this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(updatedProfile), common_constants_1.COMMON_MESSAGES.PROFILE_UPDATED);
+        });
+        this.changePassword = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
             const { currentPassword, newPassword, confirmNewPassword } = req.body;
-            // Input validation
+            this.logger.info("Change password attempt", { userId });
             if (!currentPassword || !newPassword || !confirmNewPassword) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    error: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD,
-                    timestamp: new Date().toISOString(),
-                });
-                return;
+                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD };
             }
             if (newPassword !== confirmNewPassword) {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    error: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
-                    timestamp: new Date().toISOString(),
-                });
-                return;
+                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT };
             }
-            this._logger.info("User changing password", {
-                userId,
-                ip: req.ip,
-            });
-            await this._userProfileUseCase.changePassword(userId, currentPassword, newPassword);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.PASSWORD_CHANGED,
-                timestamp: new Date().toISOString(),
-            });
-        }
-        catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to change password";
-            this._logger.error("Failed to change password", err, {
-                userId: req.user?.id,
-                ip: req.ip,
-            });
-            // Determine appropriate status code based on error
-            let statusCode = statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR;
-            if (err instanceof Error) {
-                if (err.message.includes("current password") ||
-                    err.message.includes("incorrect")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.BAD_REQUEST;
-                }
-                else if (err.message.includes("not found")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.NOT_FOUND;
-                }
-                else if (err.message.includes("weak") ||
-                    err.message.includes("validation")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.BAD_REQUEST;
-                }
-            }
-            res.status(statusCode).json({
-                success: false,
-                error: message,
-                timestamp: new Date().toISOString(),
-            });
-        }
-    }
-    /**
-     * Gets the activity history for the authenticated user
-     *
-     * @param req - Express request object with authenticated user
-     * @param res - Express response object
-     */
-    // public async getActivityHistory(req: AuthenticatedRequest, res: Response): Promise<void> {
-    //     try {
-    //         const userId = req.user!.id
-    //         const { limit = 10, offset = 0 } = req.query
-    //         this._logger.info('User getting activity history', {
-    //             userId,
-    //             limit: Number(limit),
-    //             offset: Number(offset),
-    //             ip: req.ip
-    //         })
-    //         const activities = await this._userProfileUseCase.getActivityHistory(
-    //             userId,
-    //             Number(limit),
-    //             Number(offset)
-    //         )
-    //         res.status(HttpStatus.OK).json({
-    //             success: true,
-    //             message: 'Activity history retrieved successfully',
-    //             data: activities,
-    //             count: activities.length,
-    //             pagination: {
-    //                 limit: Number(limit),
-    //                 offset: Number(offset)
-    //             },
-    //             timestamp: new Date().toISOString()
-    //         })
-    //     } catch (err: unknown) {
-    //         const message = (err instanceof Error) ? err.message : 'Failed to retrieve activity history'
-    //         this._logger.error('Failed to get activity history', err as Error, {
-    //             userId: req.user?.id,
-    //             ip: req.ip
-    //         })
-    //         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-    //             success: false,
-    //             error: message,
-    //             timestamp: new Date().toISOString()
-    //         })
-    //     }
-    // }
-    /**
-     * Deletes (soft delete) the authenticated user's account
-     *
-     * @param req - Express request object with authenticated user and confirmation data
-     * @param res - Express response object
-     */
-    async deleteAccount(req, res) {
-        try {
+            await this.userProfileUseCase.changePassword(userId, currentPassword, newPassword);
+            this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.PASSWORD_CHANGED);
+        });
+        this.deleteAccount = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
             const { password, confirmation } = req.body;
-            // Input validation
+            this.logger.info("Delete account attempt", { userId });
             if (!password || confirmation !== "DELETE") {
-                res.status(statusCodes_enum_1.StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    error: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD,
-                    timestamp: new Date().toISOString(),
-                });
-                return;
+                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD };
             }
-            this._logger.info("User deleting account", {
-                userId,
-                ip: req.ip,
-            });
-            await this._userProfileUseCase.deleteAccount(userId, password);
-            res.status(statusCodes_enum_1.StatusCodes.OK).json({
-                success: true,
-                message: common_constants_1.COMMON_MESSAGES.USER_DELETED,
-                timestamp: new Date().toISOString(),
-            });
-        }
-        catch (err) {
-            const message = err instanceof Error ? err.message : common_constants_1.COMMON_MESSAGES.GENERAL_ERROR;
-            this._logger.error("Failed to delete account", err, {
-                userId: req.user?.id,
-                ip: req.ip,
-            });
-            // Determine appropriate status code based on error
-            let statusCode = statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR;
-            if (err instanceof Error) {
-                if (err.message.includes("password") ||
-                    err.message.includes("incorrect")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.BAD_REQUEST;
-                }
-                else if (err.message.includes("not found")) {
-                    statusCode = statusCodes_enum_1.StatusCodes.NOT_FOUND;
-                }
-            }
-            res.status(statusCode).json({
-                success: false,
-                error: message,
-                timestamp: new Date().toISOString(),
-            });
-        }
+            await this.userProfileUseCase.deleteAccount(userId, password);
+            this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.USER_DELETED);
+        });
+    }
+    sendSuccess(res, data, message) {
+        res.status(statusCodes_enum_1.StatusCodes.OK).json({ success: true, message, data, timestamp: new Date().toISOString() });
     }
 };
 exports.UserController = UserController;

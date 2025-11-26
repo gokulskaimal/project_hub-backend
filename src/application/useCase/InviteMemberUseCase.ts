@@ -6,6 +6,8 @@ import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMe
 import { ILogger } from "../../domain/interfaces/services/ILogger";
 import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
 import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { HttpError } from "../../utils/asyncHandler";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class InviteMemberUseCase implements IInviteMemberUseCase {
@@ -47,13 +49,16 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
       const organization = await this._orgRepo.findById(orgId);
       if (!organization) {
         this._logger.warn("Organization not found for invitation", { orgId });
-        throw new Error("Organization not found");
+        throw new HttpError(StatusCodes.NOT_FOUND, "Organization not found");
       }
 
       const existingUser = await this._userRepo.findByEmail(email);
       if (existingUser) {
         this._logger.warn("User already exists", { email });
-        throw new Error("User with this email already exists");
+        throw new HttpError(
+          StatusCodes.CONFLICT,
+          "User with this email already exists",
+        );
       }
 
       const existingInvite = await this._inviteRepo.findPendingByEmail(
@@ -65,7 +70,10 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
           email,
           orgId,
         });
-        throw new Error("An invitation to this email is already pending");
+        throw new HttpError(
+          StatusCodes.CONFLICT,
+          "An invitation to this email is already pending",
+        );
       }
 
       const token = this._generateInvitationToken();
@@ -170,20 +178,23 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
   private _validateInput(email: string, orgId: string): void {
     if (!email || typeof email !== "string") {
-      throw new Error("Email is required");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Email is required");
     }
 
     if (!orgId || typeof orgId !== "string") {
-      throw new Error("Organization ID is required");
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        "Organization ID is required",
+      );
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new Error("Invalid email format");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
     }
 
     if (email.length > 254) {
-      throw new Error("Email address is too long");
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Email address is too long");
     }
   }
 
@@ -218,7 +229,10 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
         email,
         orgName,
       });
-      throw new Error("Failed to send invitation email");
+      throw new HttpError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        "Failed to send invitation email",
+      );
     }
   }
 }

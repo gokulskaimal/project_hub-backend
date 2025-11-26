@@ -20,18 +20,7 @@ function toUserDTO(user) {
         createdAt: toIso(user.createdAt),
         updatedAt: toIso(user.updatedAt),
         lastLoginAt: toIso(user.lastLoginAt),
-        joinedAt: toIso(user.joinedAt),
-        avatar: user.avatar,
-        phone: user.phone,
-        phoneVerified: user.phoneVerified,
-        timezone: user.timezone,
-        language: user.language,
-        title: user.title,
-        department: user.department,
-        bio: user.bio,
-        dateOfBirth: toIso(user.dateOfBirth),
-        profileComplete: Boolean(user.firstName && user.lastName && user.phone),
-        hasPassword: Boolean(user.password && user.password.length > 0),
+        profileComplete: Boolean(user.firstName && user.lastName),
     };
 }
 //# sourceMappingURL=UserDTO.js.map

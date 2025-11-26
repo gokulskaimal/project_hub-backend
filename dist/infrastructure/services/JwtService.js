@@ -13,7 +13,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JwtService = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const inversify_1 = require("inversify");
 const types_1 = require("../container/types");
 /**
@@ -129,7 +128,7 @@ let JwtService = class JwtService {
         }
         const options = {
             issuer: this._issuer,
-            audience: this._audience
+            audience: this._audience,
         };
         try {
             const payload = this.jwtProvider.verify(token, this._resetTokenSecret, options);
@@ -137,7 +136,7 @@ let JwtService = class JwtService {
                 return null;
             if (payload.id && this.revokeForAllUserMap.has(payload.id)) {
                 const revokedAt = this.revokeForAllUserMap.get(payload.id);
-                if (payload.iat && typeof payload.iat == 'number') {
+                if (payload.iat && typeof payload.iat == "number") {
                     const issuedAtMs = payload.iat * 1000;
                     if (revokedAt && issuedAtMs < revokedAt) {
                         return null;
@@ -153,7 +152,7 @@ let JwtService = class JwtService {
     verifyResetToken(token) {
         const options = {
             issuer: this._issuer,
-            audience: this._audience
+            audience: this._audience,
         };
         try {
             const payload = this.jwtProvider.verify(token, this._resetTokenSecret, options);
@@ -203,7 +202,7 @@ let JwtService = class JwtService {
     async revokeRefreshToken(token) {
         try {
             const decode = this.decodeToken(token);
-            if (decode && decode.exp && typeof decode.exp == 'number') {
+            if (decode && decode.exp && typeof decode.exp == "number") {
                 const expiryMs = decode.exp * 1000;
                 if (expiryMs > Date.now()) {
                     this.revokedRefreshedTokens.set(token, expiryMs);
@@ -222,7 +221,7 @@ let JwtService = class JwtService {
             }
         }
         catch (err) {
-            console.warn('Failed to revoke refresh token ', err.message);
+            console.warn("Failed to revoke refresh token ", err.message);
         }
     }
     async revokeAllForUser(userId) {
@@ -231,7 +230,7 @@ let JwtService = class JwtService {
             this.revokeForAllUserMap.set(userId, now);
         }
         catch (err) {
-            console.warn('Failed to revoke all tokens for user ', err.message);
+            console.warn("Failed to revoke all tokens for user ", err.message);
         }
     }
 };
