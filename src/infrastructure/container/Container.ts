@@ -4,35 +4,45 @@ import { Container } from "inversify";
 import { TYPES } from "./types";
 
 // Domain Interfaces - Services
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { IOtpService } from "../../domain/interfaces/services/IOtpService";
-import { ICacheService } from "../../domain/interfaces/services/ICacheService";
-import { IGoogleAuthService } from "../../domain/interfaces/services/IGoogleAuthService ";
+import { ILogger } from "../interface/services/ILogger";
+import { IHashService } from "../interface/services/IHashService";
+import { IJwtService } from "../interface/services/IJwtService";
+import { IEmailService } from "../interface/services/IEmailService";
+import { IOtpService } from "../interface/services/IOtpService";
+import { ICacheService } from "../interface/services/ICacheService";
+import { IGoogleAuthService } from "../interface/services/IGoogleAuthService ";
+import { IRazorpayService } from "../interface/services/IRazorpayService";
+import { IPlanRepo } from "../interface/repositories/IPlanRepo";
+import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
+
 // Domain Interfaces - Repositories
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
+import { IUserRepo } from "../interface/repositories/IUserRepo";
+import { IOrgRepo } from "../interface/repositories/IOrgRepo";
+import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 
 // Domain Interfaces - Use Cases
-import { ILoginUseCase } from "../../domain/interfaces/useCases/ILoginUseCase";
-import { IRegisterUseCase } from "../../domain/interfaces/useCases/IRegisterUseCase";
-import { IGoogleSignInUseCase } from "../../domain/interfaces/useCases/IGoogleSignInUseCase";
-import { ITokenRefreshUseCase } from "../../domain/interfaces/useCases/ITokenRefreshUseCase";
-import { ILogoutUseCase } from "../../domain/interfaces/useCases/ILogoutUseCase";
-import { IVerifyEmailUseCase } from "../../domain/interfaces/useCases/IVerifyEmailUseCase";
-import { IValidateTokenUseCase } from "../../domain/interfaces/useCases/IValidateTokenUseCase";
-import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegisterManagerUseCase";
-import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
-import { IVerifyOtpUseCase } from "../../domain/interfaces/useCases/IVerifyOtpUseCase";
-import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/ICompleteSignupUseCase";
-import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
-import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
-import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
-import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases/IOrganizationManagementUseCase";
+import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
+import { IRegisterUseCase } from "../../application/interface/useCases/IRegisterUseCase";
+import { IGoogleSignInUseCase } from "../../application/interface/useCases/IGoogleSignInUseCase";
+import { ITokenRefreshUseCase } from "../../application/interface/useCases/ITokenRefreshUseCase";
+import { ILogoutUseCase } from "../../application/interface/useCases/ILogoutUseCase";
+import { IVerifyEmailUseCase } from "../../application/interface/useCases/IVerifyEmailUseCase";
+import { IValidateTokenUseCase } from "../../application/interface/useCases/IValidateTokenUseCase";
+import { IRegisterManagerUseCase } from "../../application/interface/useCases/IRegisterManagerUseCase";
+import { ISendOtpUseCase } from "../../application/interface/useCases/ISendOtpUseCase";
+import { IVerifyOtpUseCase } from "../../application/interface/useCases/IVerifyOtpUseCase";
+import { ICompleteSignupUseCase } from "../../application/interface/useCases/ICompleteSignupUseCase";
+import { IAcceptUseCase } from "../../application/interface/useCases/IAcceptUseCase";
+import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
+import { IResetPasswordUseCase } from "../../application/interface/useCases/IResetPasswordUseCase";
+import { IUserProfileUseCase } from "../../application/interface/useCases/IUserProfileUseCase";
+import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
+import { ICreateSubscriptionUseCase } from "../../application/interface/useCases/ICreateSubscriptionUseCase";
+import { IVerifyPaymentUseCase } from "../../application/interface/useCases/IVerifyPaymentUseCase";
+import { IGetPlanUseCase } from "../../application/interface/useCases/IGetPlanUseCase";
+import { ICreatePlanUseCase } from "../../application/interface/useCases/ICreatePlanUseCase";
+import { IUpdatePlanUseCase } from "../../application/interface/useCases/IUpdatePlanUseCase";
+import { IDeletePlanUseCase } from "../../application/interface/useCases/IDeletePlanUseCase";
 
 // Infrastructure Implementations - Services
 import { Logger } from "../services/Logger";
@@ -45,14 +55,17 @@ import { OtpService } from "../services/OTPService";
 import { JsonWebTokenProvider } from "../services/providers/JsonWebTokenProvider";
 import { RedisCacheService } from "../services/RedisCacheService";
 import { InMemoryCacheService } from "../services/InMemoryCacheService";
+import { RazorpayService } from "../services/RazorpayService";
 
 // Domain Interfaces - Providers
-import { IJwtProvider } from "../../domain/interfaces/services/IJwtProvider";
+import { IJwtProvider } from "../interface/services/IJwtProvider";
 
 // Infrastructure Implementations - Repositories
 import { UserRepo } from "../repositories/UserRepo";
 import { OrgRepo } from "../repositories/OrgRepo";
 import { InviteRepo } from "../repositories/InviteRepo";
+import { PlanRepo } from "../repositories/PlanRepo";
+import { SubscriptionRepo } from "../repositories/SubscriptionRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -71,12 +84,20 @@ import { InviteMemberUseCase } from "../../application/useCase/InviteMemberUseCa
 import { ResetPasswordUseCase } from "../../application/useCase/ResetPasswordUseCase";
 import { UserProfileUseCase } from "../../application/useCase/UserProfileUseCase";
 import { OrganizationManagementUseCase } from "../../application/useCase/OrganizationManagementUseCase";
+import { CreatePlanUseCase } from "../../application/useCase/CreatePlanUseCase";
+import { GetPlansUseCase } from "../../application/useCase/GetPlansUseCase";
+import { CreateSubscriptionUseCase } from "../../application/useCase/CreateSubscriptionUseCase";
+import { VerifyPaymentUseCase } from "../../application/useCase/VerifyPaymentUseCase";
+import { UpdatePlanUseCase } from "../../application/useCase/UpdatePlanUseCase";
+import { DeletePlanUseCase } from "../../application/useCase/DeletePlanUseCase";
 
 // Presentation Controllers
 import { AuthController } from "../../presentation/controllers/AuthController";
 import { AdminController } from "../../presentation/controllers/AdminController";
 import { UserController } from "../../presentation/controllers/UserController";
 import { ManagerController } from "../../presentation/controllers/ManagerController";
+import { PaymentController } from "../../presentation/controllers/PaymentController";
+import { WebhookController } from "../../presentation/controllers/WebhookController";
 
 /**
  * Service interface for async initialization/cleanup
@@ -152,6 +173,10 @@ class DIContainer {
       .bind<IGoogleAuthService>(TYPES.IGoogleAuthService)
       .to(GoogleAuthService)
       .inSingletonScope();
+    this._container
+      .bind<IRazorpayService>(TYPES.IRazorpayService)
+      .to(RazorpayService)
+      .inSingletonScope();
 
     const useRedis =
       String(process.env.USE_REDIS || "").toLowerCase() === "true";
@@ -180,6 +205,14 @@ class DIContainer {
     this._container
       .bind<IInviteRepo>(TYPES.IInviteRepo)
       .to(InviteRepo)
+      .inSingletonScope();
+    this._container
+      .bind<IPlanRepo>(TYPES.IPlanRepo)
+      .to(PlanRepo)
+      .inSingletonScope();
+    this._container
+      .bind<ISubscriptionRepo>(TYPES.ISubscriptionRepo)
+      .to(SubscriptionRepo)
       .inSingletonScope();
   }
 
@@ -250,6 +283,30 @@ class DIContainer {
       )
       .to(OrganizationManagementUseCase)
       .inTransientScope();
+    this._container
+      .bind<ICreatePlanUseCase>(TYPES.ICreatePlanUseCase)
+      .to(CreatePlanUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IGetPlanUseCase>(TYPES.IGetPlanUseCase)
+      .to(GetPlansUseCase)
+      .inTransientScope();
+    this._container
+      .bind<ICreateSubscriptionUseCase>(TYPES.ICreateSubscriptionUseCase)
+      .to(CreateSubscriptionUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IVerifyPaymentUseCase>(TYPES.IVerifyPaymentUseCase)
+      .to(VerifyPaymentUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IUpdatePlanUseCase>(TYPES.IUpdatePlanUseCase)
+      .to(UpdatePlanUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IDeletePlanUseCase>(TYPES.IDeletePlanUseCase)
+      .to(DeletePlanUseCase)
+      .inTransientScope();
   }
 
   private _bindControllers(): void {
@@ -268,6 +325,14 @@ class DIContainer {
     this._container
       .bind<ManagerController>(TYPES.ManagerController)
       .to(ManagerController)
+      .inSingletonScope();
+    this._container
+      .bind<PaymentController>(TYPES.PaymentController)
+      .to(PaymentController)
+      .inSingletonScope();
+    this._container
+      .bind<WebhookController>(TYPES.WebhookController)
+      .to(WebhookController)
       .inSingletonScope();
   }
 

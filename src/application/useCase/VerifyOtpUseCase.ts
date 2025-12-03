@@ -1,27 +1,19 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IVerifyOtpUseCase } from "../../domain/interfaces/useCases/IVerifyOtpUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { ICacheService } from "../../domain/interfaces/services/ICacheService";
+import { IVerifyOtpUseCase } from "../interface/useCases/IVerifyOtpUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
-  private readonly _userRepo: IUserRepo;
-  private readonly _logger: ILogger;
-  private readonly _cache: ICacheService;
-
   constructor(
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ICacheService) cache: ICacheService,
-  ) {
-    this._userRepo = userRepo;
-    this._logger = logger;
-    this._cache = cache;
-  }
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.ICacheService) private readonly _cache: ICacheService,
+  ) {}
 
   public async execute(
     email: string,

@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
-import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases/IOrganizationManagementUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
+import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
+import { CreatePlanUseCase } from "../../application/useCase/CreatePlanUseCase";
+import { GetPlansUseCase } from "../../application/useCase/GetPlansUseCase";
+import { IUpdatePlanUseCase } from "../../application/interface/useCases/IUpdatePlanUseCase";
+import { IDeletePlanUseCase } from "../../application/interface/useCases/IDeletePlanUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
@@ -14,12 +18,19 @@ import { asyncHandler, HttpError } from "../../utils/asyncHandler";
 @injectable()
 export class AdminController {
   constructor(
-    @inject(TYPES.IUserRepo) private userRepo: IUserRepo,
-    @inject(TYPES.IOrgRepo) private orgRepo: IOrgRepo,
+    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
+    @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
     @inject(TYPES.IInviteMemberUseCase)
-    private inviteMemberUseCase: IInviteMemberUseCase,
+    private _inviteMemberUseCase: IInviteMemberUseCase,
     @inject(TYPES.IOrganizationManagementUseCase)
-    private orgManagementUseCase: IOrganizationManagementUseCase,
+    private _orgManagementUseCase: IOrganizationManagementUseCase,
+    @inject(TYPES.ICreatePlanUseCase)
+    private _createPlanUseCase: CreatePlanUseCase,
+    @inject(TYPES.IGetPlanUseCase) private _getPlanUseCase: GetPlansUseCase,
+    @inject(TYPES.IUpdatePlanUseCase)
+    private _updatePlanUseCase: IUpdatePlanUseCase,
+    @inject(TYPES.IDeletePlanUseCase)
+    private _deletePlanUseCase: IDeletePlanUseCase,
     @inject(TYPES.ILogger) private logger: ILogger,
   ) {}
 
@@ -29,14 +40,12 @@ export class AdminController {
     message: string = "Success",
     status: number = StatusCodes.OK,
   ): void {
-    res
-      .status(status)
-      .json({
-        success: true,
-        message,
-        data,
-        timestamp: new Date().toISOString(),
-      });
+    res.status(status).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   listOrganizations = asyncHandler(async (req: Request, res: Response) => {
@@ -48,7 +57,7 @@ export class AdminController {
         "Invalid pagination parameters",
       );
     }
-    const result = await this.orgRepo.findPaginated(
+    const result = await this._orgRepo.findPaginated(
       Number(limit),
       Number(offset),
       search as string,
@@ -75,7 +84,7 @@ export class AdminController {
         "Organization settings are required",
       );
 
-    const newOrg = await this.orgRepo.create({
+    const newOrg = await this._orgRepo.create({
       name,
       description,
       settings,
@@ -88,7 +97,7 @@ export class AdminController {
   getOrganizationById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Fetching organization by ID", { orgId: id });
-    const organization = await this.orgRepo.findById(id);
+    const organization = await this._orgRepo.findById(id);
     if (!organization)
       throw new HttpError(StatusCodes.NOT_FOUND, COMMON_MESSAGES.NOT_FOUND);
     this.sendSuccess(res, organization);
@@ -112,7 +121,7 @@ export class AdminController {
     // If status is being updated, use the use case to handle cascading effects
     if (updateData.status) {
       const updatedOrg =
-        await this.orgManagementUseCase.updateOrganizationStatus(
+        await this._orgManagementUseCase.updateOrganizationStatus(
           id,
           updateData.status,
         );
@@ -121,9 +130,9 @@ export class AdminController {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { status: _status, ...otherFields } = updateData;
       if (Object.keys(otherFields).length > 0) {
-        await this.orgRepo.update(id, otherFields);
+        await this._orgRepo.update(id, otherFields);
         // Re-fetch to get the final state
-        const finalOrg = await this.orgRepo.findById(id);
+        const finalOrg = await this._orgRepo.findById(id);
         this.sendSuccess(res, finalOrg, COMMON_MESSAGES.UPDATED);
         return;
       }
@@ -133,7 +142,7 @@ export class AdminController {
     }
 
     // Default update for non-status fields
-    const updatedOrg = await this.orgRepo.update(id, updateData);
+    const updatedOrg = await this._orgRepo.update(id, updateData);
     this.sendSuccess(res, updatedOrg, COMMON_MESSAGES.UPDATED);
   });
 
@@ -146,7 +155,7 @@ export class AdminController {
         "Organization ID is required",
       );
 
-    await this.orgManagementUseCase.deleteOrganizationCascade(id);
+    await this._orgManagementUseCase.deleteOrganizationCascade(id);
     this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);
   });
 
@@ -168,7 +177,7 @@ export class AdminController {
       status: typeof status === "string" ? status : undefined,
     };
 
-    const result = await this.userRepo.findPaginated(
+    const result = await this._userRepo.findPaginated(
       Number(limit),
       Number(offset),
       search as string,
@@ -183,7 +192,7 @@ export class AdminController {
     if (!id)
       throw new HttpError(StatusCodes.BAD_REQUEST, "User ID is required");
 
-    const user = await this.userRepo.findById(id);
+    const user = await this._userRepo.findById(id);
     if (!user)
       throw new HttpError(StatusCodes.NOT_FOUND, COMMON_MESSAGES.NOT_FOUND);
 
@@ -206,7 +215,7 @@ export class AdminController {
     } as Record<string, unknown>;
     Reflect.deleteProperty(safeUpdateData, "password");
     Reflect.deleteProperty(safeUpdateData, "otp");
-    const updatedUser = await this.userRepo.updateProfile(id, safeUpdateData);
+    const updatedUser = await this._userRepo.updateProfile(id, safeUpdateData);
     const safeUser = {
       ...(updatedUser as unknown as Record<string, unknown>),
     } as Record<string, unknown>;
@@ -226,7 +235,7 @@ export class AdminController {
         COMMON_MESSAGES.INVALID_INPUT,
       );
 
-    const updatedUser = await this.userRepo.updateStatus(id, status);
+    const updatedUser = await this._userRepo.updateStatus(id, status);
     const safeUser = {
       ...(updatedUser as unknown as Record<string, unknown>),
     } as Record<string, unknown>;
@@ -239,15 +248,15 @@ export class AdminController {
     this.logger.info("Deleting user", { userId: id });
     if (!id)
       throw new HttpError(StatusCodes.BAD_REQUEST, "User ID is required");
-    await this.userRepo.delete(id);
+    await this._userRepo.delete(id);
     this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);
   });
 
   getReports = asyncHandler(async (req: Request, res: Response) => {
     this.logger.info("Fetching reports");
     const [userStats, orgStats] = await Promise.all([
-      this.userRepo.getStats(),
-      this.orgRepo.getStats(),
+      this._userRepo.getStats(),
+      this._orgRepo.getStats(),
     ]);
 
     const report = {
@@ -264,8 +273,8 @@ export class AdminController {
   getDashboardStats = asyncHandler(async (req: Request, res: Response) => {
     this.logger.info("Fetching dashboard stats");
     const [userStats, orgStats] = await Promise.all([
-      this.userRepo.getStats(),
-      this.orgRepo.getStats(),
+      this._userRepo.getStats(),
+      this._orgRepo.getStats(),
     ]);
     this.sendSuccess(res, { users: userStats, organizations: orgStats });
   });
@@ -273,7 +282,7 @@ export class AdminController {
   getUsersByOrganization = asyncHandler(async (req: Request, res: Response) => {
     const { orgId } = req.params;
     this.logger.info("Fetching users by organization", { orgId });
-    const users = await this.userRepo.findByOrg(orgId);
+    const users = await this._userRepo.findByOrg(orgId);
     this.sendSuccess(res, users);
   });
 
@@ -286,7 +295,7 @@ export class AdminController {
         COMMON_MESSAGES.INVALID_INPUT,
       );
 
-    const result = await this.inviteMemberUseCase.execute(email, orgId, role);
+    const result = await this._inviteMemberUseCase.execute(email, orgId, role);
     this.sendSuccess(
       res,
       result,
@@ -308,11 +317,70 @@ export class AdminController {
         COMMON_MESSAGES.INVALID_INPUT,
       );
 
-    const result = await this.inviteMemberUseCase.bulkInvite(
+    const result = await this._inviteMemberUseCase.bulkInvite(
       emails,
       orgId,
       role,
     );
     this.sendSuccess(res, result, COMMON_MESSAGES.INVITATION_SENT);
+  });
+
+  createPlan = asyncHandler(async (req: Request, res: Response) => {
+    const planData = req.body;
+    this.logger.info("Creating Subscription Plan", { body: planData });
+    if (!planData) {
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Request body is missing");
+    }
+    if (
+      !planData.name ||
+      !planData.price ||
+      !planData.currency ||
+      !planData.type
+    ) {
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        COMMON_MESSAGES.INVALID_INPUT,
+      );
+    }
+
+    const newPlan = await this._createPlanUseCase.execute(planData);
+    this.sendSuccess(
+      res,
+      newPlan,
+      COMMON_MESSAGES.CREATED,
+      StatusCodes.CREATED,
+    );
+  });
+
+  getPlans = asyncHandler(async (req: Request, res: Response) => {
+    this.logger.info("Fetching Subscritption Plans");
+    const plans = await this._getPlanUseCase.execute({});
+    this.sendSuccess(res, plans);
+  });
+
+  updatePlan = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const planData = req.body;
+    this.logger.info("Updating Subscription Plan", { planId: id });
+    if (!id)
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Plan ID is required");
+
+    const updatedPlan = await this._updatePlanUseCase.execute(id, planData);
+    if (!updatedPlan)
+      throw new HttpError(StatusCodes.NOT_FOUND, "Plan not found");
+
+    this.sendSuccess(res, updatedPlan, COMMON_MESSAGES.UPDATED);
+  });
+
+  deletePlan = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    this.logger.info("Deleting Subscription Plan", { planId: id });
+    if (!id)
+      throw new HttpError(StatusCodes.BAD_REQUEST, "Plan ID is required");
+
+    const success = await this._deletePlanUseCase.execute(id);
+    if (!success) throw new HttpError(StatusCodes.NOT_FOUND, "Plan not found");
+
+    this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);
   });
 }

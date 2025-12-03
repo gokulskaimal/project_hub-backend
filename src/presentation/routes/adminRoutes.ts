@@ -51,5 +51,22 @@ export function createAdminRoutes(container: Container): Router {
     controller.bulkInviteMembers(req as AuthenticatedRequest, res, next),
   );
 
+  //Plans
+  //Plans
+  router.post(API_ROUTES.ADMIN.PLANS, (req, res, next) =>
+    controller.createPlan(req as AuthenticatedRequest, res, next),
+  );
+
+  router.get(API_ROUTES.ADMIN.PLANS, (req, res, next) =>
+    controller.getPlans(req as AuthenticatedRequest, res, next),
+  );
+
+  router.put(`${API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) =>
+    controller.updatePlan(req as AuthenticatedRequest, res, next),
+  );
+
+  router.delete(`${API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) =>
+    controller.deletePlan(req as AuthenticatedRequest, res, next),
+  );
   return router;
 }

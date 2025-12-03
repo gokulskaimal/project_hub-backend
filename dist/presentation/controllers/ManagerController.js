@@ -37,9 +37,15 @@ let ManagerController = class ManagerController {
         this.bulkInvite = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { emails } = req.body;
             const orgId = req.user.orgId;
-            this._logger.info("Manager bulk inviting members", { orgId, count: emails?.length });
+            this._logger.info("Manager bulk inviting members", {
+                orgId,
+                count: emails?.length,
+            });
             if (!emails?.length)
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: "Emails array is required" };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: "Emails array is required",
+                };
             const results = [];
             const errors = [];
             for (const email of emails) {
@@ -48,14 +54,25 @@ let ManagerController = class ManagerController {
                     results.push({ email, status: "success", result });
                 }
                 catch (error) {
-                    this._logger.error("Bulk invite failed for email", error, { email, orgId });
-                    errors.push({ email, status: "error", error: error.message });
+                    this._logger.error("Bulk invite failed for email", error, {
+                        email,
+                        orgId,
+                    });
+                    errors.push({
+                        email,
+                        status: "error",
+                        error: error.message,
+                    });
                 }
             }
             this.sendSuccess(res, {
                 successful: results,
                 failed: errors,
-                summary: { total: emails.length, successful: results.length, failed: errors.length }
+                summary: {
+                    total: emails.length,
+                    successful: results.length,
+                    failed: errors.length,
+                },
             }, `Bulk invite completed`);
         });
         this.listInvitations = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
@@ -70,7 +87,10 @@ let ManagerController = class ManagerController {
             this._logger.info("Cancelling invitation", { orgId, token: "REDACTED" });
             const invitation = await this._inviteRepo.findByToken(token);
             if (!invitation)
-                throw { status: statusCodes_enum_1.StatusCodes.NOT_FOUND, message: "Invitation not found" };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.NOT_FOUND,
+                    message: "Invitation not found",
+                };
             if (invitation.orgId !== orgId)
                 throw { status: statusCodes_enum_1.StatusCodes.FORBIDDEN, message: "Access denied" };
             await this._inviteRepo.markCancelled?.(token);
@@ -90,14 +110,25 @@ let ManagerController = class ManagerController {
             const { status } = req.body;
             const orgId = req.user.orgId;
             const managerId = req.user.id;
-            this._logger.info("Updating member status", { orgId, managerId, targetUserId: id, status });
+            this._logger.info("Updating member status", {
+                orgId,
+                managerId,
+                targetUserId: id,
+                status,
+            });
             if (id === managerId)
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: "Cannot change your own status" };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: "Cannot change your own status",
+                };
             const member = await this._userRepo.findById(id);
             if (!member)
                 throw { status: statusCodes_enum_1.StatusCodes.NOT_FOUND, message: "Member not found" };
             if (member.orgId !== orgId)
-                throw { status: statusCodes_enum_1.StatusCodes.FORBIDDEN, message: "Member not in your organization" };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.FORBIDDEN,
+                    message: "Member not in your organization",
+                };
             const updatedMember = await this._userRepo.updateStatus(id, status);
             this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(updatedMember), "Member status updated");
         });
@@ -105,20 +136,37 @@ let ManagerController = class ManagerController {
             const { id } = req.params;
             const orgId = req.user.orgId;
             const managerId = req.user.id;
-            this._logger.info("Removing member", { orgId, managerId, targetUserId: id });
+            this._logger.info("Removing member", {
+                orgId,
+                managerId,
+                targetUserId: id,
+            });
             if (id === managerId)
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: "Cannot remove yourself" };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: "Cannot remove yourself",
+                };
             const member = await this._userRepo.findById(id);
             if (!member)
                 throw { status: statusCodes_enum_1.StatusCodes.NOT_FOUND, message: "Member not found" };
             if (member.orgId !== orgId)
-                throw { status: statusCodes_enum_1.StatusCodes.FORBIDDEN, message: "Member not in your organization" };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.FORBIDDEN,
+                    message: "Member not in your organization",
+                };
             await this._userRepo.removeFromOrg(id, orgId);
             this.sendSuccess(res, null, "Member removed successfully");
         });
     }
     sendSuccess(res, data, message = "Success") {
-        res.status(statusCodes_enum_1.StatusCodes.OK).json({ success: true, message, data, timestamp: new Date().toISOString() });
+        res
+            .status(statusCodes_enum_1.StatusCodes.OK)
+            .json({
+            success: true,
+            message,
+            data,
+            timestamp: new Date().toISOString(),
+        });
     }
 };
 exports.ManagerController = ManagerController;

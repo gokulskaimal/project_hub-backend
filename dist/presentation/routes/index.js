@@ -9,6 +9,8 @@ const authRoutes_1 = require("./authRoutes");
 const adminRoutes_1 = require("./adminRoutes");
 const managerRoutes_1 = require("./managerRoutes");
 const userRoutes_1 = require("./userRoutes");
+const webhookRoutes_1 = require("./webhookRoutes");
+const paymentRoutes_1 = require("./paymentRoutes");
 function createRoutes(container) {
     // 1. Auth Routes
     const authRouter = (0, authRoutes_1.createAuthRoutes)(container);
@@ -27,6 +29,8 @@ function createRoutes(container) {
     projectRouter.get("/", (_req, res) => {
         res.json({ message: "Coming soon" });
     });
+    const webhookRouter = (0, webhookRoutes_1.createWebhookRoutes)(container);
+    const paymentRouter = (0, paymentRoutes_1.createPaymentRoutes)(container);
     return {
         auth: authRouter,
         admin: adminRouter,
@@ -34,6 +38,8 @@ function createRoutes(container) {
         user: userRouter,
         organizations: orgRouter,
         projects: projectRouter,
+        webhooks: webhookRouter,
+        payments: paymentRouter,
     };
 }
 //# sourceMappingURL=index.js.map

@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITokenRefreshUseCase } from "../../domain/interfaces/useCases/ITokenRefreshUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { ITokenRefreshUseCase } from "../interface/useCases/ITokenRefreshUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { AuthTokens } from "../../domain/interfaces/useCases/types";
+import { AuthTokens } from "../interface/useCases/types";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 

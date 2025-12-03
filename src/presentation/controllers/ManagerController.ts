@@ -1,10 +1,10 @@
 import { Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
+import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { toUserDTO } from "../../application/dto/UserDTO";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
@@ -22,14 +22,12 @@ export class ManagerController {
   ) {}
 
   private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
-    res
-      .status(StatusCodes.OK)
-      .json({
-        success: true,
-        message,
-        data,
-        timestamp: new Date().toISOString(),
-      });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   inviteMember = asyncHandler(

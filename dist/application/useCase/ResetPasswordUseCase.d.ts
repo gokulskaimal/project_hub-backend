@@ -1,9 +1,9 @@
-import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IResetPasswordUseCase } from "../interface/useCases/IResetPasswordUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 export declare class ResetPasswordUseCase implements IResetPasswordUseCase {
     private readonly _userRepo;
     private readonly _hashService;

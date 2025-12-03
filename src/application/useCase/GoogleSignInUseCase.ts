@@ -1,15 +1,15 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IGoogleSignInUseCase } from "../../domain/interfaces/useCases/IGoogleSignInUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IGoogleAuthService } from "../../domain/interfaces/services/IGoogleAuthService ";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IGoogleSignInUseCase } from "../interface/useCases/IGoogleSignInUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IGoogleAuthService } from "../../infrastructure/interface/services/IGoogleAuthService ";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { UserRole } from "../../domain/enums/UserRole";
 import { toUserDTO, UserDTO } from "../dto/UserDTO";
-import { AuthTokens } from "../../domain/interfaces/useCases/types";
+import { AuthTokens } from "../interface/useCases/types";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
@@ -119,12 +119,23 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
         }
 
         // Create Organization
-        const newOrg = await this._orgRepo.create({
-          name: orgName,
-          status: OrganizationStatus.ACTIVE,
-          createdAt: new Date(),
-          // You might want to add more default fields here
-        });
+        let newOrg;
+        try {
+          newOrg = await this._orgRepo.create({
+            name: orgName,
+            status: OrganizationStatus.ACTIVE,
+            createdAt: new Date(),
+            // You might want to add more default fields here
+          });
+        } catch (error: unknown) {
+          if ((error as { code?: number }).code === 11000) {
+            throw new HttpError(
+              StatusCodes.BAD_REQUEST,
+              "Organization name already exists",
+            );
+          }
+          throw error;
+        }
 
         // Create User as ORG_MANAGER linked to new Org
         const newUser = await this._userRepo.create({

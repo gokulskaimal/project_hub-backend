@@ -15,11 +15,6 @@ const inversify_1 = require("inversify");
 /**
  * Hash Service Implementation
  * Provides password hashing and verification using bcrypt
- *
- * ✅ DEPENDENCY INVERSION PRINCIPLE:
- * - Implements IHashService interface
- * - Can be easily swapped for testing or different implementations
- * - Uses @injectable decorator for DI container
  */
 let HashService = class HashService {
     /**

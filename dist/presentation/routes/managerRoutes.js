@@ -11,7 +11,7 @@ function createManagerRoutes(container) {
     const router = (0, express_1.Router)();
     const controller = container.get(types_1.TYPES.ManagerController);
     // Protect all manager routes
-    router.use('/manager', AuthMiddleware_1.authMiddleware, (0, RoleMiddleware_1.roleMiddleware)(UserRole_1.UserRole.ORG_MANAGER));
+    router.use("/manager", AuthMiddleware_1.authMiddleware, (0, RoleMiddleware_1.roleMiddleware)(UserRole_1.UserRole.ORG_MANAGER));
     router.get(constants_1.API_ROUTES.MANAGER.MEMBERS, (req, res, next) => controller.listMembers(req, res, next));
     router.delete(`${constants_1.API_ROUTES.MANAGER.MEMBERS}/:id`, (req, res, next) => controller.removeMember(req, res, next));
     router.put(`${constants_1.API_ROUTES.MANAGER.MEMBERS}/:id/status`, (req, res, next) => controller.updateMemberStatus(req, res, next));

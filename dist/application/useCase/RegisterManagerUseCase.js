@@ -20,12 +20,12 @@ const Organization_1 = require("../../domain/entities/Organization");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let RegisterManagerUseCase = class RegisterManagerUseCase {
-    constructor(userRepo, otpService, emailService, logger, orgRepo) {
-        this._userRepo = userRepo;
-        this._otpService = otpService;
-        this._emailService = emailService;
-        this._logger = logger;
-        this._orgRepo = orgRepo;
+    constructor(_userRepo, _otpService, _emailService, _logger, _orgRepo) {
+        this._userRepo = _userRepo;
+        this._otpService = _otpService;
+        this._emailService = _emailService;
+        this._logger = _logger;
+        this._orgRepo = _orgRepo;
     }
     async execute(email, organizationName) {
         this._logger.info("Manager registration attempt", {

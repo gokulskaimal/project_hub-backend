@@ -1,5 +1,5 @@
 import { BaseRepository } from "./BaseRepository";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
+import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { Invite } from "../../domain/entities/Invite";
 import { Document } from "mongoose";
 interface IInviteDoc extends Document {
@@ -18,6 +18,7 @@ export declare class InviteRepo extends BaseRepository<Invite, IInviteDoc> imple
     constructor();
     protected toDomain(doc: IInviteDoc): Invite;
     findByToken(token: string): Promise<Invite | null>;
+    delete(token: string): Promise<boolean>;
     markAccepted(token: string): Promise<void>;
     expire(token: string): Promise<void>;
     findPendingByEmail(email: string, orgId: string): Promise<Invite | null>;

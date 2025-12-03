@@ -8,6 +8,15 @@ export const TYPES = {
   IOtpService: Symbol.for("IOtpService"),
   ICacheService: Symbol.for("ICacheService"),
   IGoogleAuthService: Symbol.for("IGoogleAuthService"),
+  IRazorpayService: Symbol.for("IRazorpayService"),
+  IPlanRepo: Symbol.for("IPlanRepo"),
+  ISubscriptionRepo: Symbol.for("ISubscriptionRepo"),
+  ICreatePlanUseCase: Symbol.for("ICreatePlanUseCase"),
+  IGetPlanUseCase: Symbol.for("IGetPlanUseCase"),
+  ICreateSubscriptionUseCase: Symbol.for("ICreateSubscriptionUseCase"),
+  IVerifyPaymentUseCase: Symbol.for("IVerifyPaymentUseCase"),
+  IUpdatePlanUseCase: Symbol.for("IUpdatePlanUseCase"),
+  IDeletePlanUseCase: Symbol.for("IDeletePlanUseCase"),
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
@@ -38,6 +47,8 @@ export const TYPES = {
   ManagerController: Symbol.for("ManagerController"),
   UserController: Symbol.for("UserController"),
   ProjectController: Symbol.for("ProjectController"),
+  WebhookController: Symbol.for("WebhookController"),
+  PaymentController: Symbol.for("PaymentController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),

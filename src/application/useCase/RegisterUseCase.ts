@@ -1,13 +1,13 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IRegisterUseCase } from "../../domain/interfaces/useCases/IRegisterUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IRegisterUseCase } from "../interface/useCases/IRegisterUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { User } from "../../domain/entities/User";
 import { toUserDTO } from "../dto/UserDTO";
-import { AuthResult } from "../../domain/interfaces/useCases/types";
+import { AuthResult } from "../interface/useCases/types";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 

@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepository";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IUserRepo } from "../interface/repositories/IUserRepo";
 import { User } from "../../domain/entities/User";
 import { Organization } from "../../domain/entities/Organization";
 import UserModel, { IUserDoc } from "../models/UserModel";
@@ -209,8 +209,9 @@ export class UserRepo
     return users.map((u) => this.toDomainUser(u));
   }
 
-  async delete(id: string): Promise<void> {
-    await UserModel.findByIdAndDelete(id);
+  async delete(id: string): Promise<boolean> {
+    const result = await UserModel.findByIdAndDelete(id);
+    return !!result;
   }
 
   async findByRole(role: string): Promise<User[]> {

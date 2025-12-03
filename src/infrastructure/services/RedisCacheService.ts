@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { ICacheService } from "../../domain/interfaces/services/ICacheService";
+import { ICacheService } from "../interface/services/ICacheService";
 import Redis from "ioredis";
 
 @injectable()

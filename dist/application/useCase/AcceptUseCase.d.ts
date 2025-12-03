@@ -1,19 +1,18 @@
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IAcceptUseCase } from "../interface/useCases/IAcceptUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 export declare class AcceptUseCase implements IAcceptUseCase {
     private readonly _inviteRepo;
     private readonly _userRepo;
     private readonly _logger;
     private readonly _hashService;
     private readonly _jwtService;
-    constructor(inviteRepo: IInviteRepo, userRepo: IUserRepo, logger: ILogger, hashService: IHashService, jwtService: IJwtService);
+    constructor(_inviteRepo: IInviteRepo, _userRepo: IUserRepo, _logger: ILogger, _hashService: IHashService, _jwtService: IJwtService);
     /**
-     * ✅ FIXED: Execute invitation acceptance with correct signature
      * @param token - Invitation token
      * @param password - User's chosen password
      * @param firstName - User's first name

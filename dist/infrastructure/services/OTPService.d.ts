@@ -1,4 +1,4 @@
-import { IOtpService } from "../../domain/interfaces/services/IOtpService";
+import { IOtpService } from "../interface/services/IOtpService";
 /**
  * OTP Service Implementation
  * Focuses purely on Generation logic.

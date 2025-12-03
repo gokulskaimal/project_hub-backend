@@ -1,5 +1,5 @@
 import { BaseRepository } from "./BaseRepository";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IUserRepo } from "../interface/repositories/IUserRepo";
 import { User } from "../../domain/entities/User";
 import { Organization } from "../../domain/entities/Organization";
 import { IUserDoc } from "../models/UserModel";
@@ -27,7 +27,7 @@ export declare class UserRepo extends BaseRepository<User, IUserDoc> implements 
     verifyOtp(email: string, otp: string): Promise<User | null>;
     findByOrg(orgId: string): Promise<User[]>;
     findAll(): Promise<User[]>;
-    delete(id: string): Promise<void>;
+    delete(id: string): Promise<boolean>;
     findByRole(role: string): Promise<User[]>;
     findByOrgAndRole(orgId: string, role: string): Promise<User[]>;
     updateStatus(id: string, status: string): Promise<User>;

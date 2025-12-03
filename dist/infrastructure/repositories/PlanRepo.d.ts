@@ -1,8 +1,14 @@
-import { IPlanRepo } from "../../domain/interfaces/IPlanRepo";
+import { BaseRepository } from "./BaseRepository";
 import { Plan } from "../../domain/entities/Plan";
-export declare class PlanRepo implements IPlanRepo {
+import { IPlanRepo } from "../interface/repositories/IPlanRepo";
+import { IPlanDoc } from "../models/PlanModel";
+export declare class PlanRepo extends BaseRepository<Plan, IPlanDoc> implements IPlanRepo {
+    constructor();
+    protected toDomain(doc: IPlanDoc): Plan;
+    create(data: Partial<Plan>): Promise<Plan>;
     findAll(): Promise<Plan[]>;
     findById(id: string): Promise<Plan | null>;
-    create(plan: Partial<Plan>): Promise<Plan>;
+    update(id: string, plan: Partial<Plan>): Promise<Plan | null>;
+    delete(id: string): Promise<boolean>;
 }
 //# sourceMappingURL=PlanRepo.d.ts.map

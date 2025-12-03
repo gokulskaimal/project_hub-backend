@@ -1,5 +1,5 @@
-import { IJwtService, JwtPayload } from "../../domain/interfaces/services/IJwtService";
-import { IJwtProvider } from "../../domain/interfaces/services/IJwtProvider";
+import { IJwtService, JwtPayload } from "../interface/services/IJwtService";
+import { IJwtProvider } from "../interface/services/IJwtProvider";
 /**
  * JWT Service Implementation
  * Uses dependency injection to receive a JWT provider
@@ -16,8 +16,8 @@ export declare class JwtService implements IJwtService {
     private readonly _resetTokenExpiry;
     private readonly _issuer;
     private readonly _audience;
-    private readonly revokedRefreshedTokens;
-    private readonly revokeForAllUserMap;
+    private readonly _revokedRefreshedTokens;
+    private readonly _revokeForAllUserMap;
     /**
      * Constructor with dependency injection for JWT provider
      * @param jwtProvider Implementation of IJwtProvider interface

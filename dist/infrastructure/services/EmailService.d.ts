@@ -1,4 +1,4 @@
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
+import { IEmailService } from "../interface/services/IEmailService";
 /**
  * Email Service Implementation
  * Provides email sending capabilities using NodeMailer

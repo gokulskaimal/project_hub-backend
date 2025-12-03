@@ -1,5 +1,5 @@
 import { Document, Model, FilterQuery } from "mongoose";
-import { IBaseRepository } from "../../domain/interfaces/IBaseRepository";
+import { IBaseRepository } from "../interface/repositories/IBaseRepository";
 /**
  * Base Repository Abstract Class
  *
@@ -54,13 +54,13 @@ export declare abstract class BaseRepository<TDomain, TDoc extends Document> imp
      * @returns The updated domain entity
      * @throws Error if the document is not found
      */
-    update(id: string, data: Partial<TDomain>): Promise<TDomain>;
+    update(id: string, data: Partial<TDomain>): Promise<TDomain | null>;
     /**
      * Deletes a document by its ID
      *
      * @param id - The ID of the document to delete
      */
-    delete(id: string): Promise<void>;
+    delete(id: string): Promise<boolean>;
     /**
      * Counts documents matching the filter
      *

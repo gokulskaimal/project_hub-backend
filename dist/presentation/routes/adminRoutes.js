@@ -11,7 +11,7 @@ function createAdminRoutes(container) {
     const router = (0, express_1.Router)();
     const controller = container.get(types_1.TYPES.AdminController);
     // Protect all admin routes
-    router.use('/admin', AuthMiddleware_1.authMiddleware, (0, RoleMiddleware_1.roleMiddleware)(UserRole_1.UserRole.SUPER_ADMIN));
+    router.use("/admin", AuthMiddleware_1.authMiddleware, (0, RoleMiddleware_1.roleMiddleware)(UserRole_1.UserRole.SUPER_ADMIN));
     // Organizations
     router.get(constants_1.API_ROUTES.ADMIN.ORGANIZATIONS, (req, res, next) => controller.listOrganizations(req, res, next));
     router.post(constants_1.API_ROUTES.ADMIN.ORGANIZATIONS, (req, res, next) => controller.createOrganization(req, res, next));
@@ -25,6 +25,9 @@ function createAdminRoutes(container) {
     router.get(constants_1.API_ROUTES.ADMIN.REPORTS, (req, res, next) => controller.getReports(req, res, next));
     router.post("/invite-member", (req, res, next) => controller.inviteMember(req, res, next));
     router.post("/bulk-invite", (req, res, next) => controller.bulkInviteMembers(req, res, next));
+    //Plans
+    router.post('/plans', (req, res, next) => controller.createPlan(req, res, next));
+    router.get('/plans', (req, res, next) => controller.getPlans(req, res, next));
     return router;
 }
 //# sourceMappingURL=adminRoutes.js.map

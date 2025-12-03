@@ -1,37 +1,59 @@
-import { IPlanRepo } from "../../domain/interfaces/IPlanRepo";
+import { injectable } from "inversify";
+import { BaseRepository } from "./BaseRepository";
 import { Plan } from "../../domain/entities/Plan";
-import PlanModel from "../models/PlanModel";
+import { IPlanRepo } from "../interface/repositories/IPlanRepo";
+import PlanModel, { IPlanDoc } from "../models/PlanModel";
+import { Model } from "mongoose";
 
-export class PlanRepo implements IPlanRepo {
-  async findAll(): Promise<Plan[]> {
-    const plans = await PlanModel.find();
+@injectable()
+export class PlanRepo
+  extends BaseRepository<Plan, IPlanDoc>
+  implements IPlanRepo
+{
+  constructor() {
+    super(PlanModel as unknown as Model<IPlanDoc>);
+  }
 
-    return plans.map((plan) => ({
-      id: plan._id.toString(),
-      name: plan.name,
-      maxUsers: plan.maxUsers,
-      pricePerMonth: plan.pricePerMonth,
-    }));
+  protected toDomain(doc: IPlanDoc): Plan {
+    const obj = doc.toObject();
+    return {
+      id: obj._id.toString(),
+      name: obj.name,
+      description: obj.description,
+      price: obj.price,
+      currency: obj.currency,
+      features: obj.features,
+      type: obj.type,
+      isActive: obj.isActive,
+      razorpayPlanId: obj.razorpayPlanId,
+      limits: obj.limits,
+      createdAt: obj.createdAt,
+      updatedAt: obj.updatedAt,
+    } as Plan;
+  }
+
+  async create(data: Partial<Plan>): Promise<Plan> {
+    const doc = await this.model.create(data);
+    return this.toDomain(doc);
+  }
+
+  async findAll(filter: Partial<Plan> = { isActive: true }): Promise<Plan[]> {
+    const docs = await this.model.find(filter);
+    return docs.map((d) => this.toDomain(d));
   }
 
   async findById(id: string): Promise<Plan | null> {
-    const plan = await PlanModel.findById(id);
-    if (!plan) return null;
-    return {
-      id: plan._id.toString(),
-      name: plan.name,
-      maxUsers: plan.maxUsers,
-      pricePerMonth: plan.pricePerMonth,
-    };
+    const docs = await this.model.findById(id);
+    return docs ? this.toDomain(docs) : null;
   }
 
-  async create(plan: Partial<Plan>): Promise<Plan> {
-    const newPlan = await PlanModel.create(plan);
-    return {
-      id: newPlan._id.toString(),
-      name: newPlan.name,
-      maxUsers: newPlan.maxUsers,
-      pricePerMonth: newPlan.pricePerMonth,
-    };
+  async update(id: string, plan: Partial<Plan>): Promise<Plan | null> {
+    const doc = await this.model.findByIdAndUpdate(id, plan, { new: true });
+    return doc ? this.toDomain(doc) : null;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await this.model.findByIdAndDelete(id);
+    return !!result;
   }
 }

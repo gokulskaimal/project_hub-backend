@@ -18,12 +18,12 @@ const types_1 = require("../../infrastructure/container/types");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let SendOtpUseCase = class SendOtpUseCase {
-    constructor(userRepo, otpService, emailService, logger, cache) {
-        this._userRepo = userRepo;
-        this._otpService = otpService;
-        this._emailService = emailService;
-        this._logger = logger;
-        this._cache = cache;
+    constructor(_userRepo, _otpService, _emailService, _logger, _cache) {
+        this._userRepo = _userRepo;
+        this._otpService = _otpService;
+        this._emailService = _emailService;
+        this._logger = _logger;
+        this._cache = _cache;
     }
     /**
      * Send OTP

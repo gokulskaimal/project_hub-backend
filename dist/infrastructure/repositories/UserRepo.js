@@ -178,7 +178,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
         return users.map((u) => this.toDomainUser(u));
     }
     async delete(id) {
-        await UserModel_1.default.findByIdAndDelete(id);
+        const result = await UserModel_1.default.findByIdAndDelete(id);
+        return !!result;
     }
     async findByRole(role) {
         try {

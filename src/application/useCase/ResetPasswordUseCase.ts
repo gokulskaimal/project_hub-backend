@@ -1,11 +1,11 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IResetPasswordUseCase } from "../../domain/interfaces/useCases/IResetPasswordUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IResetPasswordUseCase } from "../interface/useCases/IResetPasswordUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 

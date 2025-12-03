@@ -2,37 +2,24 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IAcceptUseCase } from "../../domain/interfaces/useCases/IAcceptUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IAcceptUseCase } from "../interface/useCases/IAcceptUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IHashService } from "../../infrastructure/interface/services/IHashService"; // Correct import
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 
 @injectable()
 export class AcceptUseCase implements IAcceptUseCase {
-  private readonly _inviteRepo: IInviteRepo;
-  private readonly _userRepo: IUserRepo;
-  private readonly _logger: ILogger;
-  private readonly _hashService: IHashService;
-  private readonly _jwtService: IJwtService;
-
   constructor(
-    @inject(TYPES.IInviteRepo) inviteRepo: IInviteRepo,
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IHashService) hashService: IHashService,
-    @inject(TYPES.IJwtService) jwtService: IJwtService,
-  ) {
-    this._inviteRepo = inviteRepo;
-    this._userRepo = userRepo;
-    this._logger = logger;
-    this._hashService = hashService;
-    this._jwtService = jwtService;
-  }
+    @inject(TYPES.IInviteRepo) private readonly _inviteRepo: IInviteRepo,
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IHashService) private readonly _hashService: IHashService,
+    @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
+  ) {}
 
   /**
-   * ✅ FIXED: Execute invitation acceptance with correct signature
    * @param token - Invitation token
    * @param password - User's chosen password
    * @param firstName - User's first name

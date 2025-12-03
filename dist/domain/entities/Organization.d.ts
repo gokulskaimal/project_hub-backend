@@ -50,8 +50,6 @@ export interface Organization {
             requireSymbols?: boolean;
         };
         sessionTimeout?: number;
-        multiFactorRequired?: boolean;
-        [key: string]: any;
     };
     features?: string[];
     timezone?: string;
@@ -67,7 +65,7 @@ export interface Organization {
     isDeleted?: boolean;
     deletedAt?: Date;
     deletionReason?: string;
-    customFields?: Record<string, any>;
+    customFields?: Record<string, unknown>;
     tags?: string[];
     priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
     onboardingStatus?: {
@@ -79,7 +77,7 @@ export interface Organization {
     integrations?: {
         [service: string]: {
             enabled: boolean;
-            config?: Record<string, any>;
+            config?: Record<string, unknown>;
             connectedAt?: Date;
         };
     };
@@ -90,6 +88,6 @@ export interface Organization {
         apiCallsLimit?: number;
         lastResetAt?: Date;
     };
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 //# sourceMappingURL=Organization.d.ts.map

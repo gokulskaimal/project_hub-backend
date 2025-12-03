@@ -7,5 +7,7 @@ export declare function createRoutes(container: Container): {
     user: Router;
     organizations: Router;
     projects: Router;
+    webhooks: Router;
+    payments: Router;
 };
 //# sourceMappingURL=index.d.ts.map

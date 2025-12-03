@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { injectable, inject } from "inversify";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
+import { IUserProfileUseCase } from "../../application/interface/useCases/IUserProfileUseCase";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { toUserDTO } from "../../application/dto/UserDTO";
 import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
@@ -12,26 +12,24 @@ import { asyncHandler } from "../../utils/asyncHandler";
 @injectable()
 export class UserController {
   constructor(
-    @inject(TYPES.ILogger) private logger: ILogger,
+    @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IUserProfileUseCase)
     private userProfileUseCase: IUserProfileUseCase,
   ) {}
 
   private sendSuccess(res: Response, data: unknown, message: string) {
-    res
-      .status(StatusCodes.OK)
-      .json({
-        success: true,
-        message,
-        data,
-        timestamp: new Date().toISOString(),
-      });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   getProfile = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
-      this.logger.info("Fetching user profile", { userId });
+      this._logger.info("Fetching user profile", { userId });
       const profile = await this.userProfileUseCase.getProfile(userId);
       this.sendSuccess(
         res,
@@ -45,7 +43,7 @@ export class UserController {
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
       const updateData = req.body;
-      this.logger.info("Updating user profile", {
+      this._logger.info("Updating user profile", {
         userId,
         updatedFields: Object.keys(updateData || {}),
       });
@@ -71,7 +69,7 @@ export class UserController {
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
       const { currentPassword, newPassword, confirmNewPassword } = req.body;
-      this.logger.info("Change password attempt", { userId });
+      this._logger.info("Change password attempt", { userId });
 
       if (!currentPassword || !newPassword || !confirmNewPassword) {
         throw {
@@ -99,7 +97,7 @@ export class UserController {
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
       const { password, confirmation } = req.body;
-      this.logger.info("Delete account attempt", { userId });
+      this._logger.info("Delete account attempt", { userId });
 
       if (!password || confirmation !== "DELETE") {
         throw {

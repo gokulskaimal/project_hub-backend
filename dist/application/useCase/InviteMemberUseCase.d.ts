@@ -1,16 +1,16 @@
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { IInviteMemberUseCase } from "../interface/useCases/IInviteMemberUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 export declare class InviteMemberUseCase implements IInviteMemberUseCase {
     private readonly _inviteRepo;
     private readonly _emailService;
     private readonly _logger;
     private readonly _orgRepo;
     private readonly _userRepo;
-    constructor(inviteRepo: IInviteRepo, emailService: IEmailService, logger: ILogger, orgRepo: IOrgRepo, userRepo: IUserRepo);
+    constructor(_inviteRepo: IInviteRepo, _emailService: IEmailService, _logger: ILogger, _orgRepo: IOrgRepo, _userRepo: IUserRepo);
     execute(email: string, orgId: string, role?: string): Promise<{
         invitationId: string;
         token: string;

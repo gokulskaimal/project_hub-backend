@@ -4,6 +4,9 @@ import { createAuthRoutes } from "./authRoutes";
 import { createAdminRoutes } from "./adminRoutes";
 import { createManagerRoutes } from "./managerRoutes";
 import { createUserRoutes } from "./userRoutes";
+import { createWebhookRoutes } from "./webhookRoutes";
+import { createPaymentRoutes } from "./paymentRoutes";
+import { createPlanRoutes } from "./planRoutes";
 
 export function createRoutes(container: Container): {
   auth: Router;
@@ -12,6 +15,9 @@ export function createRoutes(container: Container): {
   user: Router;
   organizations: Router;
   projects: Router;
+  webhooks: Router;
+  payments: Router;
+  plans: Router;
 } {
   // 1. Auth Routes
   const authRouter = createAuthRoutes(container);
@@ -36,6 +42,10 @@ export function createRoutes(container: Container): {
     res.json({ message: "Coming soon" });
   });
 
+  const webhookRouter = createWebhookRoutes(container);
+  const paymentRouter = createPaymentRoutes(container);
+  const planRouter = createPlanRoutes(container);
+
   return {
     auth: authRouter,
     admin: adminRouter,
@@ -43,5 +53,8 @@ export function createRoutes(container: Container): {
     user: userRouter,
     organizations: orgRouter,
     projects: projectRouter,
+    webhooks: webhookRouter,
+    payments: paymentRouter,
+    plans: planRouter,
   };
 }

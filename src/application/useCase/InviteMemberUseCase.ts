@@ -1,35 +1,23 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { IInviteMemberUseCase } from "../interface/useCases/IInviteMemberUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class InviteMemberUseCase implements IInviteMemberUseCase {
-  private readonly _inviteRepo: IInviteRepo;
-  private readonly _emailService: IEmailService;
-  private readonly _logger: ILogger;
-  private readonly _orgRepo: IOrgRepo;
-  private readonly _userRepo: IUserRepo;
-
   constructor(
-    @inject(TYPES.IInviteRepo) inviteRepo: IInviteRepo,
-    @inject(TYPES.IEmailService) emailService: IEmailService,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IOrgRepo) orgRepo: IOrgRepo,
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-  ) {
-    this._inviteRepo = inviteRepo;
-    this._emailService = emailService;
-    this._logger = logger;
-    this._orgRepo = orgRepo;
-    this._userRepo = userRepo;
-  }
+    @inject(TYPES.IInviteRepo) private readonly _inviteRepo: IInviteRepo,
+    @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+  ) {}
 
   public async execute(
     email: string,

@@ -11,14 +11,14 @@ import { StatusCodes } from "./infrastructure/config/statusCodes.enum";
 // Import DI Container
 import { diContainer, container } from "./infrastructure/container/Container";
 import { TYPES } from "./infrastructure/container/types";
-import { ILogger } from "./domain/interfaces/services/ILogger";
+import { ILogger } from "./infrastructure/interface/services/ILogger";
 
 // Import Route Factory
 import { createRoutes } from "./presentation/routes/index";
 
 // Import middleware
 import { errorHandler, notFoundHandler } from "./utils/asyncHandler"; // Ensure path points to where you put handlers
-import { IBootstrapService } from "./domain/interfaces/services/IBootstrapService";
+import { IBootstrapService } from "./infrastructure/interface/services/IBootstrapService";
 
 let logger: ILogger;
 const port = parseInt(process.env.PORT || "4000");
@@ -35,7 +35,7 @@ function setupMiddleware(app: express.Application): void {
   // Rate limiting
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 1000, // Limit each IP to 1000 requests per windowMs
     message: {
       error: "Too many requests from this IP, please try again later.",
       retryAfter: "15 minutes",
@@ -64,8 +64,15 @@ function setupMiddleware(app: express.Application): void {
   });
 
   // Body parsing middleware
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  app.use((req, res, next) => {
+    express.json({ limit: "10mb" })(req, res, next);
+  });
+
+  app.use((req, res, next) => {
+    express.urlencoded({ extended: true, limit: "10mb" })(req, res, next);
+  });
+
   app.use(cookieParser());
 
   // Request logging middleware
@@ -115,14 +122,16 @@ function setupRoutes(app: express.Application): void {
   // Generate all routes using the DI container
   const routes = createRoutes(container);
 
-  // Mount routers - ORDER MATTERS!
-  // Mount more specific routes first to avoid conflicts
+  // Mount routes
   app.use("/api", routes.auth);
-  app.use("/api", routes.manager); // Manager routes MUST come before admin
+  app.use("/api", routes.manager);
   app.use("/api", routes.admin);
   app.use("/api/organizations", routes.organizations);
   app.use("/api/projects", routes.projects);
   app.use("/api", routes.user);
+  app.use("/api/webhooks", routes.webhooks);
+  app.use("/api/payments", routes.payments);
+  app.use("/api/plans", routes.plans);
 
   // Container diagnostic endpoint (development only)
   if (process.env.NODE_ENV === "development") {

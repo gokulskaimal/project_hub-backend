@@ -18,11 +18,11 @@ const types_1 = require("../../infrastructure/container/types");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let CompleteSignupUseCase = class CompleteSignupUseCase {
-    constructor(userRepo, logger, hashService, jwtService) {
-        this._userRepo = userRepo;
-        this._logger = logger;
-        this._hashService = hashService;
-        this._jwtService = jwtService;
+    constructor(_userRepo, _logger, _hashService, _jwtService) {
+        this._userRepo = _userRepo;
+        this._logger = _logger;
+        this._hashService = _hashService;
+        this._jwtService = _jwtService;
     }
     async validateSignupData(data) {
         const { email, password, firstName, lastName } = data;
@@ -93,7 +93,9 @@ let CompleteSignupUseCase = class CompleteSignupUseCase {
                 firstName,
                 lastName,
             });
-            const safeUserData = { ...updatedUser };
+            const safeUserData = {
+                ...updatedUser,
+            };
             Reflect.deleteProperty(safeUserData, "password");
             Reflect.deleteProperty(safeUserData, "resetPasswordToken");
             Reflect.deleteProperty(safeUserData, "resetPasswordExpires");

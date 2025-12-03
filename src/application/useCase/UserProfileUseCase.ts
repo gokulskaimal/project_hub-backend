@@ -1,27 +1,19 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserProfileUseCase } from "../../domain/interfaces/useCases/IUserProfileUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserProfileUseCase } from "../interface/useCases/IUserProfileUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class UserProfileUseCase implements IUserProfileUseCase {
-  private readonly _userRepo: IUserRepo;
-  private readonly _hashService: IHashService;
-  private readonly _logger: ILogger;
-
   constructor(
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.IHashService) hashService: IHashService,
-    @inject(TYPES.ILogger) logger: ILogger,
-  ) {
-    this._userRepo = userRepo;
-    this._hashService = hashService;
-    this._logger = logger;
-  }
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IHashService) private readonly _hashService: IHashService,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+  ) {}
 
   public async getProfile(userId: string): Promise<Record<string, unknown>> {
     this._logger.info("Getting user profile", { userId });

@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
+import { IOrgRepo } from "../interface/repositories/IOrgRepo";
 import {
   Organization,
   OrganizationStatus,
@@ -83,21 +83,24 @@ export class OrgRepo implements IOrgRepo {
     return docs.map((d) => this.toDomain(d));
   }
 
-  async update(id: string, data: Partial<Organization>): Promise<Organization> {
+  async update(
+    id: string,
+    data: Partial<Organization>,
+  ): Promise<Organization | null> {
     const updated = await OrgModel.findByIdAndUpdate(
       id,
       { ...data, updatedAt: new Date() },
       { new: true },
     );
-    if (!updated) throw new Error("Organization not found");
-    return this.toDomain(updated);
+    return updated ? this.toDomain(updated) : null;
   }
 
-  async delete(id: string): Promise<void> {
-    await OrgModel.findByIdAndUpdate(id, {
+  async delete(id: string): Promise<boolean> {
+    const result = await OrgModel.findByIdAndUpdate(id, {
       status: OrganizationStatus.INACTIVE,
       deletedAt: new Date(),
     });
+    return !!result;
   }
 
   async hardDelete(id: string): Promise<void> {

@@ -25,5 +25,6 @@ export interface User {
     createdAt: Date;
     updatedAt?: Date;
     lastLoginAt?: Date;
+    stripeCustomerId?: string;
 }
 //# sourceMappingURL=User.d.ts.map

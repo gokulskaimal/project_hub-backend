@@ -1,15 +1,15 @@
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/ICompleteSignupUseCase";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ICompleteSignupUseCase } from "../interface/useCases/ICompleteSignupUseCase";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { User } from "../../domain/entities/User";
 export declare class CompleteSignupUseCase implements ICompleteSignupUseCase {
     private readonly _userRepo;
     private readonly _logger;
     private readonly _hashService;
     private readonly _jwtService;
-    constructor(userRepo: IUserRepo, logger: ILogger, hashService: IHashService, jwtService: IJwtService);
+    constructor(_userRepo: IUserRepo, _logger: ILogger, _hashService: IHashService, _jwtService: IJwtService);
     validateSignupData(data: {
         email: string;
         password: string;

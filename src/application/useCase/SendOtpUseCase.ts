@@ -1,35 +1,23 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOtpService } from "../../domain/interfaces/services/IOtpService";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { ICacheService } from "../../domain/interfaces/services/ICacheService";
+import { ISendOtpUseCase } from "../interface/useCases/ISendOtpUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOtpService } from "../../infrastructure/interface/services/IOtpService";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class SendOtpUseCase implements ISendOtpUseCase {
-  private readonly _userRepo: IUserRepo;
-  private readonly _otpService: IOtpService;
-  private readonly _emailService: IEmailService;
-  private readonly _logger: ILogger;
-  private readonly _cache: ICacheService;
-
   constructor(
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.IOtpService) otpService: IOtpService,
-    @inject(TYPES.IEmailService) emailService: IEmailService,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ICacheService) cache: ICacheService,
-  ) {
-    this._userRepo = userRepo;
-    this._otpService = otpService;
-    this._emailService = emailService;
-    this._logger = logger;
-    this._cache = cache;
-  }
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IOtpService) private readonly _otpService: IOtpService,
+    @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.ICacheService) private readonly _cache: ICacheService,
+  ) {}
 
   /**
    * Send OTP

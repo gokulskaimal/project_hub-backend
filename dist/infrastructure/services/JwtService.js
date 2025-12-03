@@ -28,8 +28,8 @@ let JwtService = class JwtService {
      */
     constructor(jwtProvider) {
         this.jwtProvider = jwtProvider;
-        this.revokedRefreshedTokens = new Map();
-        this.revokeForAllUserMap = new Map();
+        this._revokedRefreshedTokens = new Map();
+        this._revokeForAllUserMap = new Map();
         // Get secrets from environment variables with fallbacks for development
         this._accessTokenSecret =
             process.env.JWT_ACCESS_SECRET ||
@@ -119,12 +119,12 @@ let JwtService = class JwtService {
      * @returns Decoded payload or null if invalid
      */
     verifyRefreshToken(token) {
-        const revokedExpiry = this.revokedRefreshedTokens.get(token);
+        const revokedExpiry = this._revokedRefreshedTokens.get(token);
         if (revokedExpiry && revokedExpiry > Date.now()) {
             return null;
         }
         if (revokedExpiry && revokedExpiry <= Date.now()) {
-            this.revokedRefreshedTokens.delete(token);
+            this._revokedRefreshedTokens.delete(token);
         }
         const options = {
             issuer: this._issuer,
@@ -134,8 +134,8 @@ let JwtService = class JwtService {
             const payload = this.jwtProvider.verify(token, this._resetTokenSecret, options);
             if (!payload)
                 return null;
-            if (payload.id && this.revokeForAllUserMap.has(payload.id)) {
-                const revokedAt = this.revokeForAllUserMap.get(payload.id);
+            if (payload.id && this._revokeForAllUserMap.has(payload.id)) {
+                const revokedAt = this._revokeForAllUserMap.get(payload.id);
                 if (payload.iat && typeof payload.iat == "number") {
                     const issuedAtMs = payload.iat * 1000;
                     if (revokedAt && issuedAtMs < revokedAt) {
@@ -205,18 +205,18 @@ let JwtService = class JwtService {
             if (decode && decode.exp && typeof decode.exp == "number") {
                 const expiryMs = decode.exp * 1000;
                 if (expiryMs > Date.now()) {
-                    this.revokedRefreshedTokens.set(token, expiryMs);
+                    this._revokedRefreshedTokens.set(token, expiryMs);
                     const ttl = expiryMs - Date.now();
                     setTimeout(() => {
-                        this.revokedRefreshedTokens.delete(token);
+                        this._revokedRefreshedTokens.delete(token);
                     }, Math.max(0, ttl));
                 }
             }
             else {
                 const fallbackExpiry = Date.now() + 24 * 60 * 60 * 1000;
-                this.revokedRefreshedTokens.set(token, fallbackExpiry);
+                this._revokedRefreshedTokens.set(token, fallbackExpiry);
                 setTimeout(() => {
-                    this.revokedRefreshedTokens.delete(token);
+                    this._revokedRefreshedTokens.delete(token);
                 }, 24 * 60 * 60 * 1000);
             }
         }
@@ -227,7 +227,7 @@ let JwtService = class JwtService {
     async revokeAllForUser(userId) {
         try {
             const now = Date.now();
-            this.revokeForAllUserMap.set(userId, now);
+            this._revokeForAllUserMap.set(userId, now);
         }
         catch (err) {
             console.warn("Failed to revoke all tokens for user ", err.message);

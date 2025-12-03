@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export enum OrganizationStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
@@ -74,8 +73,6 @@ export interface Organization {
       requireSymbols?: boolean;
     };
     sessionTimeout?: number;
-    multiFactorRequired?: boolean;
-    [key: string]: any;
   };
 
   features?: string[];
@@ -106,7 +103,7 @@ export interface Organization {
 
   deletionReason?: string;
 
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
 
   tags?: string[];
 
@@ -122,7 +119,7 @@ export interface Organization {
   integrations?: {
     [service: string]: {
       enabled: boolean;
-      config?: Record<string, any>;
+      config?: Record<string, unknown>;
       connectedAt?: Date;
     };
   };
@@ -135,5 +132,5 @@ export interface Organization {
     lastResetAt?: Date;
   };
 
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

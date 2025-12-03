@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepository";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
+import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { Invite } from "../../domain/entities/Invite";
 import InviteModel from "../models/InviteModel";
 import { Document, Model } from "mongoose";
@@ -48,6 +48,11 @@ export class InviteRepo
   async findByToken(token: string): Promise<Invite | null> {
     const doc = await this.model.findOne({ token });
     return doc ? this.toDomain(doc) : null;
+  }
+
+  async delete(token: string): Promise<boolean> {
+    const result = await this.model.findOneAndDelete({ token });
+    return !!result;
   }
 
   async markAccepted(token: string): Promise<void> {

@@ -1,7 +1,7 @@
 import winston from "winston";
 import path from "path";
 import { injectable } from "inversify";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { ILogger } from "../interface/services/ILogger";
 
 /**
  * Winston Logger Implementation

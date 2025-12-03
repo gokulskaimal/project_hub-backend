@@ -18,10 +18,10 @@ const types_1 = require("../../infrastructure/container/types");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let VerifyOtpUseCase = class VerifyOtpUseCase {
-    constructor(userRepo, logger, cache) {
-        this._userRepo = userRepo;
-        this._logger = logger;
-        this._cache = cache;
+    constructor(_userRepo, _logger, _cache) {
+        this._userRepo = _userRepo;
+        this._logger = _logger;
+        this._cache = _cache;
     }
     async execute(email, otp) {
         this._logger.info("Verifying OTP", { email });

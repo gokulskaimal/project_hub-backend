@@ -1,5 +1,5 @@
 import { Document, Model, FilterQuery } from "mongoose";
-import { IBaseRepository } from "../../domain/interfaces/IBaseRepository";
+import { IBaseRepository } from "../interface/repositories/IBaseRepository";
 
 /**
  * Base Repository Abstract Class
@@ -72,7 +72,7 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
    * @returns The updated domain entity
    * @throws Error if the document is not found
    */
-  async update(id: string, data: Partial<TDomain>): Promise<TDomain> {
+  async update(id: string, data: Partial<TDomain>): Promise<TDomain | null> {
     // Merge update payload and cast safely for Mongoose
     const updatePayload = {
       ...(data as unknown as Record<string, unknown>),
@@ -86,8 +86,7 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
         runValidators: true,
       },
     );
-    if (!doc) throw new Error("Document not found");
-    return this.toDomain(doc);
+    return doc ? this.toDomain(doc) : null;
   }
 
   /**
@@ -95,8 +94,9 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
    *
    * @param id - The ID of the document to delete
    */
-  async delete(id: string): Promise<void> {
-    await this.model.findByIdAndDelete(id);
+  async delete(id: string): Promise<boolean> {
+    const result = await this.model.findByIdAndDelete(id);
+    return !!result;
   }
 
   /**

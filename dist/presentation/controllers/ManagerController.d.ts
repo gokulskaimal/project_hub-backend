@@ -1,8 +1,8 @@
 import { Response } from "express";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IInviteRepo } from "../../domain/interfaces/IInviteRepo";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
+import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
 export declare class ManagerController {
     private _logger;
     private _userRepo;

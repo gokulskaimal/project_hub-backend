@@ -18,10 +18,10 @@ const types_1 = require("../../infrastructure/container/types");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let UserProfileUseCase = class UserProfileUseCase {
-    constructor(userRepo, hashService, logger) {
-        this._userRepo = userRepo;
-        this._hashService = hashService;
-        this._logger = logger;
+    constructor(_userRepo, _hashService, _logger) {
+        this._userRepo = _userRepo;
+        this._hashService = _hashService;
+        this._logger = _logger;
     }
     async getProfile(userId) {
         this._logger.info("Getting user profile", { userId });
@@ -30,7 +30,9 @@ let UserProfileUseCase = class UserProfileUseCase {
             if (!user) {
                 throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
-            const safeUserData = { ...user };
+            const safeUserData = {
+                ...user,
+            };
             Reflect.deleteProperty(safeUserData, "password");
             Reflect.deleteProperty(safeUserData, "resetPasswordToken");
             Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
@@ -69,7 +71,9 @@ let UserProfileUseCase = class UserProfileUseCase {
             }
             const updatedUser = await this._userRepo.update(userId, filteredUpdateData);
             this._logger.info("User profile updated successfully", { userId });
-            const safeUserData = { ...updatedUser };
+            const safeUserData = {
+                ...updatedUser,
+            };
             Reflect.deleteProperty(safeUserData, "password");
             Reflect.deleteProperty(safeUserData, "resetPasswordToken");
             Reflect.deleteProperty(safeUserData, "resetPasswordExpires");

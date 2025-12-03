@@ -41,6 +41,10 @@ let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
         const doc = await this.model.findOne({ token });
         return doc ? this.toDomain(doc) : null;
     }
+    async delete(token) {
+        const result = await this.model.findOneAndDelete({ token });
+        return !!result;
+    }
     async markAccepted(token) {
         await this.model.findOneAndUpdate({ token }, { status: "ACCEPTED", acceptedAt: new Date() });
     }
@@ -52,21 +56,21 @@ let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
             email,
             orgId,
             status: "PENDING",
-            expiry: { $gt: new Date() }
+            expiry: { $gt: new Date() },
         });
         return doc ? this.toDomain(doc) : null;
     }
     async findByOrganization(orgId) {
         const docs = await this.model.find({ orgId }).sort({ createdAt: -1 });
-        return docs.map(d => this.toDomain(d));
+        return docs.map((d) => this.toDomain(d));
     }
     async findPendingByOrganization(orgId) {
         const docs = await this.model.find({
             orgId,
             status: "PENDING",
-            expiry: { $gt: new Date() }
+            expiry: { $gt: new Date() },
         });
-        return docs.map(d => this.toDomain(d));
+        return docs.map((d) => this.toDomain(d));
     }
     async markCancelled(token) {
         await this.model.findOneAndUpdate({ token }, { status: "CANCELLED", cancelledAt: new Date() });
@@ -74,10 +78,10 @@ let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
     async expireOldInvitations() {
         const result = await this.model.updateMany({
             status: "PENDING",
-            expiry: { $lt: new Date() }
+            expiry: { $lt: new Date() },
         }, {
             status: "EXPIRED",
-            updatedAt: new Date()
+            updatedAt: new Date(),
         });
         return result.modifiedCount;
     }
@@ -99,9 +103,9 @@ let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
             {
                 $group: {
                     _id: "$status",
-                    count: { $sum: 1 }
-                }
-            }
+                    count: { $sum: 1 },
+                },
+            },
         ]);
         // Convert array of {_id: "PENDING", count: 5} to object
         const result = {
@@ -109,9 +113,9 @@ let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
             pending: 0,
             accepted: 0,
             expired: 0,
-            cancelled: 0
+            cancelled: 0,
         };
-        stats.forEach(s => {
+        stats.forEach((s) => {
             const status = s._id.toLowerCase();
             if (status in result) {
                 result[status] = s.count;

@@ -61,14 +61,15 @@ class BaseRepository {
      */
     async update(id, data) {
         // Merge update payload and cast safely for Mongoose
-        const updatePayload = { ...data, updatedAt: new Date() };
+        const updatePayload = {
+            ...data,
+            updatedAt: new Date(),
+        };
         const doc = await this.model.findByIdAndUpdate(id, updatePayload, {
             new: true,
             runValidators: true,
         });
-        if (!doc)
-            throw new Error("Document not found");
-        return this.toDomain(doc);
+        return doc ? this.toDomain(doc) : null;
     }
     /**
      * Deletes a document by its ID
@@ -76,7 +77,8 @@ class BaseRepository {
      * @param id - The ID of the document to delete
      */
     async delete(id) {
-        await this.model.findByIdAndDelete(id);
+        const result = await this.model.findByIdAndDelete(id);
+        return !!result;
     }
     /**
      * Counts documents matching the filter

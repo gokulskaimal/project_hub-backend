@@ -86,15 +86,14 @@ let OrgRepo = class OrgRepo {
     }
     async update(id, data) {
         const updated = await OrgModel_1.default.findByIdAndUpdate(id, { ...data, updatedAt: new Date() }, { new: true });
-        if (!updated)
-            throw new Error("Organization not found");
-        return this.toDomain(updated);
+        return updated ? this.toDomain(updated) : null;
     }
     async delete(id) {
-        await OrgModel_1.default.findByIdAndUpdate(id, {
+        const result = await OrgModel_1.default.findByIdAndUpdate(id, {
             status: Organization_1.OrganizationStatus.INACTIVE,
             deletedAt: new Date(),
         });
+        return !!result;
     }
     async hardDelete(id) {
         await OrgModel_1.default.findByIdAndDelete(id);

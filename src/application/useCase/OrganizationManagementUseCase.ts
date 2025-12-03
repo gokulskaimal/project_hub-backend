@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases/IOrganizationManagementUseCase";
+import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizationManagementUseCase";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
@@ -13,9 +13,9 @@ export class OrganizationManagementUseCase
   implements IOrganizationManagementUseCase
 {
   constructor(
-    @inject(TYPES.IUserRepo) private userRepo: IUserRepo,
-    @inject(TYPES.IOrgRepo) private orgRepo: IOrgRepo,
-    @inject(TYPES.ILogger) private logger: ILogger,
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
   ) {}
 
   /**
@@ -30,13 +30,13 @@ export class OrganizationManagementUseCase
     newStatus: OrganizationStatus,
   ): Promise<Record<string, unknown>> {
     try {
-      this.logger.info("Updating organization status with cascading effects", {
+      this._logger.info("Updating organization status with cascading effects", {
         orgId,
         newStatus,
       });
 
       // Update the organization
-      const updatedOrg = await this.orgRepo.update(orgId, {
+      const updatedOrg = await this._orgRepo.update(orgId, {
         status: newStatus,
       });
 
@@ -45,15 +45,15 @@ export class OrganizationManagementUseCase
       }
 
       // Get all users in this organization
-      const usersInOrg = await this.userRepo.findByOrg(orgId);
+      const usersInOrg = await this._userRepo.findByOrg(orgId);
 
       if (usersInOrg && usersInOrg.length > 0) {
         // Update all users based on organization status
         if (newStatus === OrganizationStatus.SUSPENDED) {
           // Suspend all users in the organization
           for (const user of usersInOrg) {
-            await this.userRepo.updateStatus(user.id, "SUSPENDED");
-            this.logger.info("User suspended due to organization suspension", {
+            await this._userRepo.updateStatus(user.id, "SUSPENDED");
+            this._logger.info("User suspended due to organization suspension", {
               userId: user.id,
               orgId,
               email: user.email,
@@ -62,8 +62,8 @@ export class OrganizationManagementUseCase
         } else if (newStatus === OrganizationStatus.ACTIVE) {
           for (const user of usersInOrg) {
             if (user.status === "SUSPENDED") {
-              await this.userRepo.updateStatus(user.id, "ACTIVE");
-              this.logger.info(
+              await this._userRepo.updateStatus(user.id, "ACTIVE");
+              this._logger.info(
                 "User reactivated due to organization activation",
                 {
                   userId: user.id,
@@ -76,7 +76,7 @@ export class OrganizationManagementUseCase
         }
       }
 
-      this.logger.info("Organization status updated successfully", {
+      this._logger.info("Organization status updated successfully", {
         orgId,
         newStatus,
         affectedUsers: usersInOrg?.length || 0,
@@ -84,7 +84,7 @@ export class OrganizationManagementUseCase
 
       return updatedOrg as unknown as Record<string, unknown>;
     } catch (error) {
-      this.logger.error(
+      this._logger.error(
         "Failed to update organization status",
         error as Error,
         { orgId, newStatus },
@@ -100,18 +100,18 @@ export class OrganizationManagementUseCase
    */
   async deleteOrganizationCascade(orgId: string): Promise<void> {
     try {
-      this.logger.info("Deleting organization with cascading deletion", {
+      this._logger.info("Deleting organization with cascading deletion", {
         orgId,
       });
 
       // Get all users in this organization
-      const usersInOrg = await this.userRepo.findByOrg(orgId);
+      const usersInOrg = await this._userRepo.findByOrg(orgId);
 
       if (usersInOrg && usersInOrg.length > 0) {
         // Delete all users in the organization
         for (const user of usersInOrg) {
-          await this.userRepo.delete(user.id);
-          this.logger.info("User deleted due to organization deletion", {
+          await this._userRepo.delete(user.id);
+          this._logger.info("User deleted due to organization deletion", {
             userId: user.id,
             orgId,
             email: user.email,
@@ -120,14 +120,14 @@ export class OrganizationManagementUseCase
       }
 
       // Delete the organization
-      await this.orgRepo.delete(orgId);
+      await this._orgRepo.delete(orgId);
 
-      this.logger.info("Organization deleted successfully with all users", {
+      this._logger.info("Organization deleted successfully with all users", {
         orgId,
         deletedUsers: usersInOrg?.length || 0,
       });
     } catch (error) {
-      this.logger.error(
+      this._logger.error(
         "Failed to delete organization cascade",
         error as Error,
         { orgId },

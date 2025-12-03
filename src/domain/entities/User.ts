@@ -31,4 +31,5 @@ export interface User {
   createdAt: Date;
   updatedAt?: Date;
   lastLoginAt?: Date;
+  stripeCustomerId?: string;
 }

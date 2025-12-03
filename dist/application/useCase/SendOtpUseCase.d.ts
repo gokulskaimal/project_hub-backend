@@ -1,16 +1,16 @@
-import { ISendOtpUseCase } from "../../domain/interfaces/useCases/ISendOtpUseCase";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOtpService } from "../../domain/interfaces/services/IOtpService";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { ICacheService } from "../../domain/interfaces/services/ICacheService";
+import { ISendOtpUseCase } from "../interface/useCases/ISendOtpUseCase";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOtpService } from "../../infrastructure/interface/services/IOtpService";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
 export declare class SendOtpUseCase implements ISendOtpUseCase {
     private readonly _userRepo;
     private readonly _otpService;
     private readonly _emailService;
     private readonly _logger;
     private readonly _cache;
-    constructor(userRepo: IUserRepo, otpService: IOtpService, emailService: IEmailService, logger: ILogger, cache: ICacheService);
+    constructor(_userRepo: IUserRepo, _otpService: IOtpService, _emailService: IEmailService, _logger: ILogger, _cache: ICacheService);
     /**
      * Send OTP
      */

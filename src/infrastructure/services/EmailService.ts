@@ -2,8 +2,7 @@ import nodemailer, { Transporter } from "nodemailer";
 import fs from "fs";
 import path from "path";
 import { injectable } from "inversify";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-
+import { IEmailService } from "../interface/services/IEmailService";
 /**
  * Email Service Implementation
  * Provides email sending capabilities using NodeMailer

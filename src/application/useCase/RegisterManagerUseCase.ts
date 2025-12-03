@@ -1,37 +1,25 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOtpService } from "../../domain/interfaces/services/IOtpService";
-import { IEmailService } from "../../domain/interfaces/services/IEmailService";
-import { IRegisterManagerUseCase } from "../../domain/interfaces/useCases/IRegisterManagerUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOtpService } from "../../infrastructure/interface/services/IOtpService";
+import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { IRegisterManagerUseCase } from "../interface/useCases/IRegisterManagerUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class RegisterManagerUseCase implements IRegisterManagerUseCase {
-  private readonly _userRepo: IUserRepo;
-  private readonly _otpService: IOtpService;
-  private readonly _emailService: IEmailService;
-  private readonly _logger: ILogger;
-  private readonly _orgRepo: IOrgRepo;
-
   constructor(
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.IOtpService) otpService: IOtpService,
-    @inject(TYPES.IEmailService) emailService: IEmailService,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IOrgRepo) orgRepo: IOrgRepo,
-  ) {
-    this._userRepo = userRepo;
-    this._otpService = otpService;
-    this._emailService = emailService;
-    this._logger = logger;
-    this._orgRepo = orgRepo;
-  }
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IOtpService) private readonly _otpService: IOtpService,
+    @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+  ) {}
 
   public async execute(
     email: string,

@@ -17,15 +17,14 @@ const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const UserRole_1 = require("../../domain/enums/UserRole");
 let AcceptUseCase = class AcceptUseCase {
-    constructor(inviteRepo, userRepo, logger, hashService, jwtService) {
-        this._inviteRepo = inviteRepo;
-        this._userRepo = userRepo;
-        this._logger = logger;
-        this._hashService = hashService;
-        this._jwtService = jwtService;
+    constructor(_inviteRepo, _userRepo, _logger, _hashService, _jwtService) {
+        this._inviteRepo = _inviteRepo;
+        this._userRepo = _userRepo;
+        this._logger = _logger;
+        this._hashService = _hashService;
+        this._jwtService = _jwtService;
     }
     /**
-     * ✅ FIXED: Execute invitation acceptance with correct signature
      * @param token - Invitation token
      * @param password - User's chosen password
      * @param firstName - User's first name
@@ -130,7 +129,9 @@ let AcceptUseCase = class AcceptUseCase {
                 lastName,
             });
             // Return safe user data (exclude sensitive fields)
-            const safeUserData = { ...newUser };
+            const safeUserData = {
+                ...newUser,
+            };
             Reflect.deleteProperty(safeUserData, "password");
             Reflect.deleteProperty(safeUserData, "resetPasswordToken");
             Reflect.deleteProperty(safeUserData, "resetPasswordExpires");

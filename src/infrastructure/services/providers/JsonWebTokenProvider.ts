@@ -1,6 +1,6 @@
 import jwt, { SignOptions, VerifyOptions } from "jsonwebtoken";
 import { injectable } from "inversify";
-import { IJwtProvider } from "../../../domain/interfaces/services/IJwtProvider";
+import { IJwtProvider } from "../../interface/services/IJwtProvider";
 import { JwtPayload, JwtOptions } from "../../../domain/types/jwt.types";
 
 /**

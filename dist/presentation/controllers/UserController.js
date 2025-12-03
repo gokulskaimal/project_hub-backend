@@ -20,21 +20,27 @@ const common_constants_1 = require("../../infrastructure/config/common.constants
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 let UserController = class UserController {
-    constructor(logger, userProfileUseCase) {
-        this.logger = logger;
+    constructor(_logger, userProfileUseCase) {
+        this._logger = _logger;
         this.userProfileUseCase = userProfileUseCase;
         this.getProfile = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
-            this.logger.info("Fetching user profile", { userId });
+            this._logger.info("Fetching user profile", { userId });
             const profile = await this.userProfileUseCase.getProfile(userId);
             this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(profile), common_constants_1.COMMON_MESSAGES.PROFILE_RETRIEVED);
         });
         this.updateProfile = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
             const updateData = req.body;
-            this.logger.info("Updating user profile", { userId, updatedFields: Object.keys(updateData || {}) });
+            this._logger.info("Updating user profile", {
+                userId,
+                updatedFields: Object.keys(updateData || {}),
+            });
             if (!updateData || Object.keys(updateData).length === 0) {
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD,
+                };
             }
             const updatedProfile = await this.userProfileUseCase.updateProfile(userId, updateData);
             this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(updatedProfile), common_constants_1.COMMON_MESSAGES.PROFILE_UPDATED);
@@ -42,12 +48,18 @@ let UserController = class UserController {
         this.changePassword = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
             const { currentPassword, newPassword, confirmNewPassword } = req.body;
-            this.logger.info("Change password attempt", { userId });
+            this._logger.info("Change password attempt", { userId });
             if (!currentPassword || !newPassword || !confirmNewPassword) {
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD,
+                };
             }
             if (newPassword !== confirmNewPassword) {
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: common_constants_1.COMMON_MESSAGES.INVALID_INPUT,
+                };
             }
             await this.userProfileUseCase.changePassword(userId, currentPassword, newPassword);
             this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.PASSWORD_CHANGED);
@@ -55,16 +67,26 @@ let UserController = class UserController {
         this.deleteAccount = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
             const { password, confirmation } = req.body;
-            this.logger.info("Delete account attempt", { userId });
+            this._logger.info("Delete account attempt", { userId });
             if (!password || confirmation !== "DELETE") {
-                throw { status: statusCodes_enum_1.StatusCodes.BAD_REQUEST, message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD };
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.BAD_REQUEST,
+                    message: common_constants_1.COMMON_MESSAGES.REQUIRED_FIELD,
+                };
             }
             await this.userProfileUseCase.deleteAccount(userId, password);
             this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.USER_DELETED);
         });
     }
     sendSuccess(res, data, message) {
-        res.status(statusCodes_enum_1.StatusCodes.OK).json({ success: true, message, data, timestamp: new Date().toISOString() });
+        res
+            .status(statusCodes_enum_1.StatusCodes.OK)
+            .json({
+            success: true,
+            message,
+            data,
+            timestamp: new Date().toISOString(),
+        });
     }
 };
 exports.UserController = UserController;

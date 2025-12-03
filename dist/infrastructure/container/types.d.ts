@@ -7,6 +7,13 @@ export declare const TYPES: {
     readonly IOtpService: symbol;
     readonly ICacheService: symbol;
     readonly IGoogleAuthService: symbol;
+    readonly IRazorpayService: symbol;
+    readonly IPlanRepo: symbol;
+    readonly ISubscriptionRepo: symbol;
+    readonly ICreatePlanUseCase: symbol;
+    readonly IGetPlanUseCase: symbol;
+    readonly ICreateSubscriptionUseCase: symbol;
+    readonly IVerifyPaymentUseCase: symbol;
     readonly IUserRepo: symbol;
     readonly IOrgRepo: symbol;
     readonly IInviteRepo: symbol;
@@ -31,6 +38,8 @@ export declare const TYPES: {
     readonly ManagerController: symbol;
     readonly UserController: symbol;
     readonly ProjectController: symbol;
+    readonly WebhookController: symbol;
+    readonly PaymentController: symbol;
     readonly AuthMiddleware: symbol;
     readonly ValidationMiddleware: symbol;
     readonly ErrorMiddleware: symbol;

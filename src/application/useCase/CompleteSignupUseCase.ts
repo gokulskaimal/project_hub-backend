@@ -1,32 +1,22 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { ICompleteSignupUseCase } from "../../domain/interfaces/useCases/ICompleteSignupUseCase";
-import { IHashService } from "../../domain/interfaces/services/IHashService";
-import { IJwtService } from "../../domain/interfaces/services/IJwtService";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ICompleteSignupUseCase } from "../interface/useCases/ICompleteSignupUseCase";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { User } from "../../domain/entities/User";
 
 @injectable()
 export class CompleteSignupUseCase implements ICompleteSignupUseCase {
-  private readonly _userRepo: IUserRepo;
-  private readonly _logger: ILogger;
-  private readonly _hashService: IHashService;
-  private readonly _jwtService: IJwtService;
-
   constructor(
-    @inject(TYPES.IUserRepo) userRepo: IUserRepo,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IHashService) hashService: IHashService,
-    @inject(TYPES.IJwtService) jwtService: IJwtService,
-  ) {
-    this._userRepo = userRepo;
-    this._logger = logger;
-    this._hashService = hashService;
-    this._jwtService = jwtService;
-  }
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IHashService) private readonly _hashService: IHashService,
+    @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
+  ) {}
   async validateSignupData(data: {
     email: string;
     password: string;

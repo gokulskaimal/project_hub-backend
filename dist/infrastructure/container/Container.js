@@ -16,10 +16,13 @@ const OTPService_1 = require("../services/OTPService");
 const JsonWebTokenProvider_1 = require("../services/providers/JsonWebTokenProvider");
 const RedisCacheService_1 = require("../services/RedisCacheService");
 const InMemoryCacheService_1 = require("../services/InMemoryCacheService");
+const RazorpayService_1 = require("../services/RazorpayService");
 // Infrastructure Implementations - Repositories
 const UserRepo_1 = require("../repositories/UserRepo");
 const OrgRepo_1 = require("../repositories/OrgRepo");
 const InviteRepo_1 = require("../repositories/InviteRepo");
+const PlanRepo_1 = require("../repositories/PlanRepo");
+const SubscriptionRepo_1 = require("../repositories/SubscriptionRepo");
 // Application Use Cases
 const LoginUseCase_1 = require("../../application/useCase/LoginUseCase");
 const RegisterUseCase_1 = require("../../application/useCase/RegisterUseCase");
@@ -37,11 +40,17 @@ const InviteMemberUseCase_1 = require("../../application/useCase/InviteMemberUse
 const ResetPasswordUseCase_1 = require("../../application/useCase/ResetPasswordUseCase");
 const UserProfileUseCase_1 = require("../../application/useCase/UserProfileUseCase");
 const OrganizationManagementUseCase_1 = require("../../application/useCase/OrganizationManagementUseCase");
+const CreatePlanUseCase_1 = require("../../application/useCase/CreatePlanUseCase");
+const GetPlansUseCase_1 = require("../../application/useCase/GetPlansUseCase");
+const CreateSubscriptionUseCase_1 = require("../../application/useCase/CreateSubscriptionUseCase");
+const VerifyPaymentUseCase_1 = require("../../application/useCase/VerifyPaymentUseCase");
 // Presentation Controllers
 const AuthController_1 = require("../../presentation/controllers/AuthController");
 const AdminController_1 = require("../../presentation/controllers/AdminController");
 const UserController_1 = require("../../presentation/controllers/UserController");
 const ManagerController_1 = require("../../presentation/controllers/ManagerController");
+const PaymentController_1 = require("../../presentation/controllers/PaymentController");
+const WebhookController_1 = require("../../presentation/controllers/WebhookController");
 /**
  * DIContainer
  *
@@ -94,6 +103,10 @@ class DIContainer {
             .bind(types_1.TYPES.IGoogleAuthService)
             .to(GoogleAuthService_1.GoogleAuthService)
             .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IRazorpayService)
+            .to(RazorpayService_1.RazorpayService)
+            .inSingletonScope();
         const useRedis = String(process.env.USE_REDIS || "").toLowerCase() === "true";
         if (useRedis) {
             this._container
@@ -120,6 +133,14 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.IInviteRepo)
             .to(InviteRepo_1.InviteRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IPlanRepo)
+            .to(PlanRepo_1.PlanRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ISubscriptionRepo)
+            .to(SubscriptionRepo_1.SubscriptionRepo)
             .inSingletonScope();
     }
     _bindUseCases() {
@@ -187,6 +208,22 @@ class DIContainer {
             .bind(types_1.TYPES.IOrganizationManagementUseCase)
             .to(OrganizationManagementUseCase_1.OrganizationManagementUseCase)
             .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ICreatePlanUseCase)
+            .to(CreatePlanUseCase_1.CreatePlanUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetPlanUseCase)
+            .to(GetPlansUseCase_1.GetPlansUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ICreateSubscriptionUseCase)
+            .to(CreateSubscriptionUseCase_1.CreateSubscriptionUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IVerifyPaymentUseCase)
+            .to(VerifyPaymentUseCase_1.VerifyPaymentUseCase)
+            .inTransientScope();
     }
     _bindControllers() {
         this._container
@@ -204,6 +241,14 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.ManagerController)
             .to(ManagerController_1.ManagerController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.PaymentController)
+            .to(PaymentController_1.PaymentController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.WebhookController)
+            .to(WebhookController_1.WebhookController)
             .inSingletonScope();
     }
     /**

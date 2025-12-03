@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IOtpService } from "../../domain/interfaces/services/IOtpService";
+import { IOtpService } from "../interface/services/IOtpService";
 
 /**
  * OTP Service Implementation

@@ -1,9 +1,6 @@
 import { injectable, inject } from "inversify";
-import {
-  IJwtService,
-  JwtPayload,
-} from "../../domain/interfaces/services/IJwtService";
-import { IJwtProvider } from "../../domain/interfaces/services/IJwtProvider";
+import { IJwtService, JwtPayload } from "../interface/services/IJwtService";
+import { IJwtProvider } from "../interface/services/IJwtProvider";
 import { TYPES } from "../container/types";
 
 /**
@@ -23,8 +20,8 @@ export class JwtService implements IJwtService {
   private readonly _issuer: string;
   private readonly _audience: string;
 
-  private readonly revokedRefreshedTokens = new Map<string, number>();
-  private readonly revokeForAllUserMap = new Map<string, number>();
+  private readonly _revokedRefreshedTokens = new Map<string, number>();
+  private readonly _revokeForAllUserMap = new Map<string, number>();
 
   /**
    * Constructor with dependency injection for JWT provider
@@ -140,13 +137,13 @@ export class JwtService implements IJwtService {
    * @returns Decoded payload or null if invalid
    */
   verifyRefreshToken(token: string): JwtPayload | null {
-    const revokedExpiry = this.revokedRefreshedTokens.get(token);
+    const revokedExpiry = this._revokedRefreshedTokens.get(token);
 
     if (revokedExpiry && revokedExpiry > Date.now()) {
       return null;
     }
     if (revokedExpiry && revokedExpiry <= Date.now()) {
-      this.revokedRefreshedTokens.delete(token);
+      this._revokedRefreshedTokens.delete(token);
     }
 
     const options = {
@@ -161,8 +158,8 @@ export class JwtService implements IJwtService {
       ) as JwtPayload | null;
       if (!payload) return null;
 
-      if (payload.id && this.revokeForAllUserMap.has(payload.id)) {
-        const revokedAt = this.revokeForAllUserMap.get(payload.id);
+      if (payload.id && this._revokeForAllUserMap.has(payload.id)) {
+        const revokedAt = this._revokeForAllUserMap.get(payload.id);
 
         if (payload.iat && typeof payload.iat == "number") {
           const issuedAtMs = payload.iat * 1000;
@@ -242,21 +239,21 @@ export class JwtService implements IJwtService {
       if (decode && decode.exp && typeof decode.exp == "number") {
         const expiryMs = decode.exp * 1000;
         if (expiryMs > Date.now()) {
-          this.revokedRefreshedTokens.set(token, expiryMs);
+          this._revokedRefreshedTokens.set(token, expiryMs);
           const ttl = expiryMs - Date.now();
           setTimeout(
             () => {
-              this.revokedRefreshedTokens.delete(token);
+              this._revokedRefreshedTokens.delete(token);
             },
             Math.max(0, ttl),
           );
         }
       } else {
         const fallbackExpiry = Date.now() + 24 * 60 * 60 * 1000;
-        this.revokedRefreshedTokens.set(token, fallbackExpiry);
+        this._revokedRefreshedTokens.set(token, fallbackExpiry);
         setTimeout(
           () => {
-            this.revokedRefreshedTokens.delete(token);
+            this._revokedRefreshedTokens.delete(token);
           },
           24 * 60 * 60 * 1000,
         );
@@ -269,7 +266,7 @@ export class JwtService implements IJwtService {
   async revokeAllForUser(userId: string): Promise<void> {
     try {
       const now = Date.now();
-      this.revokeForAllUserMap.set(userId, now);
+      this._revokeForAllUserMap.set(userId, now);
     } catch (err) {
       console.warn(
         "Failed to revoke all tokens for user ",

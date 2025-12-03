@@ -1,16 +1,20 @@
 import { Request, Response } from "express";
-import { IUserRepo } from "../../domain/interfaces/IUserRepo";
-import { IOrgRepo } from "../../domain/interfaces/IOrgRepo";
-import { IInviteMemberUseCase } from "../../domain/interfaces/useCases/IInviteMemberUseCase";
-import { IOrganizationManagementUseCase } from "../../domain/interfaces/useCases/IOrganizationManagementUseCase";
-import { ILogger } from "../../domain/interfaces/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
+import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
+import { CreatePlanUseCase } from "../../application/useCase/CreatePlanUseCase";
+import { GetPlansUseCase } from "../../application/useCase/GetPlansUseCase";
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 export declare class AdminController {
-    private userRepo;
-    private orgRepo;
-    private inviteMemberUseCase;
-    private orgManagementUseCase;
+    private _userRepo;
+    private _orgRepo;
+    private _inviteMemberUseCase;
+    private _orgManagementUseCase;
+    private _createPlanUseCase;
+    private _getPlanUseCase;
     private logger;
-    constructor(userRepo: IUserRepo, orgRepo: IOrgRepo, inviteMemberUseCase: IInviteMemberUseCase, orgManagementUseCase: IOrganizationManagementUseCase, logger: ILogger);
+    constructor(_userRepo: IUserRepo, _orgRepo: IOrgRepo, _inviteMemberUseCase: IInviteMemberUseCase, _orgManagementUseCase: IOrganizationManagementUseCase, _createPlanUseCase: CreatePlanUseCase, _getPlanUseCase: GetPlansUseCase, logger: ILogger);
     private sendSuccess;
     listOrganizations: (req: Request, res: Response, next: import("express").NextFunction) => void;
     createOrganization: (req: Request, res: Response, next: import("express").NextFunction) => void;
@@ -27,5 +31,7 @@ export declare class AdminController {
     getUsersByOrganization: (req: Request, res: Response, next: import("express").NextFunction) => void;
     inviteMember: (req: Request, res: Response, next: import("express").NextFunction) => void;
     bulkInviteMembers: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    createPlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getPlans: (req: Request, res: Response, next: import("express").NextFunction) => void;
 }
 //# sourceMappingURL=AdminController.d.ts.map

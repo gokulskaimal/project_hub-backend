@@ -18,12 +18,12 @@ const types_1 = require("../../infrastructure/container/types");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 let InviteMemberUseCase = class InviteMemberUseCase {
-    constructor(inviteRepo, emailService, logger, orgRepo, userRepo) {
-        this._inviteRepo = inviteRepo;
-        this._emailService = emailService;
-        this._logger = logger;
-        this._orgRepo = orgRepo;
-        this._userRepo = userRepo;
+    constructor(_inviteRepo, _emailService, _logger, _orgRepo, _userRepo) {
+        this._inviteRepo = _inviteRepo;
+        this._emailService = _emailService;
+        this._logger = _logger;
+        this._orgRepo = _orgRepo;
+        this._userRepo = _userRepo;
     }
     async execute(email, orgId, role) {
         this._logger.info("Processing member invitation", { email, orgId, role });
