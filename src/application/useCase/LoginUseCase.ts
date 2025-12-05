@@ -37,8 +37,14 @@ export class LoginUseCase implements ILoginUseCase {
         email === superAdminEmail &&
         password === superAdminPassword
       ) {
+        // Try to find the real user in DB to get the correct ID
+        const existingSuperAdmin = await this._userRepo.findByEmail(email);
+        const realId = existingSuperAdmin
+          ? existingSuperAdmin.id
+          : "super_admin";
+
         const superAdminPayload = {
-          id: "super_admin",
+          id: realId,
           email,
           role: UserRole.SUPER_ADMIN,
           emailVerified: true,

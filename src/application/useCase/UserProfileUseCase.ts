@@ -20,6 +20,19 @@ export class UserProfileUseCase implements IUserProfileUseCase {
   public async getProfile(userId: string): Promise<Record<string, unknown>> {
     this._logger.info("Getting user profile", { userId });
 
+    // Handle synthetic Super Admin ID (from env-based login)
+    if (userId === "super_admin") {
+      return {
+        id: "super_admin",
+        name: "Super Admin",
+        email: process.env.SUPER_ADMIN_EMAIL || "admin@projecthub.com",
+        role: "SUPER_ADMIN",
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+        avatar: null,
+      };
+    }
+
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
@@ -31,9 +44,17 @@ export class UserProfileUseCase implements IUserProfileUseCase {
       } as Record<string, unknown>;
 
       if (user.orgId) {
-        const org = await this._orgRepo.findById(user.orgId);
-        if (org) {
-          safeUserData.organizationName = org.name;
+        try {
+          const org = await this._orgRepo.findById(user.orgId);
+          if (org) {
+            safeUserData.organizationName = org.name;
+          }
+        } catch (error) {
+          this._logger.warn("Failed to fetch organization details", {
+            userId,
+            orgId: user.orgId,
+            error,
+          });
         }
       }
 
