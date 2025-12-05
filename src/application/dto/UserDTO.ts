@@ -15,12 +15,13 @@ export interface UserDTO {
   updatedAt?: string;
   lastLoginAt?: string;
   profileComplete?: boolean;
+  organizationName?: string;
 }
 
 /**
  * Convert domain User entity to UserDTO (safe for API responses)
  */
-export function toUserDTO(user: User): UserDTO {
+export function toUserDTO(user: User & { organizationName?: string }): UserDTO {
   const toIso = (d?: Date | string | undefined): string | undefined =>
     d ? new Date(d).toISOString() : undefined;
 
@@ -32,6 +33,7 @@ export function toUserDTO(user: User): UserDTO {
     lastName: user.lastName,
     role: user.role,
     orgId: user.orgId ?? null,
+    organizationName: user.organizationName,
     emailVerified: Boolean(user.emailVerified),
     emailVerifiedAt: toIso(user.emailVerifiedAt),
     status: user.status,

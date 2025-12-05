@@ -5,8 +5,8 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
 import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
-import { CreatePlanUseCase } from "../../application/useCase/CreatePlanUseCase";
-import { GetPlansUseCase } from "../../application/useCase/GetPlansUseCase";
+import { ICreatePlanUseCase } from "../../application/interface/useCases/ICreatePlanUseCase";
+import { IGetPlanUseCase } from "../../application/interface/useCases/IGetPlanUseCase";
 import { IUpdatePlanUseCase } from "../../application/interface/useCases/IUpdatePlanUseCase";
 import { IDeletePlanUseCase } from "../../application/interface/useCases/IDeletePlanUseCase";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
@@ -25,8 +25,8 @@ export class AdminController {
     @inject(TYPES.IOrganizationManagementUseCase)
     private _orgManagementUseCase: IOrganizationManagementUseCase,
     @inject(TYPES.ICreatePlanUseCase)
-    private _createPlanUseCase: CreatePlanUseCase,
-    @inject(TYPES.IGetPlanUseCase) private _getPlanUseCase: GetPlansUseCase,
+    private _createPlanUseCase: ICreatePlanUseCase,
+    @inject(TYPES.IGetPlanUseCase) private _getPlanUseCase: IGetPlanUseCase,
     @inject(TYPES.IUpdatePlanUseCase)
     private _updatePlanUseCase: IUpdatePlanUseCase,
     @inject(TYPES.IDeletePlanUseCase)
@@ -333,7 +333,8 @@ export class AdminController {
     }
     if (
       !planData.name ||
-      !planData.price ||
+      planData.price === undefined ||
+      planData.price === null ||
       !planData.currency ||
       !planData.type
     ) {

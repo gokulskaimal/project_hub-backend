@@ -21,6 +21,8 @@ exports.TYPES = {
     IGetPlanUseCase: Symbol.for("IGetPlanUseCase"),
     ICreateSubscriptionUseCase: Symbol.for("ICreateSubscriptionUseCase"),
     IVerifyPaymentUseCase: Symbol.for("IVerifyPaymentUseCase"),
+    IUpdatePlanUseCase: Symbol.for("IUpdatePlanUseCase"),
+    IDeletePlanUseCase: Symbol.for("IDeletePlanUseCase"),
     // ===== REPOSITORIES =====
     IUserRepo: Symbol.for("IUserRepo"),
     IOrgRepo: Symbol.for("IOrgRepo"),

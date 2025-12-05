@@ -29,6 +29,7 @@ export const API_ROUTES = {
     MEMBERS: "/manager/members",
     ACTIVITY: "/manager/activity",
     INVITATIONS: "/manager/invitations",
+    ORGANIZATION: "/manager/organization",
   },
   USER: {
     PROFILE: "/user/profile",

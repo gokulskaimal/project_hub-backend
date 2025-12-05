@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserProfileUseCase } from "../interface/useCases/IUserProfileUseCase";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { HttpError } from "../../utils/asyncHandler";
@@ -11,6 +12,7 @@ import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 export class UserProfileUseCase implements IUserProfileUseCase {
   constructor(
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
   ) {}
@@ -27,6 +29,14 @@ export class UserProfileUseCase implements IUserProfileUseCase {
       const safeUserData = {
         ...(user as unknown as Record<string, unknown>),
       } as Record<string, unknown>;
+
+      if (user.orgId) {
+        const org = await this._orgRepo.findById(user.orgId);
+        if (org) {
+          safeUserData.organizationName = org.name;
+        }
+      }
+
       Reflect.deleteProperty(safeUserData, "password");
       Reflect.deleteProperty(safeUserData, "resetPasswordToken");
       Reflect.deleteProperty(safeUserData, "resetPasswordExpires");

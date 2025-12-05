@@ -22,13 +22,15 @@ const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum
 const common_constants_1 = require("../../infrastructure/config/common.constants");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 let AdminController = class AdminController {
-    constructor(_userRepo, _orgRepo, _inviteMemberUseCase, _orgManagementUseCase, _createPlanUseCase, _getPlanUseCase, logger) {
+    constructor(_userRepo, _orgRepo, _inviteMemberUseCase, _orgManagementUseCase, _createPlanUseCase, _getPlanUseCase, _updatePlanUseCase, _deletePlanUseCase, logger) {
         this._userRepo = _userRepo;
         this._orgRepo = _orgRepo;
         this._inviteMemberUseCase = _inviteMemberUseCase;
         this._orgManagementUseCase = _orgManagementUseCase;
         this._createPlanUseCase = _createPlanUseCase;
         this._getPlanUseCase = _getPlanUseCase;
+        this._updatePlanUseCase = _updatePlanUseCase;
+        this._deletePlanUseCase = _deletePlanUseCase;
         this.logger = logger;
         this.listOrganizations = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { limit = 50, offset = 0, search } = req.query;
@@ -230,8 +232,14 @@ let AdminController = class AdminController {
         });
         this.createPlan = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const planData = req.body;
-            this.logger.info("Creating Subscription Plan", { name: planData.name });
-            if (!planData.name || !planData.price || !planData.currency || !planData.type) {
+            this.logger.info("Creating Subscription Plan", { body: planData });
+            if (!planData) {
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Request body is missing");
+            }
+            if (!planData.name ||
+                !planData.price ||
+                !planData.currency ||
+                !planData.type) {
                 throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, common_constants_1.COMMON_MESSAGES.INVALID_INPUT);
             }
             const newPlan = await this._createPlanUseCase.execute(planData);
@@ -239,14 +247,33 @@ let AdminController = class AdminController {
         });
         this.getPlans = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             this.logger.info("Fetching Subscritption Plans");
-            const plans = await this._getPlanUseCase.execute();
+            const plans = await this._getPlanUseCase.execute({});
             this.sendSuccess(res, plans);
+        });
+        this.updatePlan = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { id } = req.params;
+            const planData = req.body;
+            this.logger.info("Updating Subscription Plan", { planId: id });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Plan ID is required");
+            const updatedPlan = await this._updatePlanUseCase.execute(id, planData);
+            if (!updatedPlan)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "Plan not found");
+            this.sendSuccess(res, updatedPlan, common_constants_1.COMMON_MESSAGES.UPDATED);
+        });
+        this.deletePlan = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { id } = req.params;
+            this.logger.info("Deleting Subscription Plan", { planId: id });
+            if (!id)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Plan ID is required");
+            const success = await this._deletePlanUseCase.execute(id);
+            if (!success)
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "Plan not found");
+            this.sendSuccess(res, null, common_constants_1.COMMON_MESSAGES.DELETED);
         });
     }
     sendSuccess(res, data, message = "Success", status = statusCodes_enum_1.StatusCodes.OK) {
-        res
-            .status(status)
-            .json({
+        res.status(status).json({
             success: true,
             message,
             data,
@@ -263,8 +290,10 @@ exports.AdminController = AdminController = __decorate([
     __param(3, (0, inversify_1.inject)(types_1.TYPES.IOrganizationManagementUseCase)),
     __param(4, (0, inversify_1.inject)(types_1.TYPES.ICreatePlanUseCase)),
     __param(5, (0, inversify_1.inject)(types_1.TYPES.IGetPlanUseCase)),
-    __param(6, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
+    __param(6, (0, inversify_1.inject)(types_1.TYPES.IUpdatePlanUseCase)),
+    __param(7, (0, inversify_1.inject)(types_1.TYPES.IDeletePlanUseCase)),
+    __param(8, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
     __metadata("design:paramtypes", [Object, Object, Object, Object, CreatePlanUseCase_1.CreatePlanUseCase,
-        GetPlansUseCase_1.GetPlansUseCase, Object])
+        GetPlansUseCase_1.GetPlansUseCase, Object, Object, Object])
 ], AdminController);
 //# sourceMappingURL=AdminController.js.map

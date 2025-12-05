@@ -11,6 +11,7 @@ const managerRoutes_1 = require("./managerRoutes");
 const userRoutes_1 = require("./userRoutes");
 const webhookRoutes_1 = require("./webhookRoutes");
 const paymentRoutes_1 = require("./paymentRoutes");
+const planRoutes_1 = require("./planRoutes");
 function createRoutes(container) {
     // 1. Auth Routes
     const authRouter = (0, authRoutes_1.createAuthRoutes)(container);
@@ -31,6 +32,7 @@ function createRoutes(container) {
     });
     const webhookRouter = (0, webhookRoutes_1.createWebhookRoutes)(container);
     const paymentRouter = (0, paymentRoutes_1.createPaymentRoutes)(container);
+    const planRouter = (0, planRoutes_1.createPlanRoutes)(container);
     return {
         auth: authRouter,
         admin: adminRouter,
@@ -40,6 +42,7 @@ function createRoutes(container) {
         projects: projectRouter,
         webhooks: webhookRouter,
         payments: paymentRouter,
+        plans: planRouter,
     };
 }
 //# sourceMappingURL=index.js.map

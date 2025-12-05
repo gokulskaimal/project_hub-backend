@@ -79,9 +79,7 @@ let UserController = class UserController {
         });
     }
     sendSuccess(res, data, message) {
-        res
-            .status(statusCodes_enum_1.StatusCodes.OK)
-            .json({
+        res.status(statusCodes_enum_1.StatusCodes.OK).json({
             success: true,
             message,
             data,

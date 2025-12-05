@@ -20,6 +20,7 @@ export declare const API_ROUTES: {
         readonly ORGANIZATIONS: "/admin/organizations";
         readonly USERS: "/admin/users";
         readonly REPORTS: "/admin/reports";
+        readonly PLANS: "/admin/plans";
     };
     readonly MANAGER: {
         readonly INVITE: "/manager/invite";
@@ -48,6 +49,7 @@ export declare const ADMIN_ROUTES: {
     readonly ORGANIZATIONS: "/admin/organizations";
     readonly USERS: "/admin/users";
     readonly REPORTS: "/admin/reports";
+    readonly PLANS: "/admin/plans";
 };
 export declare const AUTH_ROUTES: {
     readonly LOGIN: "/auth/login";

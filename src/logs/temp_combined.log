@@ -1,0 +1,100 @@
+﻿{"duration":"6ms","ip":"::1","level":"info","message":"GET /api/admin/plans","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:28.752Z","url":"/api/admin/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2025-12-02T18:37:35.577Z"}
+{"duration":"6ms","ip":"::1","level":"info","message":"GET /api/admin/plans","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:35.581Z","url":"/api/admin/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2025-12-02T18:37:37.653Z"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/admin/plans","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:37.656Z","url":"/api/admin/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:45.973Z"}
+{"duration":"13ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:45.983Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:45.989Z"}
+{"duration":"12ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:45.998Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:46.002Z"}
+{"duration":"10ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:46.010Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:46.014Z"}
+{"duration":"6ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:46.018Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:50.713Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:50.717Z"}
+{"duration":"12ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:50.723Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"11ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:50.726Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:50.739Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:50.743Z"}
+{"duration":"13ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:50.750Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"12ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:50.754Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:53.062Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:53.068Z"}
+{"duration":"15ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:53.075Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"12ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:53.079Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:53.091Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:53.096Z"}
+{"duration":"12ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:53.102Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"10ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:53.104Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:54.568Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:54.573Z"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2025-12-02T18:37:54.580Z"}
+{"duration":"19ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:54.586Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"18ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:54.590Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"16ms","ip":"::1","level":"info","message":"GET /api/admin/plans","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:54.594Z","url":"/api/admin/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-02T18:37:54.603Z"}
+{"duration":"8ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:54.610Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-02T18:37:54.613Z"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2025-12-02T18:37:54.621Z"}
+{"duration":"13ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:54.624Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"8ms","ip":"::1","level":"info","message":"GET /api/admin/plans","method":"GET","statusCode":200,"timestamp":"2025-12-02T18:37:54.626Z","url":"/api/admin/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-12-03T03:37:57.285Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-12-03T03:37:57.389Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-12-03T03:37:57.390Z"}
+{"duration":"16ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":401,"timestamp":"2025-12-03T03:38:20.454Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"SIGINT received. Closing resources...","timestamp":"2025-12-03T03:52:31.506Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-12-03T04:10:46.336Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-12-03T04:10:46.421Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-12-03T04:10:46.421Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-12-03T05:10:58.489Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-12-03T05:10:58.606Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-12-03T05:10:58.607Z"}
+{"duration":"15ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":401,"timestamp":"2025-12-03T05:12:13.589Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"hasInviteToken":false,"level":"info","message":"Google Sign-In attempt","timestamp":"2025-12-03T05:13:30.867Z"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2025-12-03T05:13:31.229Z","userId":"6927de2a9dfebc70c85e60ee"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2025-12-03T05:13:31.233Z","userId":"6927de2a9dfebc70c85e60ee"}
+{"duration":"369ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2025-12-03T05:13:31.236Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"6927de2a9dfebc70c85e60ee","message":"Listing members","orgId":"6927de2a9dfebc70c85e60ec","timestamp":"2025-12-03T05:13:32.790Z"}
+{"level":"info","message":"Listing invitations","orgId":"6927de2a9dfebc70c85e60ec","timestamp":"2025-12-03T05:13:32.798Z"}
+{"duration":"39ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:13:32.807Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"36ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:13:32.813Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-12-03T05:21:23.531Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-12-03T05:21:23.618Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-12-03T05:21:23.619Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-12-03T05:23:07.334Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-12-03T05:23:07.416Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-12-03T05:23:07.417Z"}
+{"email":"email@email.com","level":"info","message":"Login attempt","timestamp":"2025-12-03T05:26:59.188Z"}
+{"email":"email@email.com","level":"info","message":"User login attempt","timestamp":"2025-12-03T05:26:59.192Z"}
+{"level":"info","message":"User logged in successfully","timestamp":"2025-12-03T05:26:59.217Z","userId":"super_admin"}
+{"duration":"50ms","ip":"::1","level":"info","message":"POST /api/auth/login","method":"POST","statusCode":200,"timestamp":"2025-12-03T05:26:59.232Z","url":"/api/auth/login","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"email":"email@email.com","level":"info","message":"Login attempt","timestamp":"2025-12-03T05:27:03.875Z"}
+{"email":"email@email.com","level":"info","message":"User login attempt","timestamp":"2025-12-03T05:27:03.877Z"}
+{"level":"info","message":"User logged in successfully","timestamp":"2025-12-03T05:27:03.883Z","userId":"super_admin"}
+{"duration":"11ms","ip":"::1","level":"info","message":"POST /api/auth/login","method":"POST","statusCode":200,"timestamp":"2025-12-03T05:27:03.885Z","url":"/api/auth/login","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-03T05:27:06.017Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-03T05:27:06.032Z"}
+{"duration":"31ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:06.059Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"55ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:06.064Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-03T05:27:06.077Z"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-03T05:27:06.083Z"}
+{"duration":"18ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:06.093Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"24ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:06.105Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"2ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":401,"timestamp":"2025-12-03T05:27:15.161Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"1ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":401,"timestamp":"2025-12-03T05:27:15.183Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"email":"email@email.com","level":"info","message":"Login attempt","timestamp":"2025-12-03T05:27:27.356Z"}
+{"email":"email@email.com","level":"info","message":"User login attempt","timestamp":"2025-12-03T05:27:27.358Z"}
+{"level":"info","message":"User logged in successfully","timestamp":"2025-12-03T05:27:27.363Z","userId":"super_admin"}
+{"duration":"13ms","ip":"::1","level":"info","message":"POST /api/auth/login","method":"POST","statusCode":200,"timestamp":"2025-12-03T05:27:27.368Z","url":"/api/auth/login","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-03T05:27:27.728Z"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-03T05:27:27.739Z"}
+{"duration":"24ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:27.751Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"duration":"21ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:27.757Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing organizations","offset":0,"timestamp":"2025-12-03T05:27:27.770Z"}
+{"duration":"14ms","ip":"::1","level":"info","message":"GET /api/admin/organizations","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:27.781Z","url":"/api/admin/organizations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","limit":50,"message":"Listing users","offset":0,"timestamp":"2025-12-03T05:27:27.787Z"}
+{"duration":"10ms","ip":"::1","level":"info","message":"GET /api/admin/users","method":"GET","statusCode":200,"timestamp":"2025-12-03T05:27:27.795Z","url":"/api/admin/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2025-12-03T05:28:01.715Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2025-12-03T05:28:01.816Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-12-03T05:28:01.817Z"}

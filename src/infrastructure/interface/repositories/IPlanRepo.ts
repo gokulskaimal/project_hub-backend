@@ -6,4 +6,5 @@ export interface IPlanRepo {
   findById(id: string): Promise<Plan | null>;
   update(id: string, plan: Partial<Plan>): Promise<Plan | null>;
   delete(id: string): Promise<boolean>;
+  findByRazorpayId(razorpayPlanId: string): Promise<Plan | null>;
 }

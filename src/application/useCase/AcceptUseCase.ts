@@ -129,7 +129,7 @@ export class AcceptUseCase implements IAcceptUseCase {
         lastName: lastName.trim(),
         name: `${firstName.trim()} ${lastName.trim()}`,
         orgId: invite.orgId,
-        role: UserRole.TEAM_MEMBER,
+        role: (invite.assignedRole as UserRole) || UserRole.TEAM_MEMBER,
         password: hashedPassword,
         emailVerified: true, // Pre-verified through invitation
         status: "ACTIVE",

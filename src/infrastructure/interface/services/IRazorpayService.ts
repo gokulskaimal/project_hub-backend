@@ -17,12 +17,28 @@ export interface RazorpayCustomer {
 
 export interface RazorpaySubscription {
   id: string;
+  entity?: string;
   plan_id: string;
   customer_id?: string;
   status: string;
   current_start?: number;
   current_end?: number;
+  ended_at?: number;
+  quantity?: number;
+  notes?: Record<string, string | number>;
+  charge_at?: number;
+  start_at?: number;
+  end_at?: number;
+  auth_attempts?: number;
+  total_count?: number;
+  paid_count?: number;
+  customer_notify?: boolean;
   created_at: number;
+  expire_by?: number;
+  short_url?: string;
+  has_scheduled_changes?: boolean;
+  change_scheduled_at?: number;
+  source?: string;
 }
 
 export interface RazorpayPlan {
@@ -68,4 +84,7 @@ export interface IRazorpayService {
     period: "daily" | "weekly" | "monthly" | "yearly",
     interval: number,
   ): Promise<string>;
+  fetchSubscription(
+    subscriptionId: string,
+  ): Promise<RazorpaySubscription | null>;
 }

@@ -44,6 +44,8 @@ const CreatePlanUseCase_1 = require("../../application/useCase/CreatePlanUseCase
 const GetPlansUseCase_1 = require("../../application/useCase/GetPlansUseCase");
 const CreateSubscriptionUseCase_1 = require("../../application/useCase/CreateSubscriptionUseCase");
 const VerifyPaymentUseCase_1 = require("../../application/useCase/VerifyPaymentUseCase");
+const UpdatePlanUseCase_1 = require("../../application/useCase/UpdatePlanUseCase");
+const DeletePlanUseCase_1 = require("../../application/useCase/DeletePlanUseCase");
 // Presentation Controllers
 const AuthController_1 = require("../../presentation/controllers/AuthController");
 const AdminController_1 = require("../../presentation/controllers/AdminController");
@@ -223,6 +225,14 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.IVerifyPaymentUseCase)
             .to(VerifyPaymentUseCase_1.VerifyPaymentUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IUpdatePlanUseCase)
+            .to(UpdatePlanUseCase_1.UpdatePlanUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IDeletePlanUseCase)
+            .to(DeletePlanUseCase_1.DeletePlanUseCase)
             .inTransientScope();
     }
     _bindControllers() {

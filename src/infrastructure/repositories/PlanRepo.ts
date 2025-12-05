@@ -56,4 +56,9 @@ export class PlanRepo
     const result = await this.model.findByIdAndDelete(id);
     return !!result;
   }
+
+  async findByRazorpayId(razorpayPlanId: string): Promise<Plan | null> {
+    const doc = await this.model.findOne({ razorpayPlanId });
+    return doc ? this.toDomain(doc) : null;
+  }
 }

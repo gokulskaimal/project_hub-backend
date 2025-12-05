@@ -159,9 +159,7 @@ let ManagerController = class ManagerController {
         });
     }
     sendSuccess(res, data, message = "Success") {
-        res
-            .status(statusCodes_enum_1.StatusCodes.OK)
-            .json({
+        res.status(statusCodes_enum_1.StatusCodes.OK).json({
             success: true,
             message,
             data,

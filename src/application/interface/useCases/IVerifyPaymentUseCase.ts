@@ -3,5 +3,6 @@ export interface IVerifyPaymentUseCase {
     orderId: string,
     paymentId: string,
     signature: string,
+    orgId: string,
   ): Promise<boolean>;
 }

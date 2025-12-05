@@ -98,4 +98,29 @@ export interface IInviteRepo {
     expired: number;
     cancelled: number;
   }>;
+
+  /**
+   * Find invitation by ID
+   * @param id - Invitation ID
+   */
+  findById(id: string): Promise<Invite | null>;
+
+  /**
+   * Mark invitation as cancelled by ID
+   * @param id - Invitation ID
+   */
+  markCancelledById(id: string): Promise<void>;
+
+  /**
+   * Delete invitation by ID
+   * @param id - Invitation ID
+   */
+  deleteById(id: string): Promise<boolean>;
+
+  /**
+   * Delete all invitations for an organization
+   * @param orgId - Organization ID
+   * @returns Number of deleted invitations
+   */
+  deleteByOrganization(orgId: string): Promise<number>;
 }

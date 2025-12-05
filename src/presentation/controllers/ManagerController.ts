@@ -5,6 +5,7 @@ import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
 import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { toUserDTO } from "../../application/dto/UserDTO";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
@@ -19,6 +20,7 @@ export class ManagerController {
     @inject(TYPES.IInviteRepo) private _inviteRepo: IInviteRepo,
     @inject(TYPES.IInviteMemberUseCase)
     private _inviteMemberUC: IInviteMemberUseCase,
+    @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
   ) {}
 
   private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
@@ -107,11 +109,11 @@ export class ManagerController {
 
   cancelInvitation = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
-      const { token } = req.params;
+      const { id } = req.params;
       const orgId = req.user!.orgId!;
-      this._logger.info("Cancelling invitation", { orgId, token: "REDACTED" });
+      this._logger.info("Cancelling invitation", { orgId, id });
 
-      const invitation = await this._inviteRepo.findByToken(token);
+      const invitation = await this._inviteRepo.findById(id);
       if (!invitation)
         throw {
           status: StatusCodes.NOT_FOUND,
@@ -120,7 +122,7 @@ export class ManagerController {
       if (invitation.orgId !== orgId)
         throw { status: StatusCodes.FORBIDDEN, message: "Access denied" };
 
-      await this._inviteRepo.markCancelled?.(token);
+      await this._inviteRepo.deleteById(id);
       this.sendSuccess(res, null, "Invitation cancelled successfully");
     },
   );
@@ -198,8 +200,24 @@ export class ManagerController {
           message: "Member not in your organization",
         };
 
-      await this._userRepo.removeFromOrg(id, orgId);
+      await this._userRepo.delete(id);
       this.sendSuccess(res, null, "Member removed successfully");
+    },
+  );
+
+  getOrganization = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const orgId = req.user!.orgId!;
+      this._logger.info("Getting organization details", { orgId });
+
+      const org = await this._orgRepo.findById(orgId);
+      if (!org)
+        throw {
+          status: StatusCodes.NOT_FOUND,
+          message: "Organization not found",
+        };
+
+      this.sendSuccess(res, org, "Organization details retrieved");
     },
   );
 }

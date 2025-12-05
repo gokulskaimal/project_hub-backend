@@ -38,21 +38,20 @@ const planSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     description: { type: String },
     price: { type: Number, required: true },
-    currency: { type: String, required: true, default: 'inr' },
+    currency: { type: String, required: true, default: "inr" },
     features: [{ type: String }],
     type: {
         type: String,
-        enum: ['STARTER', 'PRO', 'ENTERPRISE'],
-        required: true
+        enum: ["STARTER", "PRO", "ENTERPRISE"],
+        required: true,
     },
     isActive: { type: Boolean, default: true },
-    stripeProductId: { type: String, required: true },
-    stripePriceId: { type: String, required: true },
+    razorpayPlanId: { type: String, required: true },
     limits: {
         projects: { type: Number, required: true, default: 1 },
         members: { type: Number, required: true, default: 5 },
-        storage: { type: Number, required: true, default: 1 }
+        storage: { type: Number, required: true, default: 1 },
     },
 }, { timestamps: true });
-exports.default = mongoose_1.default.model('Plan', planSchema);
+exports.default = mongoose_1.default.model("Plan", planSchema);
 //# sourceMappingURL=PlanModel.js.map

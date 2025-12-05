@@ -14,6 +14,8 @@ export declare const TYPES: {
     readonly IGetPlanUseCase: symbol;
     readonly ICreateSubscriptionUseCase: symbol;
     readonly IVerifyPaymentUseCase: symbol;
+    readonly IUpdatePlanUseCase: symbol;
+    readonly IDeletePlanUseCase: symbol;
     readonly IUserRepo: symbol;
     readonly IOrgRepo: symbol;
     readonly IInviteRepo: symbol;

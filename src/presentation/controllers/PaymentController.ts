@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ICreateSubscriptionUseCase } from "../../application/interface/useCases/ICreateSubscriptionUseCase";
@@ -39,31 +39,44 @@ export class PaymentController {
     },
   );
 
-  verifyPayment = asyncHandler(async (req: Request, res: Response) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+  verifyPayment = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        razorpay_subscription_id,
+      } = req.body;
+      const orgId = req.user!.orgId!;
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      throw {
-        status: StatusCodes.BAD_REQUEST,
-        message: "Missing payment details",
-      };
-    }
+      const orderId = razorpay_order_id || razorpay_subscription_id;
 
-    const isValid = await this._verifyPaymentUC.execute(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    );
+      if (!orderId || !razorpay_payment_id || !razorpay_signature) {
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "Missing payment details",
+        };
+      }
 
-    if (isValid) {
-      res
-        .status(StatusCodes.OK)
-        .json({ success: true, message: "Payment verified" });
-    } else {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ success: false, message: "Invalid signature" });
-    }
-  });
+      const isValid = await this._verifyPaymentUC.execute(
+        orderId,
+        razorpay_payment_id,
+        razorpay_signature,
+        orgId,
+      );
+
+      if (isValid) {
+        res
+          .status(StatusCodes.OK)
+          .json({
+            success: true,
+            message: "Payment verified and subscription updated",
+          });
+      } else {
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ success: false, message: "Invalid signature" });
+      }
+    },
+  );
 }

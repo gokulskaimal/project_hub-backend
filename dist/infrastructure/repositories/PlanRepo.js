@@ -34,15 +34,15 @@ let PlanRepo = class PlanRepo extends BaseRepository_1.BaseRepository {
             razorpayPlanId: obj.razorpayPlanId,
             limits: obj.limits,
             createdAt: obj.createdAt,
-            updatedAt: obj.updatedAt
+            updatedAt: obj.updatedAt,
         };
     }
     async create(data) {
         const doc = await this.model.create(data);
         return this.toDomain(doc);
     }
-    async findAll() {
-        const docs = await this.model.find({ isActive: true });
+    async findAll(filter = { isActive: true }) {
+        const docs = await this.model.find(filter);
         return docs.map((d) => this.toDomain(d));
     }
     async findById(id) {

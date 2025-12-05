@@ -27,7 +27,10 @@ export interface Organization {
     | "INACTIVE"
     | "TRIAL"
     | "EXPIRED"
+    | "EXPIRED"
     | "CANCELLED";
+
+  razorpaySubscriptionId?: string;
 
   status: OrganizationStatus;
 

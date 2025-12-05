@@ -5,6 +5,8 @@ import { IInviteMemberUseCase } from "../../application/interface/useCases/IInvi
 import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
 import { CreatePlanUseCase } from "../../application/useCase/CreatePlanUseCase";
 import { GetPlansUseCase } from "../../application/useCase/GetPlansUseCase";
+import { IUpdatePlanUseCase } from "../../application/interface/useCases/IUpdatePlanUseCase";
+import { IDeletePlanUseCase } from "../../application/interface/useCases/IDeletePlanUseCase";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 export declare class AdminController {
     private _userRepo;
@@ -13,8 +15,10 @@ export declare class AdminController {
     private _orgManagementUseCase;
     private _createPlanUseCase;
     private _getPlanUseCase;
+    private _updatePlanUseCase;
+    private _deletePlanUseCase;
     private logger;
-    constructor(_userRepo: IUserRepo, _orgRepo: IOrgRepo, _inviteMemberUseCase: IInviteMemberUseCase, _orgManagementUseCase: IOrganizationManagementUseCase, _createPlanUseCase: CreatePlanUseCase, _getPlanUseCase: GetPlansUseCase, logger: ILogger);
+    constructor(_userRepo: IUserRepo, _orgRepo: IOrgRepo, _inviteMemberUseCase: IInviteMemberUseCase, _orgManagementUseCase: IOrganizationManagementUseCase, _createPlanUseCase: CreatePlanUseCase, _getPlanUseCase: GetPlansUseCase, _updatePlanUseCase: IUpdatePlanUseCase, _deletePlanUseCase: IDeletePlanUseCase, logger: ILogger);
     private sendSuccess;
     listOrganizations: (req: Request, res: Response, next: import("express").NextFunction) => void;
     createOrganization: (req: Request, res: Response, next: import("express").NextFunction) => void;
@@ -33,5 +37,7 @@ export declare class AdminController {
     bulkInviteMembers: (req: Request, res: Response, next: import("express").NextFunction) => void;
     createPlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
     getPlans: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    updatePlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    deletePlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
 }
 //# sourceMappingURL=AdminController.d.ts.map

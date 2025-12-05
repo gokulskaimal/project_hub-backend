@@ -26,8 +26,11 @@ function createAdminRoutes(container) {
     router.post("/invite-member", (req, res, next) => controller.inviteMember(req, res, next));
     router.post("/bulk-invite", (req, res, next) => controller.bulkInviteMembers(req, res, next));
     //Plans
-    router.post('/plans', (req, res, next) => controller.createPlan(req, res, next));
-    router.get('/plans', (req, res, next) => controller.getPlans(req, res, next));
+    //Plans
+    router.post(constants_1.API_ROUTES.ADMIN.PLANS, (req, res, next) => controller.createPlan(req, res, next));
+    router.get(constants_1.API_ROUTES.ADMIN.PLANS, (req, res, next) => controller.getPlans(req, res, next));
+    router.put(`${constants_1.API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) => controller.updatePlan(req, res, next));
+    router.delete(`${constants_1.API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) => controller.deletePlan(req, res, next));
     return router;
 }
 //# sourceMappingURL=adminRoutes.js.map

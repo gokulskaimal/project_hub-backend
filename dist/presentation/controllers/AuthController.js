@@ -34,7 +34,7 @@ let AuthController = class AuthController {
         this._inviteMemberUC = _inviteMemberUC;
         this._acceptUC = _acceptUC;
         this._resetPasswordUC = _resetPasswordUC;
-        this.refreshCookieOptions = {
+        this._refreshCookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
@@ -53,9 +53,11 @@ let AuthController = class AuthController {
             this._logger.info("Login attempt", { email });
             const result = await this._loginUC.execute(email, password);
             if (result.tokens.refreshToken) {
-                res.cookie("refreshToken", result.tokens.refreshToken, this.refreshCookieOptions);
+                res.cookie("refreshToken", result.tokens.refreshToken, this._refreshCookieOptions);
             }
-            this._logger.info("User logged in successfully", { userId: result.user.id });
+            this._logger.info("User logged in successfully", {
+                userId: result.user.id,
+            });
             this.sendSuccess(res, { accessToken: result.tokens.accessToken, user: result.user }, common_constants_1.COMMON_MESSAGES.LOGIN_SUCCESS);
         });
         this.refreshToken = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
@@ -70,7 +72,7 @@ let AuthController = class AuthController {
             }
             const tokens = await this._tokenRefreshUC.execute(refreshToken);
             if (tokens.refreshToken) {
-                res.cookie("refreshToken", tokens.refreshToken, this.refreshCookieOptions);
+                res.cookie("refreshToken", tokens.refreshToken, this._refreshCookieOptions);
             }
             this.sendSuccess(res, { accessToken: tokens.accessToken }, common_constants_1.COMMON_MESSAGES.TOKEN_REFRESHED);
         });
@@ -163,9 +165,11 @@ let AuthController = class AuthController {
             try {
                 const result = await this._googleSignInUC.execute(idToken, inviteToken, orgName);
                 if (result.tokens.refreshToken) {
-                    res.cookie("refreshToken", result.tokens.refreshToken, this.refreshCookieOptions);
+                    res.cookie("refreshToken", result.tokens.refreshToken, this._refreshCookieOptions);
                 }
-                this._logger.info("Google Sign-In successful", { userId: result.user.id });
+                this._logger.info("Google Sign-In successful", {
+                    userId: result.user.id,
+                });
                 this.sendSuccess(res, { accessToken: result.tokens.accessToken, user: result.user }, common_constants_1.COMMON_MESSAGES.LOGIN_SUCCESS);
             }
             catch (error) {

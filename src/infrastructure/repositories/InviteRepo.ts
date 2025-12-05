@@ -103,6 +103,23 @@ export class InviteRepo
     );
   }
 
+  async markCancelledById(id: string): Promise<void> {
+    await this.model.findByIdAndUpdate(id, {
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+    });
+  }
+
+  async deleteById(id: string): Promise<boolean> {
+    const result = await this.model.findByIdAndDelete(id);
+    return !!result;
+  }
+
+  async deleteByOrganization(orgId: string): Promise<number> {
+    const result = await this.model.deleteMany({ orgId });
+    return result.deletedCount;
+  }
+
   async expireOldInvitations(): Promise<number> {
     const result = await this.model.updateMany(
       {

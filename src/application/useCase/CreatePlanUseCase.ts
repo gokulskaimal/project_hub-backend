@@ -18,14 +18,19 @@ export class CreatePlanUseCase implements ICreatePlanUseCase {
     // Create Plan in Razorpay
     // Razorpay createPlan signature: (name, description, amount, currency, period, interval)
     // Assuming period is 'monthly' and interval is 1 based on current logic, or derived from planData
-    const razorpayPlanId = await this._razorpayService.createPlan(
-      planData.name,
-      planData.description || "",
-      planData.price,
-      planData.currency,
-      "monthly", // Defaulting to monthly for now, should be dynamic if Plan has interval
-      1,
-    );
+    let razorpayPlanId = "";
+    if (planData.price > 0) {
+      razorpayPlanId = await this._razorpayService.createPlan(
+        planData.name,
+        planData.description || "",
+        planData.price,
+        planData.currency,
+        "monthly", // Defaulting to monthly for now, should be dynamic if Plan has interval
+        1,
+      );
+    } else {
+      razorpayPlanId = `plan_free_${Date.now()}`;
+    }
 
     const newPlan = await this._planRepo.create({
       ...planData,

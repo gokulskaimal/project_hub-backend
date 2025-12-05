@@ -23,6 +23,7 @@ exports.API_ROUTES = {
         ORGANIZATIONS: "/admin/organizations",
         USERS: "/admin/users",
         REPORTS: "/admin/reports",
+        PLANS: "/admin/plans",
     },
     MANAGER: {
         INVITE: "/manager/invite",

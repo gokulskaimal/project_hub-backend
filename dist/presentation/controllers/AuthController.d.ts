@@ -28,7 +28,7 @@ export declare class AuthController {
     private readonly _inviteMemberUC;
     private readonly _acceptUC;
     private readonly _resetPasswordUC;
-    private readonly refreshCookieOptions;
+    private readonly _refreshCookieOptions;
     constructor(_logger: ILogger, _loginUC: ILoginUseCase, _registerUC: IRegisterUseCase, _googleSignInUC: IGoogleSignInUseCase, _tokenRefreshUC: ITokenRefreshUseCase, _logoutUC: ILogoutUseCase, _verifyEmailUC: IVerifyEmailUseCase, _registerManagerUC: IRegisterManagerUseCase, _sendOtpUC: ISendOtpUseCase, _verifyOtpUC: IVerifyOtpUseCase, _completeSignupUC: ICompleteSignupUseCase, _inviteMemberUC: IInviteMemberUseCase, _acceptUC: IAcceptUseCase, _resetPasswordUC: IResetPasswordUseCase);
     private sendSuccess;
     register: (req: Request, res: Response, next: import("express").NextFunction) => void;

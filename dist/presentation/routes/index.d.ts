@@ -9,5 +9,6 @@ export declare function createRoutes(container: Container): {
     projects: Router;
     webhooks: Router;
     payments: Router;
+    plans: Router;
 };
 //# sourceMappingURL=index.d.ts.map

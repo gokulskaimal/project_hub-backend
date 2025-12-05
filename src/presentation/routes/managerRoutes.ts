@@ -35,8 +35,12 @@ export function createManagerRoutes(container: Container): Router {
   router.get(API_ROUTES.MANAGER.INVITATIONS, (req, res, next) =>
     controller.listInvitations(req as AuthenticatedRequest, res, next),
   );
-  router.delete(`${API_ROUTES.MANAGER.INVITATIONS}/:token`, (req, res, next) =>
+  router.delete(`${API_ROUTES.MANAGER.INVITATIONS}/:id`, (req, res, next) =>
     controller.cancelInvitation(req as AuthenticatedRequest, res, next),
+  );
+
+  router.get(API_ROUTES.MANAGER.ORGANIZATION, (req, res, next) =>
+    controller.getOrganization(req as AuthenticatedRequest, res, next),
   );
 
   return router;

@@ -14,6 +14,7 @@ export interface IOrgDOc extends Document {
   logo?: string;
   website?: string;
   subscriptionStatus?: string;
+  razorpaySubscriptionId?: string;
   maxManagers?: number;
   maxUsers?: number;
   currentUserCount?: number;
@@ -120,6 +121,7 @@ const OrgSchema = new mongoose.Schema<IOrgDOc>(
       type: String,
       enum: ["ACTIVE", "INACTIVE", "TRIAL", "EXPIRED", "CANCELLED"],
     },
+    razorpaySubscriptionId: { type: String },
 
     // Limits
     maxManagers: { type: Number, default: 5 },

@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizationManagementUseCase";
@@ -15,8 +16,63 @@ export class OrganizationManagementUseCase
   constructor(
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.IInviteRepo) private readonly _inviteRepo: IInviteRepo,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
   ) {}
+
+  /**
+   * Delete organization with cascading deletion of all users
+   *
+   * @param orgId - Organization ID to delete
+   */
+  async deleteOrganizationCascade(orgId: string): Promise<void> {
+    try {
+      this._logger.info("Deleting organization with cascading deletion", {
+        orgId,
+      });
+
+      // Get all users in this organization
+      const usersInOrg = await this._userRepo.findByOrg(orgId);
+
+      if (usersInOrg && usersInOrg.length > 0) {
+        // Delete all users in the organization
+        for (const user of usersInOrg) {
+          await this._userRepo.delete(user.id);
+          this._logger.info("User deleted due to organization deletion", {
+            userId: user.id,
+            orgId,
+            email: user.email,
+          });
+        }
+      }
+
+      // Delete all invitations for this organization
+      const deletedInvites = await this._inviteRepo.deleteByOrganization(orgId);
+      this._logger.info("Deleted invitations for organization", {
+        orgId,
+        count: deletedInvites,
+      });
+
+      // Delete the organization
+      await this._orgRepo.hardDelete(orgId);
+
+      this._logger.info(
+        "Organization deleted successfully with all users and invites",
+        {
+          orgId,
+          deletedUsers: usersInOrg?.length || 0,
+          deletedInvites,
+        },
+      );
+    } catch (error) {
+      this._logger.error(
+        "Failed to delete organization cascade",
+        error as Error,
+        { orgId },
+      );
+      throw error;
+    }
+  }
 
   /**
    * Update organization status with cascading effects to users
@@ -88,49 +144,6 @@ export class OrganizationManagementUseCase
         "Failed to update organization status",
         error as Error,
         { orgId, newStatus },
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Delete organization with cascading deletion of all users
-   *
-   * @param orgId - Organization ID to delete
-   */
-  async deleteOrganizationCascade(orgId: string): Promise<void> {
-    try {
-      this._logger.info("Deleting organization with cascading deletion", {
-        orgId,
-      });
-
-      // Get all users in this organization
-      const usersInOrg = await this._userRepo.findByOrg(orgId);
-
-      if (usersInOrg && usersInOrg.length > 0) {
-        // Delete all users in the organization
-        for (const user of usersInOrg) {
-          await this._userRepo.delete(user.id);
-          this._logger.info("User deleted due to organization deletion", {
-            userId: user.id,
-            orgId,
-            email: user.email,
-          });
-        }
-      }
-
-      // Delete the organization
-      await this._orgRepo.delete(orgId);
-
-      this._logger.info("Organization deleted successfully with all users", {
-        orgId,
-        deletedUsers: usersInOrg?.length || 0,
-      });
-    } catch (error) {
-      this._logger.error(
-        "Failed to delete organization cascade",
-        error as Error,
-        { orgId },
       );
       throw error;
     }

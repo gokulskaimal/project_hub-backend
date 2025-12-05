@@ -10,20 +10,19 @@ import {
 @injectable()
 export class RazorpayService implements IRazorpayService {
   private readonly _razorpay: Razorpay | null = null;
-  private readonly isMock: boolean = true; // Force mock mode
 
   constructor() {
     const key_id = process.env.RAZORPAY_KEY_ID;
     const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
-    // We initialize Razorpay if keys exist, but we will use mock methods primarily
     if (key_id && key_secret) {
       this._razorpay = new Razorpay({
         key_id,
         key_secret,
       });
+      console.log("Razorpay initialized in LIVE/TEST mode");
     } else {
-      console.warn("Razorpay Keys missing. Running in pure Mock mode.");
+      console.warn("Razorpay Keys missing. Running in MOCK mode.");
     }
   }
 
@@ -32,6 +31,20 @@ export class RazorpayService implements IRazorpayService {
     currency: string,
     receipt: string,
   ): Promise<RazorpayOrder> {
+    if (this._razorpay) {
+      try {
+        const order = await this._razorpay.orders.create({
+          amount: Math.round(amount * 100), // Razorpay expects paise
+          currency,
+          receipt,
+        });
+        return order as unknown as RazorpayOrder;
+      } catch (error) {
+        console.error("Razorpay createOrder failed:", error);
+        throw error;
+      }
+    }
+
     console.log(`[MOCK] createOrder: amount=${amount}, currency=${currency}`);
     return {
       id: `order_mock_${Date.now()}`,
@@ -48,6 +61,24 @@ export class RazorpayService implements IRazorpayService {
     totalCount: number,
     customerId?: string,
   ): Promise<RazorpaySubscription> {
+    if (this._razorpay) {
+      try {
+        const options = {
+          plan_id: planId,
+          total_count: totalCount,
+          customer_id: customerId,
+          quantity: 1,
+          addons: [],
+          notes: {},
+        };
+        const subscription = await this._razorpay.subscriptions.create(options);
+        return subscription as unknown as RazorpaySubscription;
+      } catch (error) {
+        console.error("Razorpay createSubscription failed:", error);
+        throw error;
+      }
+    }
+
     console.log(
       `[MOCK] createSubscription: planId=${planId}, customerId=${customerId}`,
     );
@@ -69,15 +100,11 @@ export class RazorpayService implements IRazorpayService {
     if (
       orderId.startsWith("order_mock_") ||
       paymentId.startsWith("pay_mock_") ||
-      (signature && signature.startsWith("sig_mock_"))
+      (signature && signature.startsWith("sig_mock_")) ||
+      orderId.startsWith("sub_mock_") ||
+      orderId.startsWith("sub_free_")
     ) {
       console.log("[MOCK] verifySignature: Verified mock signature");
-      return true;
-    }
-
-    // Also support subscription verification where orderId might be subscription_id
-    if (orderId.startsWith("sub_mock_")) {
-      console.log("[MOCK] verifySignature: Verified mock subscription");
       return true;
     }
 
@@ -85,9 +112,16 @@ export class RazorpayService implements IRazorpayService {
     if (!key_secret) return false;
 
     try {
+      // For subscriptions, the order is payment_id + "|" + subscription_id
+      // For orders, the order is order_id + "|" + payment_id
+      // We detect subscription by "sub_" prefix in orderId (which is passed as subscription_id from controller)
+      const message = orderId.startsWith("sub_")
+        ? paymentId + "|" + orderId
+        : orderId + "|" + paymentId;
+
       const generated_signature = crypto
         .createHmac("sha256", key_secret)
-        .update(orderId + "|" + paymentId)
+        .update(message)
         .digest("hex");
 
       return generated_signature === signature;
@@ -102,6 +136,20 @@ export class RazorpayService implements IRazorpayService {
     email: string,
     contact?: string,
   ): Promise<string> {
+    if (this._razorpay) {
+      try {
+        const customer = await this._razorpay.customers.create({
+          name,
+          email,
+          contact,
+        });
+        return customer.id;
+      } catch (error) {
+        console.error("Razorpay createCustomer failed:", error);
+        throw error;
+      }
+    }
+
     console.log(
       `[MOCK] createCustomer: ${name} (${email}), contact=${contact || "N/A"}`,
     );
@@ -116,9 +164,54 @@ export class RazorpayService implements IRazorpayService {
     period: "daily" | "weekly" | "monthly" | "yearly",
     interval: number,
   ): Promise<string> {
+    if (this._razorpay) {
+      try {
+        const plan = await this._razorpay.plans.create({
+          item: {
+            name,
+            description,
+            amount: Math.round(amount * 100),
+            currency,
+          },
+          period,
+          interval,
+        });
+        return plan.id;
+      } catch (error) {
+        console.error("Razorpay createPlan failed:", error);
+        throw error;
+      }
+    }
+
     console.log(
       `[MOCK] createPlan: ${name} - ${amount} ${currency} (${interval} ${period})`,
     );
     return `plan_mock_${name.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`;
+  }
+
+  async fetchSubscription(
+    subscriptionId: string,
+  ): Promise<RazorpaySubscription | null> {
+    if (subscriptionId.startsWith("sub_mock_")) {
+      console.log(`[MOCK] fetchSubscription: ${subscriptionId}`);
+      return {
+        id: subscriptionId,
+        plan_id: "plan_mock_pro_123",
+        status: "active",
+        current_start: Math.floor(Date.now() / 1000),
+        current_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 days
+        created_at: Math.floor(Date.now() / 1000),
+      };
+    }
+
+    if (!this._razorpay) return null;
+
+    try {
+      const sub = await this._razorpay.subscriptions.fetch(subscriptionId);
+      return sub as unknown as RazorpaySubscription;
+    } catch (error) {
+      console.error("Failed to fetch subscription from Razorpay", error);
+      return null;
+    }
   }
 }
