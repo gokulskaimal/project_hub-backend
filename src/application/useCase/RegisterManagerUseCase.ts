@@ -8,8 +8,10 @@ import { IRegisterManagerUseCase } from "../interface/useCases/IRegisterManagerU
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import {
+  ConflictError,
+  ValidationError,
+} from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class RegisterManagerUseCase implements IRegisterManagerUseCase {
@@ -41,19 +43,13 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
       const isNameAvailable =
         await this.validateOrganizationName(organizationName);
       if (!isNameAvailable) {
-        throw new HttpError(
-          StatusCodes.CONFLICT,
-          "Organization name is already taken",
-        );
+        throw new ConflictError("Organization name is already taken");
       }
 
       const existingUser = await this._userRepo.findByEmail(email);
       if (existingUser && existingUser.emailVerified) {
         this._logger.warn("Manager already exists and verified", { email });
-        throw new HttpError(
-          StatusCodes.CONFLICT,
-          "User already exists and is verified",
-        );
+        throw new ConflictError("User already exists and is verified");
       }
 
       // ✅ FIXED: Use const assertion for organization status
@@ -164,36 +160,31 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
 
   private _validateInput(email: string, organizationName: string): void {
     if (!email || typeof email !== "string") {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Email is required");
+      throw new ValidationError("Email is required");
     }
 
     if (!organizationName || typeof organizationName !== "string") {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
-        "Organization name is required",
-      );
+      throw new ValidationError("Organization name is required");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
+      throw new ValidationError("Invalid email format");
     }
 
     if (email.length > 254) {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Email address is too long");
+      throw new ValidationError("Email address is too long");
     }
 
     const trimmedName = organizationName.trim();
     if (trimmedName.length < 2) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
+      throw new ValidationError(
         "Organization name must be at least 2 characters long",
       );
     }
 
     if (trimmedName.length > 100) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
+      throw new ValidationError(
         "Organization name must be less than 100 characters",
       );
     }
@@ -211,3 +202,4 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
     return token;
   }
 }
+

@@ -7,6 +7,7 @@ import { createUserRoutes } from "./userRoutes";
 import { createWebhookRoutes } from "./webhookRoutes";
 import { createPaymentRoutes } from "./paymentRoutes";
 import { createPlanRoutes } from "./planRoutes";
+import { createProjectRoutes } from "./projectRoutes";
 
 export function createRoutes(container: Container): {
   auth: Router;
@@ -37,10 +38,11 @@ export function createRoutes(container: Container): {
     res.json({ message: "Coming soon" });
   });
 
-  const projectRouter = express.Router();
-  projectRouter.get("/", (_req, res) => {
-    res.json({ message: "Coming soon" });
-  });
+//   const projectRouter = express.Router();
+//   projectRouter.get("/", (_req, res) => {
+//     res.json({ message: "Coming soon" });
+//   });
+  const projectRouter = createProjectRoutes(container);
 
   const webhookRouter = createWebhookRoutes(container);
   const paymentRouter = createPaymentRoutes(container);

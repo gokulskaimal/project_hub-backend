@@ -18,7 +18,8 @@ function createManagerRoutes(container) {
     router.post(constants_1.API_ROUTES.MANAGER.INVITE, (req, res, next) => controller.inviteMember(req, res, next));
     router.post(constants_1.API_ROUTES.MANAGER.BULK_INVITE, (req, res, next) => controller.bulkInvite(req, res, next));
     router.get(constants_1.API_ROUTES.MANAGER.INVITATIONS, (req, res, next) => controller.listInvitations(req, res, next));
-    router.delete(`${constants_1.API_ROUTES.MANAGER.INVITATIONS}/:token`, (req, res, next) => controller.cancelInvitation(req, res, next));
+    router.delete(`${constants_1.API_ROUTES.MANAGER.INVITATIONS}/:id`, (req, res, next) => controller.cancelInvitation(req, res, next));
+    router.get(constants_1.API_ROUTES.MANAGER.ORGANIZATION, (req, res, next) => controller.getOrganization(req, res, next));
     return router;
 }
 //# sourceMappingURL=managerRoutes.js.map

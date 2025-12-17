@@ -28,6 +28,7 @@ export declare const API_ROUTES: {
         readonly MEMBERS: "/manager/members";
         readonly ACTIVITY: "/manager/activity";
         readonly INVITATIONS: "/manager/invitations";
+        readonly ORGANIZATION: "/manager/organization";
     };
     readonly USER: {
         readonly PROFILE: "/user/profile";
@@ -40,6 +41,7 @@ export declare const MANAGER_ROUTES: {
     readonly MEMBERS: "/manager/members";
     readonly ACTIVITY: "/manager/activity";
     readonly INVITATIONS: "/manager/invitations";
+    readonly ORGANIZATION: "/manager/organization";
 };
 export declare const USER_ROUTES: {
     readonly PROFILE: "/user/profile";

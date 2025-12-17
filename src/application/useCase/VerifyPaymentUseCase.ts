@@ -4,13 +4,14 @@ import { IRazorpayService } from "../../infrastructure/interface/services/IRazor
 import { IVerifyPaymentUseCase } from "../interface/useCases/IVerifyPaymentUseCase";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-
+import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
 @injectable()
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
   constructor(
     @inject(TYPES.IRazorpayService) private _razorpayService: IRazorpayService,
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
+    @inject(TYPES.ISubscriptionRepo) private _subscriptionRepo : ISubscriptionRepo,
   ) {}
 
   async execute(
@@ -69,6 +70,7 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
             maxManagers: plan.limits.projects, // Assuming projects maps to managers for now or just separate
             // We should probably have maxManagers in Plan limits too.
           });
+          await this._subscriptionRepo.updateByRazorpayId(orderId,{status : 'active'})
         }
       }
     } catch (error) {

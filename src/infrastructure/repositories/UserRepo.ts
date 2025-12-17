@@ -1,18 +1,22 @@
-import { injectable } from "inversify";
-import { BaseRepository } from "./BaseRepository";
+import { injectable, inject } from "inversify";
+import { BaseRepository } from "./BaseRepo";
 import { IUserRepo } from "../interface/repositories/IUserRepo";
 import { User } from "../../domain/entities/User";
 import { Organization } from "../../domain/entities/Organization";
 import UserModel, { IUserDoc } from "../models/UserModel";
 import { UserRole } from "../../domain/enums/UserRole";
 import OrgModel from "../models/OrgModel";
+import { TYPES } from "../container/types";
+import { ILogger } from "../interface/services/ILogger";
 
 @injectable()
 export class UserRepo
   extends BaseRepository<User, IUserDoc>
-  implements IUserRepo
-{
-  constructor() {
+  implements IUserRepo {
+  
+  constructor(
+    @inject(TYPES.ILogger) private readonly _logger: ILogger
+  ) {
     super(UserModel);
   }
 
@@ -48,6 +52,7 @@ export class UserRepo
         { upsert: false },
       );
     } catch (error) {
+      this._logger.error(`Failed to store OTP`, error as Error, { email });
       throw new Error(`Failed to store OTP: ${(error as Error).message}`);
     }
   }
@@ -66,14 +71,17 @@ export class UserRepo
         expiresAt: user.otpExpiry,
       };
     } catch (error) {
+      this._logger.error(`Failed to get OTP`, error as Error, { email });
       throw new Error(`Failed to get OTP: ${(error as Error).message}`);
     }
   }
+  
   async findOrganizationById?(orgId: string): Promise<Organization | null> {
     try {
       const org = await OrgModel.findById(orgId);
       return org ? (org.toObject() as Organization) : null;
     } catch (error) {
+      this._logger.error(`Failed to find organization by id`, error as Error, { orgId });
       throw new Error(
         `Failed to find organization by id: ${(error as Error).message}`,
       );
@@ -134,8 +142,8 @@ export class UserRepo
   }
 
   async findById(id: string): Promise<User | null> {
-    const user = await UserModel.findById(id);
-    return user ? this.toDomainUser(user) : null;
+    const doc = await this.model.findById(id);
+    return doc ? this.toDomain(doc) : null;
   }
 
   async updatePassword(id: string, hashedPassword: string): Promise<void> {
@@ -219,8 +227,8 @@ export class UserRepo
       const users = await UserModel.find({ role });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      console.error("Error finding users by role:", error);
-      return [];
+      this._logger.error("Error finding users by role:", error as Error, { role });
+      throw error;
     }
   }
 
@@ -229,8 +237,8 @@ export class UserRepo
       const users = await UserModel.find({ orgId, role });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      console.error("Error finding users by org and role:", error);
-      return [];
+      this._logger.error("Error finding users by org and role:", error as Error, { orgId, role });
+      throw error;
     }
   }
 
@@ -244,35 +252,19 @@ export class UserRepo
       if (!updated) throw new Error("User not found");
       return this.toDomainUser(updated);
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to update user status: ${error.message}`);
-      }
-      throw new Error("Failed to update user status: Unknown error");
+      this._logger.error(`Failed to update user status`, error as Error, { userId: id, status });
+      throw error;
     }
   }
 
-  // async hardDelete(id: string): Promise<void> {
-  //   try {
-  //     await UserModel.findByIdAndDelete(id);
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       throw new Error(`Failed to hard delete user: ${error.message}`);
-  //     }
-  //     throw new Error("Failed to hard delete user: Unknown error");
-  //   }
-  // }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async removeFromOrg(userId: string, _orgId: string): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(userId, {
         orgId: null,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to remove user from org: ${error.message}`);
-      }
-      throw new Error("Failed to remove user from org: Unknown error");
+      this._logger.error(`Failed to remove user from org`, error as Error, { userId, orgId: _orgId });
+      throw error;
     }
   }
 
@@ -282,7 +274,7 @@ export class UserRepo
         lastLoginAt: loginTime,
       });
     } catch (error) {
-      console.error("Error updating last login:", error);
+      this._logger.error("Error updating last login:", error as Error, { userId: id });
     }
   }
 
@@ -335,12 +327,8 @@ export class UserRepo
         hasMore: offset + limit < total,
       };
     } catch (error) {
-      console.error("Error finding paginated users:", error);
-      return {
-        users: [],
-        total: 0,
-        hasMore: false,
-      };
+      this._logger.error("Error finding paginated users:", error as Error);
+      throw error;
     }
   }
 
@@ -348,8 +336,8 @@ export class UserRepo
     try {
       return await UserModel.countDocuments({ orgId });
     } catch (error) {
-      console.error("Error counting users by org:", error);
-      return 0;
+      this._logger.error("Error counting users by org:", error as Error, { orgId });
+      throw error;
     }
   }
 
@@ -357,8 +345,8 @@ export class UserRepo
     try {
       return await UserModel.countDocuments({ role });
     } catch (error) {
-      console.error("Error counting users by role:", error);
-      return 0;
+      this._logger.error("Error counting users by role:", error as Error, { role });
+      throw error;
     }
   }
 
@@ -366,8 +354,8 @@ export class UserRepo
     try {
       return await UserModel.countDocuments();
     } catch (error) {
-      console.error("Error counting users:", error);
-      return 0;
+      this._logger.error("Error counting users:", error as Error);
+      throw error;
     }
   }
 
@@ -376,8 +364,8 @@ export class UserRepo
       const users = await UserModel.find({ status });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      console.error("Error finding users by status:", error);
-      return [];
+      this._logger.error("Error finding users by status:", error as Error, { status });
+      throw error;
     }
   }
 
@@ -389,8 +377,8 @@ export class UserRepo
       });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      console.error("Error finding users with expired OTP:", error);
-      return [];
+      this._logger.error("Error finding users with expired OTP:", error as Error);
+      throw error;
     }
   }
 
@@ -402,8 +390,8 @@ export class UserRepo
       );
       return result.modifiedCount;
     } catch (error) {
-      console.error("Error cleaning expired OTPs:", error);
-      return 0;
+      this._logger.error("Error cleaning expired OTPs:", error as Error);
+      throw error;
     }
   }
 
@@ -416,8 +404,8 @@ export class UserRepo
       const existing = await UserModel.findOne(query);
       return !!existing;
     } catch (error) {
-      console.error("Error checking if email exists:", error);
-      return false;
+      this._logger.error("Error checking if email exists:", error as Error, { email });
+      throw error;
     }
   }
 
@@ -462,36 +450,8 @@ export class UserRepo
         byRole,
       };
     } catch (error) {
-      console.error("Error getting user stats:", error);
-      return {
-        total: 0,
-        active: 0,
-        inactive: 0,
-        pending: 0,
-        verified: 0,
-        unverified: 0,
-        byRole: {},
-      };
+      this._logger.error("Error getting user stats:", error as Error);
+      throw error;
     }
   }
-
-  // ✅ OPTIONAL METHODS WITH PROPER SIGNATURES
-  // async getActivityHistory?(
-  //   userId: string,
-  //   limit: number,
-  //   offset: number,
-  // ): Promise<any[]> {
-  //   console.log(
-  //     `Getting activity history for user ${userId} (limit: ${limit}, offset: ${offset})`,
-  //   );
-  //   return [];
-  // }
-
-  // async logActivity?(
-  //   userId: string,
-  //   action: string,
-  //   metadata?: Record<string, any>,
-  // ): Promise<void> {
-  //   console.log(`Logging activity for user ${userId}: ${action}`, metadata);
-  // }
 }

@@ -215,17 +215,6 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             throw new Error("Failed to update user status: Unknown error");
         }
     }
-    // async hardDelete(id: string): Promise<void> {
-    //   try {
-    //     await UserModel.findByIdAndDelete(id);
-    //   } catch (error) {
-    //     if (error instanceof Error) {
-    //       throw new Error(`Failed to hard delete user: ${error.message}`);
-    //     }
-    //     throw new Error("Failed to hard delete user: Unknown error");
-    //   }
-    // }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async removeFromOrg(userId, _orgId) {
         try {
             await UserModel_1.default.findByIdAndUpdate(userId, {

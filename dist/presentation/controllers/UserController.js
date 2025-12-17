@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
-const UserDTO_1 = require("../../application/dto/UserDTO");
 const common_constants_1 = require("../../infrastructure/config/common.constants");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 const asyncHandler_1 = require("../../utils/asyncHandler");
@@ -27,7 +26,7 @@ let UserController = class UserController {
             const userId = req.user.id;
             this._logger.info("Fetching user profile", { userId });
             const profile = await this.userProfileUseCase.getProfile(userId);
-            this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(profile), common_constants_1.COMMON_MESSAGES.PROFILE_RETRIEVED);
+            this.sendSuccess(res, profile, common_constants_1.COMMON_MESSAGES.PROFILE_RETRIEVED);
         });
         this.updateProfile = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;
@@ -43,7 +42,7 @@ let UserController = class UserController {
                 };
             }
             const updatedProfile = await this.userProfileUseCase.updateProfile(userId, updateData);
-            this.sendSuccess(res, (0, UserDTO_1.toUserDTO)(updatedProfile), common_constants_1.COMMON_MESSAGES.PROFILE_UPDATED);
+            this.sendSuccess(res, updatedProfile, common_constants_1.COMMON_MESSAGES.PROFILE_UPDATED);
         });
         this.changePassword = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const userId = req.user.id;

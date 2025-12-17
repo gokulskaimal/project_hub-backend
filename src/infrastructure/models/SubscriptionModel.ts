@@ -13,6 +13,8 @@ const subscriptionSchema = new Schema(
       type: String,
       enum: [
         "active",
+        "created",
+        "authenticated",
         "canceled",
         "incomplete",
         "incomplete_expired",

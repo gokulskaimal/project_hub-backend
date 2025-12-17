@@ -4,8 +4,8 @@ import { IVerifyOtpUseCase } from "../interface/useCases/IVerifyOtpUseCase";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { ValidationError } from "../../domain/errors/CommonErrors";
+import { InvalidCredentialsError } from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
@@ -27,10 +27,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
     try {
       if (!email || !otp) {
-        throw new HttpError(
-          StatusCodes.BAD_REQUEST,
-          "Email and OTP are required",
-        );
+        throw new ValidationError("Email and OTP are required");
       }
 
       const user = await this._userRepo.verifyOtp(email, otp);
@@ -50,7 +47,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
             ? `Invalid OTP. ${attemptsRemaining} attempts remaining.`
             : "Invalid OTP. Too many attempts. Please request a new OTP.";
 
-        throw new HttpError(StatusCodes.BAD_REQUEST, message);
+        throw new InvalidCredentialsError(message);
       }
 
       await this._userRepo.verifyEmail(user.id);
@@ -90,3 +87,4 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
     }
   }
 }
+

@@ -46,13 +46,19 @@ const CreateSubscriptionUseCase_1 = require("../../application/useCase/CreateSub
 const VerifyPaymentUseCase_1 = require("../../application/useCase/VerifyPaymentUseCase");
 const UpdatePlanUseCase_1 = require("../../application/useCase/UpdatePlanUseCase");
 const DeletePlanUseCase_1 = require("../../application/useCase/DeletePlanUseCase");
+const OrganizationQueryUseCase_1 = require("../../application/useCase/OrganizationQueryUseCase");
+const UserQueryUseCase_1 = require("../../application/useCase/UserQueryUseCase");
+const UserManagementUseCase_1 = require("../../application/useCase/UserManagementUseCase");
+const AdminStatsUseCase_1 = require("../../application/useCase/AdminStatsUseCase");
 // Presentation Controllers
 const AuthController_1 = require("../../presentation/controllers/AuthController");
-const AdminController_1 = require("../../presentation/controllers/AdminController");
 const UserController_1 = require("../../presentation/controllers/UserController");
 const ManagerController_1 = require("../../presentation/controllers/ManagerController");
 const PaymentController_1 = require("../../presentation/controllers/PaymentController");
 const WebhookController_1 = require("../../presentation/controllers/WebhookController");
+const AdminUserController_1 = require("../../presentation/controllers/AdminUserController");
+const AdminOrgController_1 = require("../../presentation/controllers/AdminOrgController");
+const AdminPlanController_1 = require("../../presentation/controllers/AdminPlanController");
 /**
  * DIContainer
  *
@@ -234,6 +240,22 @@ class DIContainer {
             .bind(types_1.TYPES.IDeletePlanUseCase)
             .to(DeletePlanUseCase_1.DeletePlanUseCase)
             .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IOrganizationQueryUseCase)
+            .to(OrganizationQueryUseCase_1.OrganizationQueryUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IUserQueryUseCase)
+            .to(UserQueryUseCase_1.UserQueryUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IUserManagementUseCase)
+            .to(UserManagementUseCase_1.UserManagementUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IAdminStatsUseCase)
+            .to(AdminStatsUseCase_1.AdminStatsUseCase)
+            .inTransientScope();
     }
     _bindControllers() {
         this._container
@@ -241,8 +263,16 @@ class DIContainer {
             .to(AuthController_1.AuthController)
             .inSingletonScope();
         this._container
-            .bind(types_1.TYPES.AdminController)
-            .to(AdminController_1.AdminController)
+            .bind(types_1.TYPES.AdminUserController)
+            .to(AdminUserController_1.AdminUserController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.AdminOrgController)
+            .to(AdminOrgController_1.AdminOrgController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.AdminPlanController)
+            .to(AdminPlanController_1.AdminPlanController)
             .inSingletonScope();
         this._container
             .bind(types_1.TYPES.UserController)

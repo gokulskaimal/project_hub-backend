@@ -6,8 +6,8 @@ import { IHashService } from "../../infrastructure/interface/services/IHashServi
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { InvalidTokenError } from "../../domain/errors/AuthErrors";
+import { ValidationError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class ResetPasswordUseCase implements IResetPasswordUseCase {
@@ -32,7 +32,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
   }
 
   /**
-   * ✅ ADDED: Request password reset (send email with reset link)
+   * Request password reset (send email with reset link)
    */
   public async requestReset(
     email: string,
@@ -56,11 +56,12 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
 
       // Business Rule: Set token expiry (1 hour)
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      const hashedToken = await this._hashService.hashToken(resetToken)
 
       // Store reset token in database
-      await this._userRepo.setResetPasswordToken(email, resetToken, expiresAt);
+      await this._userRepo.setResetPasswordToken(email, hashedToken, expiresAt);
 
-      // ✅ FIXED: Use sendResetPasswordEmail instead of sendPasswordResetEmail
+      // Use sendResetPasswordEmail instead of sendPasswordResetEmail
       await this._emailService.sendResetPasswordEmail(email, resetToken);
 
       this._logger.info("Password reset email sent", {
@@ -70,21 +71,18 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
 
       return {
         message: "Password reset email sent successfully",
-        token: resetToken, // Only in development - remove in production
+        token: hashedToken, // Only in development - remove in production
       };
     } catch (error) {
       this._logger.error("Password reset request failed", error as Error, {
         email,
       });
-      throw new HttpError(
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        "Failed to process password reset request",
-      );
+      throw error;
     }
   }
 
   /**
-   * ✅ ADDED: Reset password using token
+   * Reset password using token
    */
   public async resetWithToken(
     token: string,
@@ -96,19 +94,13 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
       // Business Rule: Verify reset token
       const payload = this._jwtService.verifyResetToken(token);
       if (!payload) {
-        throw new HttpError(
-          StatusCodes.BAD_REQUEST,
-          "Invalid or expired reset token",
-        );
+        throw new InvalidTokenError("Invalid or expired reset token");
       }
-
+      const hashedToken = await this._hashService.hashToken(token)
       // Business Rule: Find user by reset token
-      const user = await this._userRepo.findByResetToken(token);
+      const user = await this._userRepo.findByResetToken(hashedToken);
       if (!user) {
-        throw new HttpError(
-          StatusCodes.BAD_REQUEST,
-          "Invalid or expired reset token",
-        );
+        throw new InvalidTokenError("Invalid or expired reset token");
       }
 
       // Business Rule: Validate new password
@@ -130,7 +122,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
   }
 
   /**
-   * ✅ ADDED: Complete password reset process
+   * Complete password reset process
    */
   public async completeReset(
     token: string,
@@ -141,7 +133,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
   }
 
   /**
-   * ✅ ADDED: Validate reset token
+   * Validate reset token
    */
   public async validateResetToken(token: string): Promise<boolean> {
     try {
@@ -152,7 +144,8 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
       }
 
       // Check if token exists in database
-      const user = await this._userRepo.findByResetToken(token);
+      const hashedToken = await this._hashService.hashToken(token)
+      const user = await this._userRepo.findByResetToken(hashedToken);
       return !!user;
     } catch (error) {
       this._logger.error("Reset token validation failed", error as Error);
@@ -166,28 +159,24 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
    */
   private _validatePassword(password: string): void {
     if (!password || typeof password !== "string") {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Password is required");
+      throw new ValidationError("Password is required");
     }
 
     if (password.length < 8) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
-        "Password must be at least 8 characters long",
-      );
+      throw new ValidationError("Password must be at least 8 characters long");
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
+      throw new ValidationError(
         "Password must contain at least one lowercase letter, one uppercase letter, and one number",
       );
     }
 
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
+      throw new ValidationError(
         "Password must contain at least one special character",
       );
     }
   }
 }
+

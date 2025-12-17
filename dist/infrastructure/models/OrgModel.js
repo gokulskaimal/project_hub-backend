@@ -29,6 +29,7 @@ const OrgSchema = new mongoose_1.default.Schema({
         type: String,
         enum: ["ACTIVE", "INACTIVE", "TRIAL", "EXPIRED", "CANCELLED"],
     },
+    razorpaySubscriptionId: { type: String },
     // Limits
     maxManagers: { type: Number, default: 5 },
     maxUsers: { type: Number, default: 100 },

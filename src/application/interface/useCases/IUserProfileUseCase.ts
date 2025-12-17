@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { UserDTO, UpdateProfileRequestDTO } from "../../dto/UserDTO";
+
 export interface IUserProfileUseCase {
   /**
    * Get user profile by ID
    */
-  getProfile(userId: string): Promise<any>;
+  getProfile(userId: string): Promise<UserDTO>;
 
   /**
    * Update user profile
    */
-  updateProfile(userId: string, updateData: Record<string, any>): Promise<any>;
+  updateProfile(userId: string, updateData: UpdateProfileRequestDTO): Promise<UserDTO>;
 
   /**
    * Change user password
@@ -31,5 +32,5 @@ export interface IUserProfileUseCase {
     userId: string,
     limit: number,
     offset: number,
-  ): Promise<any[]>;
+  ): Promise<Record<string, unknown>[]>;
 }

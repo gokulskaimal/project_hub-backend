@@ -1,13 +1,13 @@
 import { Response } from "express";
 import { injectable, inject } from "inversify";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { TYPES } from "../../infrastructure/container/types";
-import { IUserProfileUseCase } from "../../application/interface/useCases/IUserProfileUseCase";
-import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
-import { toUserDTO } from "../../application/dto/UserDTO";
-import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
-import { asyncHandler } from "../../utils/asyncHandler";
+import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { TYPES } from "../../../infrastructure/container/types";
+import { IUserProfileUseCase } from "../../../application/interface/useCases/IUserProfileUseCase";
+import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
+
+import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
+import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
+import { asyncHandler } from "../../../utils/asyncHandler";
 
 @injectable()
 export class UserController {
@@ -15,7 +15,7 @@ export class UserController {
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IUserProfileUseCase)
     private userProfileUseCase: IUserProfileUseCase,
-  ) {}
+  ) { }
 
   private sendSuccess(res: Response, data: unknown, message: string) {
     res.status(StatusCodes.OK).json({
@@ -33,7 +33,7 @@ export class UserController {
       const profile = await this.userProfileUseCase.getProfile(userId);
       this.sendSuccess(
         res,
-        toUserDTO(profile),
+        profile,
         COMMON_MESSAGES.PROFILE_RETRIEVED,
       );
     },
@@ -59,7 +59,7 @@ export class UserController {
       );
       this.sendSuccess(
         res,
-        toUserDTO(updatedProfile),
+        updatedProfile,
         COMMON_MESSAGES.PROFILE_UPDATED,
       );
     },

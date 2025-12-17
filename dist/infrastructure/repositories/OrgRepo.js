@@ -13,6 +13,7 @@ exports.OrgRepo = void 0;
 const inversify_1 = require("inversify");
 const Organization_1 = require("../../domain/entities/Organization");
 const OrgModel_1 = __importDefault(require("../models/OrgModel"));
+const UserModel_1 = __importDefault(require("../models/UserModel"));
 let OrgRepo = class OrgRepo {
     toDomain(doc) {
         const o = doc.toObject();
@@ -111,8 +112,23 @@ let OrgRepo = class OrgRepo {
             OrgModel_1.default.find(query).skip(offset).limit(limit).sort({ createdAt: -1 }),
             OrgModel_1.default.countDocuments(query),
         ]);
+        // Aggregate user counts for the fetched organizations
+        const orgIds = docs.map((d) => d._id);
+        const userCounts = await UserModel_1.default.aggregate([
+            { $match: { orgId: { $in: orgIds } } },
+            { $group: { _id: "$orgId", count: { $sum: 1 } } },
+        ]);
+        // Create a map for easy lookup
+        const countMap = new Map();
+        userCounts.forEach((c) => {
+            countMap.set(c._id.toString(), c.count);
+        });
         return {
-            organizations: docs.map((d) => this.toDomain(d)),
+            organizations: docs.map((d) => {
+                const org = this.toDomain(d);
+                org.currentUserCount = countMap.get(org.id) || 0;
+                return org;
+            }),
             total,
             hasMore: offset + limit < total,
         };

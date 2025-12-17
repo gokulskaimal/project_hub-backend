@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { Container } from "inversify";
-import { UserController } from "../controllers/UserController";
+import { UserController } from "../controllers/user/UserController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
@@ -14,7 +14,6 @@ export function createUserRoutes(container: Container): Router {
   router.use(authMiddleware);
 
   router.get(API_ROUTES.USER.PROFILE, (req, res, next) => {
-    console.log("UserRoutes: Reached /user/profile handler");
     controller.getProfile(req as AuthenticatedRequest, res, next);
   });
   router.put(API_ROUTES.USER.PROFILE, (req, res, next) =>

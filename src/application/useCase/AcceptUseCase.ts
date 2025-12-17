@@ -57,7 +57,8 @@ export class AcceptUseCase implements IAcceptUseCase {
       }
 
       // Business Rule: Find and validate invitation
-      const invite = await this._inviteRepo.findByToken(token);
+      const hashedToken = this._hashService.hashToken(token);
+      const invite = await this._inviteRepo.findByToken(hashedToken);
       if (!invite) {
         this._logger.warn("Invitation not found", {
           token: token.substring(0, 8) + "...",
@@ -151,7 +152,7 @@ export class AcceptUseCase implements IAcceptUseCase {
       });
 
       // Mark invitation as accepted
-      await this._inviteRepo.markAccepted(token);
+      await this._inviteRepo.markAccepted(hashedToken);
 
       this._logger.info("Invitation accepted successfully", {
         userId: newUser.id,
@@ -210,7 +211,8 @@ export class AcceptUseCase implements IAcceptUseCase {
         return { valid: false };
       }
 
-      const invite = await this._inviteRepo.findByToken(token);
+      const hashedToken = this._hashService.hashToken(token);
+      const invite = await this._inviteRepo.findByToken(hashedToken);
       if (!invite) {
         return { valid: false };
       }

@@ -75,6 +75,20 @@ let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
     async markCancelled(token) {
         await this.model.findOneAndUpdate({ token }, { status: "CANCELLED", cancelledAt: new Date() });
     }
+    async markCancelledById(id) {
+        await this.model.findByIdAndUpdate(id, {
+            status: "CANCELLED",
+            cancelledAt: new Date(),
+        });
+    }
+    async deleteById(id) {
+        const result = await this.model.findByIdAndDelete(id);
+        return !!result;
+    }
+    async deleteByOrganization(orgId) {
+        const result = await this.model.deleteMany({ orgId });
+        return result.deletedCount;
+    }
     async expireOldInvitations() {
         const result = await this.model.updateMany({
             status: "PENDING",

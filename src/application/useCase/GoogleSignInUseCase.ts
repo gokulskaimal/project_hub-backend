@@ -10,8 +10,14 @@ import { OrganizationStatus } from "../../domain/entities/Organization";
 import { UserRole } from "../../domain/enums/UserRole";
 import { toUserDTO, UserDTO } from "../dto/UserDTO";
 import { AuthTokens } from "../interface/useCases/types";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import {
+  ValidationError,
+  ConflictError,
+} from "../../domain/errors/CommonErrors";
+import {
+  AccountSuspendedError,
+  OrganizationSuspendedError,
+} from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class GoogleSignInUseCase implements IGoogleSignInUseCase {
@@ -35,11 +41,7 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
     const emailVerified = payload.email_verified;
     const googleSub = payload.sub;
 
-    if (!email)
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
-        "Google Token missing email",
-      );
+    if (!email) throw new ValidationError("Google Token missing email");
 
     let user = await this._userRepo.findByEmail(email);
 
@@ -59,19 +61,13 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
         const invitePayload = this._jwtService.verifyAccessToken(inviteToken);
 
         if (!invitePayload) {
-          throw new HttpError(
-            StatusCodes.BAD_REQUEST,
-            "Invalid or expired invite token",
-          );
+          throw new ValidationError("Invalid or expired invite token");
         }
 
         const orgId = invitePayload.orgId;
 
         if (!orgId || typeof orgId !== "string") {
-          throw new HttpError(
-            StatusCodes.BAD_REQUEST,
-            "Invalid organization in invite token",
-          );
+          throw new ValidationError("Invalid organization in invite token");
         }
 
         const assignedRole = Object.values(UserRole).includes(
@@ -81,7 +77,7 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
           : UserRole.TEAM_MEMBER;
         const org = await this._orgRepo.findById(orgId);
         if (!org) {
-          throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid Organization");
+          throw new ValidationError("Invalid Organization");
         }
 
         const newUser = await this._userRepo.create({
@@ -112,10 +108,7 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
       } else {
         // Normal signup - REQUIRES Organization Name
         if (!orgName) {
-          throw new HttpError(
-            StatusCodes.BAD_REQUEST,
-            "Organization Name Required",
-          );
+          throw new ValidationError("Organization Name Required");
         }
 
         // Create Organization
@@ -129,10 +122,7 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
           });
         } catch (error: unknown) {
           if ((error as { code?: number }).code === 11000) {
-            throw new HttpError(
-              StatusCodes.BAD_REQUEST,
-              "Organization name already exists",
-            );
+            throw new ConflictError("Organization name already exists");
           }
           throw error;
         }
@@ -167,26 +157,17 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
 
     // Generate tokens
     if (!user) {
-      throw new HttpError(
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        "User creation failed",
-      );
+      throw new Error("User creation failed");
     }
 
     if (user.status !== "ACTIVE") {
-      throw new HttpError(
-        StatusCodes.FORBIDDEN,
-        "Account suspended or disabled",
-      );
+      throw new AccountSuspendedError();
     }
 
     if (user.orgId) {
       const org = await this._orgRepo.findById(user.orgId);
       if (org && org.status !== OrganizationStatus.ACTIVE) {
-        throw new HttpError(
-          StatusCodes.FORBIDDEN,
-          "Organization suspended or disabled",
-        );
+        throw new OrganizationSuspendedError();
       }
     }
 
@@ -219,3 +200,4 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
     };
   }
 }
+

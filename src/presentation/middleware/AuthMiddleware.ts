@@ -18,9 +18,13 @@ export async function authMiddleware(
   const token = authHeader?.split(" ")[1];
 
   if (!token) {
-    res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ error: COMMON_MESSAGES.UNAUTHORIZED });
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      success: false,
+      error: {
+        code: "AUTH_TOKEN_MISSING",
+        message: COMMON_MESSAGES.UNAUTHORIZED,
+      },
+    });
     return;
   }
 
@@ -35,17 +39,25 @@ export async function authMiddleware(
       // Fetch latest user state from DB to ensure status/org checks
       const userDoc = await UserModel.findById(payload.id);
       if (!userDoc) {
-        res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: COMMON_MESSAGES.UNAUTHORIZED });
+        res.status(StatusCodes.UNAUTHORIZED).json({
+          success: false,
+          error: {
+            code: "AUTH_USER_NOT_FOUND",
+            message: COMMON_MESSAGES.UNAUTHORIZED,
+          },
+        });
         return;
       }
 
       // If user is not ACTIVE, deny access
       if (userDoc.status !== "ACTIVE") {
-        res
-          .status(StatusCodes.FORBIDDEN)
-          .json({ error: "User account suspended or disabled" });
+        res.status(StatusCodes.FORBIDDEN).json({
+          success: false,
+          error: {
+            code: "AUTH_ACCOUNT_SUSPENDED",
+            message: "User account suspended or disabled",
+          },
+        });
         return;
       }
 
@@ -53,15 +65,23 @@ export async function authMiddleware(
       if (userDoc.orgId) {
         const orgDoc = await OrgModel.findById(userDoc.orgId);
         if (!orgDoc) {
-          res
-            .status(StatusCodes.FORBIDDEN)
-            .json({ error: "Organization not found" });
+          res.status(StatusCodes.FORBIDDEN).json({
+            success: false,
+            error: {
+              code: "AUTH_ORG_NOT_FOUND",
+              message: "Organization not found",
+            },
+          });
           return;
         }
         if (orgDoc.status !== OrganizationStatus.ACTIVE) {
-          res
-            .status(StatusCodes.FORBIDDEN)
-            .json({ error: "Organization suspended or disabled" });
+          res.status(StatusCodes.FORBIDDEN).json({
+            success: false,
+            error: {
+              code: "AUTH_ORG_SUSPENDED",
+              message: "Organization suspended or disabled",
+            },
+          });
           return;
         }
       }
@@ -73,14 +93,23 @@ export async function authMiddleware(
     // Check if the error is a JWT expiration error
     if (error instanceof jwt.TokenExpiredError) {
       res.status(StatusCodes.UNAUTHORIZED).json({
-        error: "JWT token expired",
-        code: "TOKEN_EXPIRED",
+        success: false,
+        error: {
+          code: "TOKEN_EXPIRED",
+          message: "JWT token expired",
+        },
       });
       return;
     }
 
     const message =
       error instanceof Error ? error.message : COMMON_MESSAGES.UNAUTHORIZED;
-    res.status(StatusCodes.UNAUTHORIZED).json({ error: message });
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      success: false,
+      error: {
+        code: "AUTH_INVALID_TOKEN",
+        message,
+      },
+    });
   }
 }

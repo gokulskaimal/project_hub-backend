@@ -2,12 +2,21 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
 import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { IInviteMemberUseCase } from "../interface/useCases/IInviteMemberUseCase";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
+import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
+import { QuotaExceededError } from "../../domain/errors/CommonErrors";
+import {
+  ConflictError,
+  ValidationError,
+  EntityNotFoundError,
+} from "../../domain/errors/CommonErrors";
+import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
+import crypto from "crypto";
 
 @injectable()
 export class InviteMemberUseCase implements IInviteMemberUseCase {
@@ -17,12 +26,16 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.ISubscriptionRepo) private readonly _subRepo: ISubscriptionRepo,
+    @inject(TYPES.IPlanRepo) private readonly _planRepo: IPlanRepo,
+    @inject(TYPES.IHashService) private readonly _hashService: IHashService,
   ) {}
 
   public async execute(
     email: string,
     orgId: string,
     role?: string,
+    expiresIn: number = 1,
   ): Promise<{
     invitationId: string;
     token: string;
@@ -37,16 +50,27 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
       const organization = await this._orgRepo.findById(orgId);
       if (!organization) {
         this._logger.warn("Organization not found for invitation", { orgId });
-        throw new HttpError(StatusCodes.NOT_FOUND, "Organization not found");
+        throw new OrganizationNotFoundError();
+      }
+
+      // Check Plan Limits
+      if (organization.createdBy) {
+          const subscription = await this._subRepo.findByUserId(organization.createdBy); // Owner pays
+          if (subscription) {
+            const plan = await this._planRepo.findById(subscription.planId);
+            if (plan && plan.limits && plan.limits.members !== -1) {
+                 const currentMembers = await this._userRepo.countByOrg(orgId);
+                 if (currentMembers >= plan.limits.members) {
+                     throw new QuotaExceededError(`Member limit of ${plan.limits.members} reached for this plan.`);
+                 }
+            }
+          }
       }
 
       const existingUser = await this._userRepo.findByEmail(email);
       if (existingUser) {
         this._logger.warn("User already exists", { email });
-        throw new HttpError(
-          StatusCodes.CONFLICT,
-          "User with this email already exists",
-        );
+        throw new ConflictError("User with this email already exists");
       }
 
       const existingInvite = await this._inviteRepo.findPendingByEmail(
@@ -58,20 +82,21 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
           email,
           orgId,
         });
-        throw new HttpError(
-          StatusCodes.CONFLICT,
+        throw new ConflictError(
           "An invitation to this email is already pending",
         );
       }
 
       const token = this._generateInvitationToken();
-      const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const hashedToken = await this._hashService.hashToken(token)
+      
+      const expiry = new Date(Date.now() + expiresIn * 24 * 60 * 60 * 1000);
 
       // Use const assertion for status
       const inviteData = {
         email,
         orgId,
-        token,
+        token : hashedToken,
         status: "PENDING" as const,
         expiry,
         role: role || "TEAM_MEMBER",
@@ -109,6 +134,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     emails: string[],
     orgId: string,
     role?: string,
+    expiresIn?: number,
   ): Promise<{
     successful: Array<{ email: string; invitationId: string }>;
     failed: Array<{ email: string; error: string }>;
@@ -125,7 +151,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
     for (const email of emails) {
       try {
-        const result = await this.execute(email, orgId, role);
+        const result = await this.execute(email, orgId, role, expiresIn);
 
         successful.push({
           email,
@@ -166,23 +192,20 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
   private _validateInput(email: string, orgId: string): void {
     if (!email || typeof email !== "string") {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Email is required");
+      throw new ValidationError("Email is required");
     }
 
     if (!orgId || typeof orgId !== "string") {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
-        "Organization ID is required",
-      );
+      throw new ValidationError("Organization ID is required");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
+      throw new ValidationError("Invalid email format");
     }
 
     if (email.length > 254) {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Email address is too long");
+      throw new ValidationError("Email address is too long");
     }
   }
 
@@ -217,10 +240,9 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
         email,
         orgName,
       });
-      throw new HttpError(
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        "Failed to send invitation email",
-      );
+      // Throw standard Error for internal failures, middleware will handle as 500
+      throw new Error("Failed to send invitation email");
     }
   }
 }
+

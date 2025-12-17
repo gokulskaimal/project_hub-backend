@@ -14,7 +14,8 @@ export interface Organization {
     logo?: string;
     website?: string;
     planId?: string;
-    subscriptionStatus?: "ACTIVE" | "INACTIVE" | "TRIAL" | "EXPIRED" | "CANCELLED";
+    subscriptionStatus?: "ACTIVE" | "INACTIVE" | "TRIAL" | "EXPIRED" | "EXPIRED" | "CANCELLED";
+    razorpaySubscriptionId?: string;
     status: OrganizationStatus;
     maxManagers?: number;
     maxUsers?: number;

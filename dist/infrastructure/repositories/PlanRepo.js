@@ -57,6 +57,10 @@ let PlanRepo = class PlanRepo extends BaseRepository_1.BaseRepository {
         const result = await this.model.findByIdAndDelete(id);
         return !!result;
     }
+    async findByRazorpayId(razorpayPlanId) {
+        const doc = await this.model.findOne({ razorpayPlanId });
+        return doc ? this.toDomain(doc) : null;
+    }
 };
 exports.PlanRepo = PlanRepo;
 exports.PlanRepo = PlanRepo = __decorate([

@@ -11,6 +11,7 @@ export interface IOrgDOc extends Document {
     logo?: string;
     website?: string;
     subscriptionStatus?: string;
+    razorpaySubscriptionId?: string;
     maxManagers?: number;
     maxUsers?: number;
     currentUserCount?: number;

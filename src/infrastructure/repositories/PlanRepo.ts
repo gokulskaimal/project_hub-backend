@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { BaseRepository } from "./BaseRepository";
+import { BaseRepository } from "./BaseRepo";
 import { Plan } from "../../domain/entities/Plan";
 import { IPlanRepo } from "../interface/repositories/IPlanRepo";
 import PlanModel, { IPlanDoc } from "../models/PlanModel";
@@ -8,8 +8,7 @@ import { Model } from "mongoose";
 @injectable()
 export class PlanRepo
   extends BaseRepository<Plan, IPlanDoc>
-  implements IPlanRepo
-{
+  implements IPlanRepo {
   constructor() {
     super(PlanModel as unknown as Model<IPlanDoc>);
   }
@@ -37,9 +36,22 @@ export class PlanRepo
     return this.toDomain(doc);
   }
 
-  async findAll(filter: Partial<Plan> = { isActive: true }): Promise<Plan[]> {
-    const docs = await this.model.find(filter);
-    return docs.map((d) => this.toDomain(d));
+  async findAll(filter?: Partial<Plan>): Promise<Plan[]> {
+    try {
+      // If no filter is provided, default to { isActive: true }
+      // If filter IS provided (even empty {}), use it.
+      // Ideally, the caller should be explicit.
+      // But for safety, let's just pass the filter blindly if provided.
+      // However, the issue is that arguments defaults only apply if undefined.
+
+      const query = filter === undefined ? { isActive: true } : filter;
+      // console.log("PlanRepo.findAll query:", query);
+      const docs = await this.model.find(query);
+      return docs.map((d) => this.toDomain(d));
+    } catch (error) {
+      console.error("PlanRepo.findAll failed:", error);
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<Plan | null> {

@@ -8,8 +8,13 @@ const inviteSchema = new mongoose_1.default.Schema({
     email: { type: String, required: true },
     orgId: { type: String, required: true },
     token: { type: String, required: true, unique: true },
-    status: { type: String, enum: ['PENDING', 'ACCEPTED', 'EXPIRED'], default: 'PENDING' },
-    expiry: { type: Date, required: true }
-});
-exports.default = mongoose_1.default.model('Invite', inviteSchema);
+    status: {
+        type: String,
+        enum: ["PENDING", "ACCEPTED", "EXPIRED", "CANCELLED"],
+        default: "PENDING",
+    },
+    expiry: { type: Date, required: true },
+    role: { type: String, required: false },
+}, { timestamps: true });
+exports.default = mongoose_1.default.model("Invite", inviteSchema);
 //# sourceMappingURL=InviteModel.js.map

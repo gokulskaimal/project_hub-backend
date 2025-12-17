@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { OrganizationStatus } from "../../../domain/entities/Organization";
+import { OrganizationStatus , Organization } from "../../../domain/entities/Organization";
+
 
 export interface IOrganizationManagementUseCase {
   updateOrganizationStatus(
@@ -8,4 +9,8 @@ export interface IOrganizationManagementUseCase {
   ): Promise<any>;
 
   deleteOrganizationCascade(orgId: string): Promise<void>;
+  
+  createOrganization(data: Partial<Organization>): Promise<Organization>;
+
+  updateOrganization(orgId: string, data: Partial<Organization>): Promise<Organization>;
 }

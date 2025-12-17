@@ -1,8 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express";
 import logger from "../../infrastructure/services/Logger";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
+import { AppError } from "../../domain/errors/AppError";
+import {
+  EntityNotFoundError,
+  ValidationError,
+  ConflictError,
+  InvalidOperationError,
+} from "../../domain/errors/CommonErrors";
+import {
+  InvalidCredentialsError,
+  AccountSuspendedError,
+  EmailNotVerifiedError,
+  OrganizationNotFoundError,
+  OrganizationSuspendedError,
+  TokenExpiredError,
+  InvalidTokenError,
+} from "../../domain/errors/AuthErrors";
 
 export interface HttpError extends Error {
   status?: number;
@@ -10,7 +25,13 @@ export interface HttpError extends Error {
 }
 
 export function notFoundHandler(_req: Request, res: Response): void {
-  res.status(StatusCodes.NOT_FOUND).json({ error: COMMON_MESSAGES.NOT_FOUND });
+  res.status(StatusCodes.NOT_FOUND).json({
+    success: false,
+    error: {
+      code: "NOT_FOUND",
+      message: COMMON_MESSAGES.NOT_FOUND,
+    },
+  });
 }
 
 export const asyncHandler =
@@ -19,31 +40,88 @@ export const asyncHandler =
     Promise.resolve(fn(req, res, next)).catch(next);
 
 export function errorHandler(
-  err: HttpError,
+  err: Error | HttpError | AppError,
   req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
-  const status = err.status ?? StatusCodes.INTERNAL_SERVER_ERROR;
-  const message =
-    status === StatusCodes.INTERNAL_SERVER_ERROR
-      ? COMMON_MESSAGES.SERVER_ERROR
-      : err.message;
+  // 1. Default fallback
+  let status = StatusCodes.INTERNAL_SERVER_ERROR;
+  let message: string = COMMON_MESSAGES.SERVER_ERROR;
+  let code = "INTERNAL_ERROR";
 
-  if (status >= 400 && status < 500) {
-    logger.warn("Request validation failed", {
+  // 2. Map Domain Errors to HTTP Statuses
+  if (err instanceof AppError || (err as any).code?.startsWith("AUTH_") || (err as any).code?.startsWith("COMMON_")) {
+    code = (err as any).code || "INTERNAL_ERROR";
+    message = err.message;
+
+    // Use name or code to check type if instanceof failed
+    const errorType = err.constructor.name;
+    const errCode = (err as any).code;
+
+    if (err instanceof EntityNotFoundError || errCode === "COMMON_NOT_FOUND") {
+      status = StatusCodes.NOT_FOUND;
+    } else if (err instanceof ValidationError || errCode === "COMMON_VALIDATION_ERROR") {
+      status = StatusCodes.BAD_REQUEST;
+    } else if (err instanceof ConflictError || errCode === "COMMON_CONFLICT") {
+      status = StatusCodes.CONFLICT;
+    } else if (
+      err instanceof InvalidCredentialsError ||
+      err instanceof InvalidTokenError ||
+      err instanceof TokenExpiredError ||
+       errCode === "AUTH_INVALID_CREDENTIALS" ||
+       errCode === "AUTH_TOKEN_EXPIRED"
+    ) {
+      status = StatusCodes.UNAUTHORIZED;
+    } else if (
+      err instanceof AccountSuspendedError ||
+      err instanceof EmailNotVerifiedError ||
+      err instanceof OrganizationSuspendedError ||
+      err instanceof OrganizationNotFoundError ||
+      errCode === "AUTH_ACCOUNT_SUSPENDED" || 
+      errCode === "AUTH_ORG_NOT_FOUND"
+    ) {
+      status = StatusCodes.FORBIDDEN;
+    } else {
+      status = StatusCodes.BAD_REQUEST; // Default for other domain errors
+    }
+  }
+  // 3. Handle Legacy HttpErrors (Transition period support)
+  else if ("status" in err && typeof err.status === "number") {
+    status = err.status;
+    message = err.message || COMMON_MESSAGES.SERVER_ERROR;
+    code = (err as HttpError).code || "HTTP_ERROR";
+  }
+  // 4. Handle Standard Errors
+  else if (err instanceof Error) {
+    message = err.message;
+  }
+
+  // 5. Log Error
+  if (status >= 500) {
+    logger.error("Server Error", err, {
       path: req.path,
       status,
       message,
+      code,
+      stack: err.stack,
     });
   } else {
-    logger.error("Request failed", err, {
+    logger.warn("Request Failed", {
       path: req.path,
       status,
       message,
-      stack: err.stack,
+      code,
     });
   }
 
-  res.status(status).json({ error: message, code: err.code });
+  // 6. Send Strict JSON Response
+  res.status(status).json({
+    success: false,
+    error: {
+      code,
+      message,
+    },
+  });
 }
+

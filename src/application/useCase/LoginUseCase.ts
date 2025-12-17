@@ -10,8 +10,14 @@ import { OrganizationStatus } from "../../domain/entities/Organization";
 import { toUserDTO } from "../dto/UserDTO";
 import { AuthResult } from "../interface/useCases/types";
 import { UserRole } from "../../domain/enums/UserRole";
-import { HttpError } from "../../utils/asyncHandler";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import {
+  InvalidCredentialsError,
+  EmailNotVerifiedError,
+  AccountSuspendedError,
+  OrganizationNotFoundError,
+  OrganizationSuspendedError,
+} from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class LoginUseCase implements ILoginUseCase {
@@ -67,11 +73,13 @@ export class LoginUseCase implements ILoginUseCase {
       }
 
       const user = await this._userRepo.findByEmail(email);
-      if (!user)
-        throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid credentials");
+      if (!user) {
+        throw new InvalidCredentialsError();
+      }
 
-      if (!user.emailVerified)
-        throw new HttpError(StatusCodes.FORBIDDEN, "Email not verified");
+      if (!user.emailVerified) {
+        throw new EmailNotVerifiedError();
+      }
 
       if (user.status !== "ACTIVE") {
         this._logger.warn("Login attempt by blocked/suspended user", {
@@ -79,10 +87,7 @@ export class LoginUseCase implements ILoginUseCase {
           email,
           status: user.status,
         });
-        throw new HttpError(
-          StatusCodes.FORBIDDEN,
-          "Account suspended or disabled",
-        );
+        throw new AccountSuspendedError();
       }
 
       if (user.orgId) {
@@ -92,10 +97,7 @@ export class LoginUseCase implements ILoginUseCase {
             userId: user.id,
             orgId: user.orgId,
           });
-          throw new HttpError(
-            StatusCodes.FORBIDDEN,
-            "Organization does not exist",
-          );
+          throw new OrganizationNotFoundError();
         }
         if (org.status !== OrganizationStatus.ACTIVE) {
           this._logger.warn("Login attempt by user from suspended org", {
@@ -103,10 +105,7 @@ export class LoginUseCase implements ILoginUseCase {
             orgId: user.orgId,
             orgStatus: org.status,
           });
-          throw new HttpError(
-            StatusCodes.FORBIDDEN,
-            "Organization suspended or disabled",
-          );
+          throw new OrganizationSuspendedError();
         }
       }
 
@@ -114,8 +113,9 @@ export class LoginUseCase implements ILoginUseCase {
         password,
         user.password,
       );
-      if (!isPasswordValid)
-        throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid credentials");
+      if (!isPasswordValid) {
+        throw new InvalidCredentialsError();
+      }
 
       const payload = {
         id: user.id,
@@ -147,3 +147,4 @@ export class LoginUseCase implements ILoginUseCase {
     }
   }
 }
+

@@ -4,10 +4,9 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { OrganizationStatus } from "../../domain/entities/Organization";
+import { OrganizationStatus, Organization } from "../../domain/entities/Organization";
 import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizationManagementUseCase";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class OrganizationManagementUseCase
@@ -97,7 +96,7 @@ export class OrganizationManagementUseCase
       });
 
       if (!updatedOrg) {
-        throw new HttpError(StatusCodes.NOT_FOUND, "Organization not found");
+        throw new OrganizationNotFoundError();
       }
 
       // Get all users in this organization
@@ -148,4 +147,17 @@ export class OrganizationManagementUseCase
       throw error;
     }
   }
+
+  async createOrganization(data: Partial<Organization>): Promise<Organization> {
+    return this._orgRepo.create(data);
+  }
+
+  async updateOrganization(orgId: string, data: Partial<Organization>): Promise<Organization> {
+    const updatedOrg = await this._orgRepo.update(orgId, data);
+    if (!updatedOrg) {
+        throw new OrganizationNotFoundError();
+    }
+    return updatedOrg;
+  }
 }
+

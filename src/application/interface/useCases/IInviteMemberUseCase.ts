@@ -6,6 +6,7 @@ export interface IInviteMemberUseCase {
     email: string,
     orgId: string,
     role?: string,
+    expiresIn?: number,
   ): Promise<{
     invitationId: string;
     token: string;
@@ -20,6 +21,7 @@ export interface IInviteMemberUseCase {
     emails: string[],
     orgId: string,
     role?: string,
+    expiresIn?: number,
   ): Promise<{
     successful: Array<{ email: string; invitationId: string }>;
     failed: Array<{ email: string; error: string }>;

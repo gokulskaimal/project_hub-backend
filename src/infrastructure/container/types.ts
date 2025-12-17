@@ -9,19 +9,17 @@ export const TYPES = {
   ICacheService: Symbol.for("ICacheService"),
   IGoogleAuthService: Symbol.for("IGoogleAuthService"),
   IRazorpayService: Symbol.for("IRazorpayService"),
-  IPlanRepo: Symbol.for("IPlanRepo"),
-  ISubscriptionRepo: Symbol.for("ISubscriptionRepo"),
-  ICreatePlanUseCase: Symbol.for("ICreatePlanUseCase"),
-  IGetPlanUseCase: Symbol.for("IGetPlanUseCase"),
-  ICreateSubscriptionUseCase: Symbol.for("ICreateSubscriptionUseCase"),
-  IVerifyPaymentUseCase: Symbol.for("IVerifyPaymentUseCase"),
-  IUpdatePlanUseCase: Symbol.for("IUpdatePlanUseCase"),
-  IDeletePlanUseCase: Symbol.for("IDeletePlanUseCase"),
+  
+  
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
   IOrgRepo: Symbol.for("IOrgRepo"),
   IInviteRepo: Symbol.for("IInviteRepo"),
+  IPlanRepo: Symbol.for("IPlanRepo"),
+  ISubscriptionRepo: Symbol.for("ISubscriptionRepo"),
+  ITaskRepo: Symbol.for("ITaskRepo"),
+  IProjectRepo: Symbol.for("IProjectRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -40,15 +38,42 @@ export const TYPES = {
   IResetPasswordUseCase: Symbol.for("IResetPasswordUseCase"),
   IUserProfileUseCase: Symbol.for("IUserProfileUseCase"),
   IOrganizationManagementUseCase: Symbol.for("IOrganizationManagementUseCase"),
+  IOrganizationQueryUseCase: Symbol.for("IOrganizationQueryUseCase"),
+  IUserQueryUseCase: Symbol.for("IUserQueryUseCase"),
+  IUserManagementUseCase: Symbol.for("IUserManagementUseCase"),
+  IAdminStatsUseCase: Symbol.for("IAdminStatsUseCase"),
+  ICreatePlanUseCase: Symbol.for("ICreatePlanUseCase"),
+  IGetPlanUseCase: Symbol.for("IGetPlanUseCase"),
+  ICreateSubscriptionUseCase: Symbol.for("ICreateSubscriptionUseCase"),
+  IVerifyPaymentUseCase: Symbol.for("IVerifyPaymentUseCase"),
+  IUpdatePlanUseCase: Symbol.for("IUpdatePlanUseCase"),
+  IDeletePlanUseCase: Symbol.for("IDeletePlanUseCase"),
+  ICreateTaskUseCase: Symbol.for("ICreateTaskUseCase"),
+  IGetTaskUseCase: Symbol.for("IGetTaskUseCase"),
+  IUpdateTaskUseCase: Symbol.for("IUpdateTaskUseCase"),
+  IDeleteTaskUseCase: Symbol.for("IDeleteTaskUseCase"),
+  ICreateProjectUseCase: Symbol.for("ICreateProjectUseCase"),
+  IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
+  IUpdateProjectUseCase: Symbol.for("IUpdateProjectUseCase"),
+  IDeleteProjectUseCase: Symbol.for("IDeleteProjectUseCase"),
 
   // ===== CONTROLLERS =====
-  AuthController: Symbol.for("AuthController"),
-  AdminController: Symbol.for("AdminController"),
+  // AuthController: Symbol.for("AuthController"), // Removed in favor of split controllers
+  SessionController: Symbol.for("SessionController"),
+  RegistrationController: Symbol.for("RegistrationController"),
+  InviteController: Symbol.for("InviteController"),
+  PasswordController: Symbol.for("PasswordController"),
+
+  AdminUserController: Symbol.for("AdminUserController"),
+  AdminOrgController: Symbol.for("AdminOrgController"),
+  AdminPlanController: Symbol.for("AdminPlanController"),
   ManagerController: Symbol.for("ManagerController"),
   UserController: Symbol.for("UserController"),
   ProjectController: Symbol.for("ProjectController"),
   WebhookController: Symbol.for("WebhookController"),
   PaymentController: Symbol.for("PaymentController"),
+  TaskController: Symbol.for("TaskController"),
+  
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),

@@ -7,8 +7,13 @@ import { IJwtService } from "../../infrastructure/interface/services/IJwtService
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { toUserDTO, UserDTO } from "../dto/UserDTO";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
+import {
+  InvalidTokenError,
+  AccountSuspendedError,
+  OrganizationNotFoundError,
+  OrganizationSuspendedError,
+} from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class ValidateTokenUseCase implements IValidateTokenUseCase {
@@ -22,21 +27,18 @@ export class ValidateTokenUseCase implements IValidateTokenUseCase {
   async execute(token: string): Promise<UserDTO> {
     try {
       const payload = this._jwtService.verifyAccessToken(token);
-      if (!payload)
-        throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid token");
+      if (!payload) throw new InvalidTokenError();
 
       const user = await this._userRepo.findById(payload.id);
-      if (!user) throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+      if (!user) throw new EntityNotFoundError("User", payload.id);
 
-      if (user.status !== "ACTIVE")
-        throw new HttpError(StatusCodes.FORBIDDEN, "User suspended");
+      if (user.status !== "ACTIVE") throw new AccountSuspendedError();
 
       if (user.orgId) {
         const org = await this._orgRepo.findById(user.orgId);
-        if (!org)
-          throw new HttpError(StatusCodes.FORBIDDEN, "Organization not found");
+        if (!org) throw new OrganizationNotFoundError();
         if (org.status !== OrganizationStatus.ACTIVE)
-          throw new HttpError(StatusCodes.FORBIDDEN, "Organization suspended");
+          throw new OrganizationSuspendedError();
       }
 
       return toUserDTO(user);
@@ -46,3 +48,4 @@ export class ValidateTokenUseCase implements IValidateTokenUseCase {
     }
   }
 }
+

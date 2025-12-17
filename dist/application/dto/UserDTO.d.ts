@@ -14,11 +14,15 @@ export interface UserDTO {
     updatedAt?: string;
     lastLoginAt?: string;
     profileComplete?: boolean;
+    organizationName?: string;
+    avatar?: string | null;
 }
 /**
  * Convert domain User entity to UserDTO (safe for API responses)
  */
-export declare function toUserDTO(user: User): UserDTO;
+export declare function toUserDTO(user: User & {
+    organizationName?: string;
+}): UserDTO;
 /**
  * Login Request DTO
  */

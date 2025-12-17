@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import {
-  IRazorpayService,
-  RazorpaySubscription,
-} from "../../infrastructure/interface/services/IRazorpayService";
+import { IRazorpayService, RazorpaySubscription } from "../../infrastructure/interface/services/IRazorpayService";
 import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { asyncHandler } from "../../utils/asyncHandler";
 import crypto from "crypto";
+
+import { ILogger } from "../../infrastructure/interface/services/ILogger";
 
 @injectable()
 export class WebhookController {
@@ -20,7 +19,8 @@ export class WebhookController {
     private _subscriptionRepo: ISubscriptionRepo,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
-  ) {}
+    @inject(TYPES.ILogger) private logger: ILogger,
+  ) { }
 
   handleWebhook = asyncHandler(async (req: Request, res: Response) => {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -33,6 +33,7 @@ export class WebhookController {
     const digest = shasum.digest("hex");
 
     if (digest !== req.headers["x-razorpay-signature"]) {
+      this.logger.warn("Invalid Razorpay Webhook Signature");
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "Invalid signature" });
@@ -49,6 +50,7 @@ export class WebhookController {
     }
 
     const event = req.body as WebhookEvent;
+    this.logger.info(`Received Webhook Event: ${event.event}`);
 
     switch (event.event) {
       case "subscription.charged":
@@ -62,7 +64,7 @@ export class WebhookController {
         );
         break;
       default:
-        console.log(`Unhandled event type ${event.event}`);
+        this.logger.warn(`Unhandled event type ${event.event}`);
     }
 
     res.status(StatusCodes.OK).json({ received: true });

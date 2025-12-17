@@ -101,7 +101,7 @@ let AcceptUseCase = class AcceptUseCase {
                 lastName: lastName.trim(),
                 name: `${firstName.trim()} ${lastName.trim()}`,
                 orgId: invite.orgId,
-                role: UserRole_1.UserRole.TEAM_MEMBER,
+                role: invite.assignedRole || UserRole_1.UserRole.TEAM_MEMBER,
                 password: hashedPassword,
                 emailVerified: true, // Pre-verified through invitation
                 status: "ACTIVE",

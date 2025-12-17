@@ -15,13 +15,20 @@ export const validate =
       next();
     } catch (error) {
       if (error instanceof ZodError) {
+        // Collect validation errors into a key-value map for "details"
+        const details: Record<string, string> = {};
+        error.errors.forEach((e) => {
+          const field = e.path.join(".");
+          details[field] = e.message;
+        });
+
         return res.status(StatusCodes.BAD_REQUEST).json({
           success: false,
-          message: "Validation Error",
-          errors: error.errors.map((e) => ({
-            field: e.path.join("."),
-            message: e.message,
-          })),
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Validation failed",
+            details,
+          },
         });
       }
       next(error);

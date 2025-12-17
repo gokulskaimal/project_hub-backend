@@ -21,4 +21,6 @@ export interface IHashService {
    * @returns Generated salt
    */
   generateSalt(rounds: number): Promise<string>;
+
+  hashToken(token : string) : string
 }

@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { BaseRepository } from "./BaseRepository";
+import { BaseRepository } from "./BaseRepo";
 import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { Invite } from "../../domain/entities/Invite";
 import InviteModel from "../models/InviteModel";
@@ -21,8 +21,7 @@ interface IInviteDoc extends Document {
 @injectable()
 export class InviteRepo
   extends BaseRepository<Invite, IInviteDoc>
-  implements IInviteRepo
-{
+  implements IInviteRepo {
   constructor() {
     // Cast to unknown first to resolve strict Mongoose type incompatibilities
     super(InviteModel as unknown as Model<IInviteDoc>);

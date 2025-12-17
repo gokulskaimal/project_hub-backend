@@ -16,6 +16,7 @@ export interface UserDTO {
   lastLoginAt?: string;
   profileComplete?: boolean;
   organizationName?: string;
+  avatar?: string | null;
 }
 
 /**
@@ -31,6 +32,7 @@ export function toUserDTO(user: User & { organizationName?: string }): UserDTO {
     name: user.name,
     firstName: user.firstName,
     lastName: user.lastName,
+    avatar: user.avatar ?? null,
     role: user.role,
     orgId: user.orgId ?? null,
     organizationName: user.organizationName,

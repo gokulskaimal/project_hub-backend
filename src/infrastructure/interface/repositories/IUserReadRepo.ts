@@ -13,7 +13,7 @@ export interface IUserReadRepo {
    * @returns User or null if not found
    */
   findByEmail(email: string): Promise<User | null>;
-
+  countByOrg(orgId : string) : Promise<number>;
   /**
    * Find user by ID
    * @param id - User ID
@@ -141,3 +141,4 @@ export interface IUserReadRepo {
     byRole: Record<string, number>;
   }>;
 }
+ 

@@ -5,8 +5,13 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { UserDTO, toUserDTO, UpdateProfileRequestDTO } from "../../application/dto/UserDTO";
+import { User } from "../../domain/entities/User";
+import {
+  EntityNotFoundError,
+  ValidationError,
+} from "../../domain/errors/CommonErrors";
+import { InvalidCredentialsError } from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class UserProfileUseCase implements IUserProfileUseCase {
@@ -17,37 +22,43 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
   ) {}
 
-  public async getProfile(userId: string): Promise<Record<string, unknown>> {
+  public async getProfile(userId: string): Promise<UserDTO> {
     this._logger.info("Getting user profile", { userId });
 
     // Handle synthetic Super Admin ID (from env-based login)
     if (userId === "super_admin") {
-      return {
-        id: "super_admin",
-        name: "Super Admin",
-        email: process.env.SUPER_ADMIN_EMAIL || "admin@projecthub.com",
-        role: "SUPER_ADMIN",
-        status: "ACTIVE",
-        createdAt: new Date().toISOString(),
-        avatar: null,
-      };
+        const now = new Date().toISOString();
+        return {
+          id: "super_admin",
+          email: process.env.SUPER_ADMIN_EMAIL || "admin@projecthub.com",
+          name: "Super Admin",
+          firstName: "Super",
+          lastName: "Admin",
+          role: "SUPER_ADMIN",
+          status: "ACTIVE",
+          emailVerified: true,
+          emailVerifiedAt: now,
+          createdAt: now,
+          updatedAt: now,
+          profileComplete: true,
+          orgId: null,
+          avatar: null,
+        };
     }
 
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
-        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+        throw new EntityNotFoundError("User", userId);
       }
 
-      const safeUserData = {
-        ...(user as unknown as Record<string, unknown>),
-      } as Record<string, unknown>;
+      let organizationName: string | undefined;
 
       if (user.orgId) {
         try {
           const org = await this._orgRepo.findById(user.orgId);
           if (org) {
-            safeUserData.organizationName = org.name;
+            organizationName = org.name;
           }
         } catch (error) {
           this._logger.warn("Failed to fetch organization details", {
@@ -58,12 +69,8 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         }
       }
 
-      Reflect.deleteProperty(safeUserData, "password");
-      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
-      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
-      Reflect.deleteProperty(safeUserData, "otp");
-      Reflect.deleteProperty(safeUserData, "otpExpiry");
-      return safeUserData;
+      // Combine user and organizationName for the DTO mapper
+      return toUserDTO({ ...user, organizationName });
     } catch (error) {
       this._logger.error("Failed to get user profile", error as Error, {
         userId,
@@ -74,8 +81,8 @@ export class UserProfileUseCase implements IUserProfileUseCase {
 
   public async updateProfile(
     userId: string,
-    updateData: Record<string, unknown>,
-  ): Promise<Record<string, unknown>> {
+    updateData: UpdateProfileRequestDTO,
+  ): Promise<UserDTO> {
     this._logger.info("Updating user profile", {
       userId,
       fields: Object.keys(updateData),
@@ -84,22 +91,17 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     try {
       const existingUser = await this._userRepo.findById(userId);
       if (!existingUser) {
-        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+        throw new EntityNotFoundError("User", userId);
       }
 
-      const allowedFields = ["firstName", "lastName", "name", "avatar"];
-
-      const filteredUpdateData = Object.keys(updateData)
-        .filter((key) => allowedFields.includes(key))
-        .reduce((obj: Record<string, unknown>, key) => {
-          obj[key] = updateData[key];
-          return obj;
-        }, {});
+      const filteredUpdateData: Partial<User> = {};
+      
+      if (updateData.firstName) filteredUpdateData.firstName = updateData.firstName;
+      if (updateData.lastName) filteredUpdateData.lastName = updateData.lastName;
 
       if (filteredUpdateData.firstName || filteredUpdateData.lastName) {
-        const firstName =
-          filteredUpdateData.firstName || existingUser.firstName;
-        const lastName = filteredUpdateData.lastName || existingUser.lastName;
+        const firstName = (filteredUpdateData.firstName as string) || existingUser.firstName;
+        const lastName = (filteredUpdateData.lastName as string) || existingUser.lastName;
         filteredUpdateData.name = `${firstName} ${lastName}`.trim();
       }
 
@@ -107,18 +109,12 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         userId,
         filteredUpdateData,
       );
-
-      this._logger.info("User profile updated successfully", { userId });
-
-      const safeUserData = {
-        ...(updatedUser as unknown as Record<string, unknown>),
-      } as Record<string, unknown>;
-      Reflect.deleteProperty(safeUserData, "password");
-      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
-      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
-      Reflect.deleteProperty(safeUserData, "otp");
-      Reflect.deleteProperty(safeUserData, "otpExpiry");
-      return safeUserData;
+      
+      if (!updatedUser) {
+        throw new EntityNotFoundError("User not found after update");
+      }
+      
+      return toUserDTO({ ...updatedUser });
     } catch (error) {
       this._logger.error("Failed to update user profile", error as Error, {
         userId,
@@ -137,7 +133,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
-        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+        throw new EntityNotFoundError("User", userId);
       }
 
       const isCurrentPasswordValid = await this._hashService.compare(
@@ -145,10 +141,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         user.password,
       );
       if (!isCurrentPasswordValid) {
-        throw new HttpError(
-          StatusCodes.UNAUTHORIZED,
-          "Current password is incorrect",
-        );
+        throw new InvalidCredentialsError();
       }
 
       this._validatePassword(newPassword);
@@ -158,8 +151,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         user.password,
       );
       if (isSamePassword) {
-        throw new HttpError(
-          StatusCodes.BAD_REQUEST,
+        throw new ValidationError(
           "New password must be different from current password",
         );
       }
@@ -182,7 +174,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     try {
       const user = await this._userRepo.findById(userId);
       if (!user) {
-        throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+        throw new EntityNotFoundError("User", userId);
       }
 
       const isPasswordValid = await this._hashService.compare(
@@ -190,12 +182,11 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         user.password,
       );
       if (!isPasswordValid) {
-        throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid password");
+        throw new InvalidCredentialsError();
       }
 
-      // ✅ FIXED: Use 'INACTIVE' instead of 'DELETED' (valid User status)
       await this._userRepo.update(userId, {
-        status: "INACTIVE" as const, // Use valid User status
+        status: "INACTIVE",
         email: `deleted_${Date.now()}_${user.email}`,
       });
 
@@ -255,28 +246,24 @@ export class UserProfileUseCase implements IUserProfileUseCase {
 
   private _validatePassword(password: string): void {
     if (!password || typeof password !== "string") {
-      throw new HttpError(StatusCodes.BAD_REQUEST, "Password is required");
+      throw new ValidationError("Password is required");
     }
 
     if (password.length < 8) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
-        "Password must be at least 8 characters long",
-      );
+      throw new ValidationError("Password must be at least 8 characters long");
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
+      throw new ValidationError(
         "Password must contain at least one lowercase letter, one uppercase letter, and one number",
       );
     }
 
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
+      throw new ValidationError(
         "Password must contain at least one special character",
       );
     }
   }
 }
+

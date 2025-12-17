@@ -17,7 +17,9 @@ import { ILogger } from "./infrastructure/interface/services/ILogger";
 import { createRoutes } from "./presentation/routes/index";
 
 // Import middleware
-import { errorHandler, notFoundHandler } from "./utils/asyncHandler"; // Ensure path points to where you put handlers
+// Import middleware
+import { errorHandler, notFoundHandler } from "./presentation/middleware/ErrorMiddleware"; // Correct path to robust handlers
+// import { errorHandler, notFoundHandler } from "./utils/asyncHandler"; // Legacy handles
 import { IBootstrapService } from "./infrastructure/interface/services/IBootstrapService";
 
 let logger: ILogger;
@@ -43,7 +45,24 @@ function setupMiddleware(app: express.Application): void {
     standardHeaders: true,
     legacyHeaders: false,
   });
-  // Apply rate limiting to API routes only
+
+  // Stricter rate limiter for Auth routes (Login, Register, etc.)
+  const authLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 15, // Limit each IP to 15 login attempts per minute
+    message: {
+      success: false,
+      error: {
+        code: "AUTH_RATE_LIMIT_EXCEEDED",
+        message: "Too many attempts, please try again later."
+      }
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply rate limiting to API routes
+  app.use("/api/auth", authLimiter);
   app.use("/api", limiter);
 
   // CORS configuration
@@ -66,11 +85,15 @@ function setupMiddleware(app: express.Application): void {
   // Body parsing middleware
 
   app.use((req, res, next) => {
-    express.json({ limit: "10mb" })(req, res, next);
+    // Determine limit based on path
+    // Webhooks often need larger limits (e.g. Stripe, Razorpay)
+    const limit = req.path.startsWith("/api/webhooks") ? "10mb" : "100kb";
+    express.json({ limit })(req, res, next);
   });
 
   app.use((req, res, next) => {
-    express.urlencoded({ extended: true, limit: "10mb" })(req, res, next);
+    const limit = req.path.startsWith("/api/webhooks") ? "10mb" : "100kb";
+    express.urlencoded({ extended: true, limit })(req, res, next);
   });
 
   app.use(cookieParser());
@@ -123,15 +146,21 @@ function setupRoutes(app: express.Application): void {
   const routes = createRoutes(container);
 
   // Mount routes
+  // Public / Mixed Routes (Must come before catch-all protected routes)
   app.use("/api", routes.auth);
+  app.use("/api/plans", routes.plans);
+  app.use("/api/webhooks", routes.webhooks);
+
+  // Specific Protected Routes
   app.use("/api", routes.manager);
   app.use("/api", routes.admin);
   app.use("/api/organizations", routes.organizations);
   app.use("/api/projects", routes.projects);
-  app.use("/api", routes.user);
-  app.use("/api/webhooks", routes.webhooks);
   app.use("/api/payments", routes.payments);
-  app.use("/api/plans", routes.plans);
+  
+  // Generic User Routes (Contains global auth middleware for /api/*)
+  // Must be after all other /api routes that might need to be public
+  app.use("/api", routes.user);
 
   // Container diagnostic endpoint (development only)
   if (process.env.NODE_ENV === "development") {

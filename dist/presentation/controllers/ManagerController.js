@@ -20,11 +20,12 @@ const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum
 const common_constants_1 = require("../../infrastructure/config/common.constants");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 let ManagerController = class ManagerController {
-    constructor(_logger, _userRepo, _inviteRepo, _inviteMemberUC) {
+    constructor(_logger, _userRepo, _inviteRepo, _inviteMemberUC, _orgRepo) {
         this._logger = _logger;
         this._userRepo = _userRepo;
         this._inviteRepo = _inviteRepo;
         this._inviteMemberUC = _inviteMemberUC;
+        this._orgRepo = _orgRepo;
         this.inviteMember = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { email } = req.body;
             const orgId = req.user.orgId;
@@ -82,10 +83,10 @@ let ManagerController = class ManagerController {
             this.sendSuccess(res, invitations, common_constants_1.COMMON_MESSAGES.INVITATIONS_RETRIEVED);
         });
         this.cancelInvitation = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            const { token } = req.params;
+            const { id } = req.params;
             const orgId = req.user.orgId;
-            this._logger.info("Cancelling invitation", { orgId, token: "REDACTED" });
-            const invitation = await this._inviteRepo.findByToken(token);
+            this._logger.info("Cancelling invitation", { orgId, id });
+            const invitation = await this._inviteRepo.findById(id);
             if (!invitation)
                 throw {
                     status: statusCodes_enum_1.StatusCodes.NOT_FOUND,
@@ -93,7 +94,7 @@ let ManagerController = class ManagerController {
                 };
             if (invitation.orgId !== orgId)
                 throw { status: statusCodes_enum_1.StatusCodes.FORBIDDEN, message: "Access denied" };
-            await this._inviteRepo.markCancelled?.(token);
+            await this._inviteRepo.deleteById(id);
             this.sendSuccess(res, null, "Invitation cancelled successfully");
         });
         this.listMembers = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
@@ -154,8 +155,19 @@ let ManagerController = class ManagerController {
                     status: statusCodes_enum_1.StatusCodes.FORBIDDEN,
                     message: "Member not in your organization",
                 };
-            await this._userRepo.removeFromOrg(id, orgId);
+            await this._userRepo.delete(id);
             this.sendSuccess(res, null, "Member removed successfully");
+        });
+        this.getOrganization = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const orgId = req.user.orgId;
+            this._logger.info("Getting organization details", { orgId });
+            const org = await this._orgRepo.findById(orgId);
+            if (!org)
+                throw {
+                    status: statusCodes_enum_1.StatusCodes.NOT_FOUND,
+                    message: "Organization not found",
+                };
+            this.sendSuccess(res, org, "Organization details retrieved");
         });
     }
     sendSuccess(res, data, message = "Success") {
@@ -174,6 +186,7 @@ exports.ManagerController = ManagerController = __decorate([
     __param(1, (0, inversify_1.inject)(types_1.TYPES.IUserRepo)),
     __param(2, (0, inversify_1.inject)(types_1.TYPES.IInviteRepo)),
     __param(3, (0, inversify_1.inject)(types_1.TYPES.IInviteMemberUseCase)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object])
+    __param(4, (0, inversify_1.inject)(types_1.TYPES.IOrgRepo)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
 ], ManagerController);
 //# sourceMappingURL=ManagerController.js.map

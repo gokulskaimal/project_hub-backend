@@ -1,5 +1,5 @@
 import { Document, Model, FilterQuery } from "mongoose";
-import { IBaseRepository } from "../interface/repositories/IBaseRepository";
+import { IBaseRepository } from "../interface/repositories/IBaseRepo";
 
 /**
  * Base Repository Abstract Class
@@ -37,7 +37,8 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
    * @returns The created domain entity
    */
   async create(data: Partial<TDomain>): Promise<TDomain> {
-    // Cast via unknown to avoid unsafe `any` while satisfying Mongoose model typing
+    // Cast via unknown is necessary here because TDomain (Entity) and TDoc (Mongoose Document)
+    // are structurally different types in TypeScript, even though they map to the same data.
     const doc = await this.model.create(data as unknown as Partial<TDoc>);
     return this.toDomain(doc);
   }
@@ -74,10 +75,12 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
    */
   async update(id: string, data: Partial<TDomain>): Promise<TDomain | null> {
     // Merge update payload and cast safely for Mongoose
+    // We treat 'data' as a generic record to merge it with 'updatedAt'
     const updatePayload = {
       ...(data as unknown as Record<string, unknown>),
       updatedAt: new Date(),
     };
+    
     const doc = await this.model.findByIdAndUpdate(
       id,
       updatePayload as unknown as Partial<TDoc>,

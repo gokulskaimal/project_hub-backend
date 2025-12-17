@@ -1,16 +1,16 @@
 import { Response } from "express";
 import { injectable, inject } from "inversify";
-import { TYPES } from "../../infrastructure/container/types";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
-import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
-import { toUserDTO } from "../../application/dto/UserDTO";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
-import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
-import { asyncHandler } from "../../utils/asyncHandler";
+import { TYPES } from "../../../infrastructure/container/types";
+import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../../infrastructure/interface/repositories/IUserRepo";
+import { IInviteRepo } from "../../../infrastructure/interface/repositories/IInviteRepo";
+import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
+import { IOrgRepo } from "../../../infrastructure/interface/repositories/IOrgRepo";
+import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
+import { toUserDTO } from "../../../application/dto/UserDTO";
+import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
+import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
+import { asyncHandler } from "../../middleware/ErrorMiddleware";
 
 @injectable()
 export class ManagerController {
@@ -21,7 +21,7 @@ export class ManagerController {
     @inject(TYPES.IInviteMemberUseCase)
     private _inviteMemberUC: IInviteMemberUseCase,
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
-  ) {}
+  ) { }
 
   private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
     res.status(StatusCodes.OK).json({

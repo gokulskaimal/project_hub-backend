@@ -8,8 +8,7 @@ import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { User } from "../../domain/entities/User";
 import { toUserDTO } from "../dto/UserDTO";
 import { AuthResult } from "../interface/useCases/types";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { ConflictError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class RegisterUseCase implements IRegisterUseCase {
@@ -27,7 +26,7 @@ export class RegisterUseCase implements IRegisterUseCase {
   ): Promise<AuthResult> {
     const existing = await this._userRepo.findByEmail(email);
     if (existing) {
-      throw new HttpError(StatusCodes.CONFLICT, "Email already in use");
+      throw new ConflictError("Email already in use");
     }
 
     const hashed = await this._hashService.hash(password);
@@ -67,3 +66,4 @@ export class RegisterUseCase implements IRegisterUseCase {
     };
   }
 }
+

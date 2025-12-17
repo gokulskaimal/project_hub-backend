@@ -17,28 +17,59 @@ const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const UserDTO_1 = require("../../application/dto/UserDTO");
 let UserProfileUseCase = class UserProfileUseCase {
-    constructor(_userRepo, _hashService, _logger) {
+    constructor(_userRepo, _orgRepo, _hashService, _logger) {
         this._userRepo = _userRepo;
+        this._orgRepo = _orgRepo;
         this._hashService = _hashService;
         this._logger = _logger;
     }
     async getProfile(userId) {
         this._logger.info("Getting user profile", { userId });
+        // Handle synthetic Super Admin ID (from env-based login)
+        if (userId === "super_admin") {
+            const now = new Date().toISOString();
+            return {
+                id: "super_admin",
+                email: process.env.SUPER_ADMIN_EMAIL || "admin@projecthub.com",
+                name: "Super Admin",
+                firstName: "Super",
+                lastName: "Admin",
+                role: "SUPER_ADMIN",
+                status: "ACTIVE",
+                emailVerified: true,
+                emailVerifiedAt: now,
+                createdAt: now,
+                updatedAt: now,
+                profileComplete: true,
+                orgId: null,
+                avatar: null,
+            };
+        }
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
                 throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
-            const safeUserData = {
-                ...user,
-            };
-            Reflect.deleteProperty(safeUserData, "password");
-            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
-            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
-            Reflect.deleteProperty(safeUserData, "otp");
-            Reflect.deleteProperty(safeUserData, "otpExpiry");
-            return safeUserData;
+            let organizationName;
+            if (user.orgId) {
+                try {
+                    const org = await this._orgRepo.findById(user.orgId);
+                    if (org) {
+                        organizationName = org.name;
+                    }
+                }
+                catch (error) {
+                    this._logger.warn("Failed to fetch organization details", {
+                        userId,
+                        orgId: user.orgId,
+                        error,
+                    });
+                }
+            }
+            // Combine user and organizationName for the DTO mapper
+            return (0, UserDTO_1.toUserDTO)({ ...user, organizationName });
         }
         catch (error) {
             this._logger.error("Failed to get user profile", error, {
@@ -57,29 +88,21 @@ let UserProfileUseCase = class UserProfileUseCase {
             if (!existingUser) {
                 throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
             }
-            const allowedFields = ["firstName", "lastName", "name", "avatar"];
-            const filteredUpdateData = Object.keys(updateData)
-                .filter((key) => allowedFields.includes(key))
-                .reduce((obj, key) => {
-                obj[key] = updateData[key];
-                return obj;
-            }, {});
+            const filteredUpdateData = {};
+            if (updateData.firstName)
+                filteredUpdateData.firstName = updateData.firstName;
+            if (updateData.lastName)
+                filteredUpdateData.lastName = updateData.lastName;
             if (filteredUpdateData.firstName || filteredUpdateData.lastName) {
                 const firstName = filteredUpdateData.firstName || existingUser.firstName;
                 const lastName = filteredUpdateData.lastName || existingUser.lastName;
                 filteredUpdateData.name = `${firstName} ${lastName}`.trim();
             }
             const updatedUser = await this._userRepo.update(userId, filteredUpdateData);
-            this._logger.info("User profile updated successfully", { userId });
-            const safeUserData = {
-                ...updatedUser,
-            };
-            Reflect.deleteProperty(safeUserData, "password");
-            Reflect.deleteProperty(safeUserData, "resetPasswordToken");
-            Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
-            Reflect.deleteProperty(safeUserData, "otp");
-            Reflect.deleteProperty(safeUserData, "otpExpiry");
-            return safeUserData;
+            if (!updatedUser) {
+                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found after update");
+            }
+            return (0, UserDTO_1.toUserDTO)({ ...updatedUser });
         }
         catch (error) {
             this._logger.error("Failed to update user profile", error, {
@@ -126,9 +149,8 @@ let UserProfileUseCase = class UserProfileUseCase {
             if (!isPasswordValid) {
                 throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.UNAUTHORIZED, "Invalid password");
             }
-            // ✅ FIXED: Use 'INACTIVE' instead of 'DELETED' (valid User status)
             await this._userRepo.update(userId, {
-                status: "INACTIVE", // Use valid User status
+                status: "INACTIVE",
                 email: `deleted_${Date.now()}_${user.email}`,
             });
             this._logger.info("Account deleted successfully", { userId });
@@ -196,8 +218,9 @@ exports.UserProfileUseCase = UserProfileUseCase;
 exports.UserProfileUseCase = UserProfileUseCase = __decorate([
     (0, inversify_1.injectable)(),
     __param(0, (0, inversify_1.inject)(types_1.TYPES.IUserRepo)),
-    __param(1, (0, inversify_1.inject)(types_1.TYPES.IHashService)),
-    __param(2, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
-    __metadata("design:paramtypes", [Object, Object, Object])
+    __param(1, (0, inversify_1.inject)(types_1.TYPES.IOrgRepo)),
+    __param(2, (0, inversify_1.inject)(types_1.TYPES.IHashService)),
+    __param(3, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object])
 ], UserProfileUseCase);
 //# sourceMappingURL=UserProfileUseCase.js.map

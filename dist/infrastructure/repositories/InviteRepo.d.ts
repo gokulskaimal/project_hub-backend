@@ -25,6 +25,9 @@ export declare class InviteRepo extends BaseRepository<Invite, IInviteDoc> imple
     findByOrganization(orgId: string): Promise<Invite[]>;
     findPendingByOrganization(orgId: string): Promise<Invite[]>;
     markCancelled(token: string): Promise<void>;
+    markCancelledById(id: string): Promise<void>;
+    deleteById(id: string): Promise<boolean>;
+    deleteByOrganization(orgId: string): Promise<number>;
     expireOldInvitations(): Promise<number>;
     isValidInvitation(token: string): Promise<boolean>;
     getInvitationStats(orgId: string): Promise<{

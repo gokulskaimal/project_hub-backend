@@ -6,8 +6,11 @@ import { IOtpService } from "../../infrastructure/interface/services/IOtpService
 import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import {
+  ValidationError,
+  TooManyRequestsError,
+  InvalidOperationError,
+} from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class SendOtpUseCase implements ISendOtpUseCase {
@@ -32,14 +35,13 @@ export class SendOtpUseCase implements ISendOtpUseCase {
     try {
       // Business Rule: Validate email format
       if (!this._isValidEmail(email)) {
-        throw new HttpError(StatusCodes.BAD_REQUEST, "Invalid email format");
+        throw new ValidationError("Invalid email format");
       }
 
       // Business Rule: Check rate limiting
       const attemptsRemaining = await this._checkRateLimit(email);
       if (attemptsRemaining <= 0) {
-        throw new HttpError(
-          StatusCodes.TOO_MANY_REQUESTS,
+        throw new TooManyRequestsError(
           "Too many OTP requests. Please wait before requesting again.",
         );
       }
@@ -82,8 +84,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
         const remainingTime = Math.ceil(
           (existingOtp.expiresAt.getTime() - Date.now()) / 1000 / 60,
         );
-        throw new HttpError(
-          StatusCodes.BAD_REQUEST,
+        throw new InvalidOperationError(
           `OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`,
         );
       }
@@ -130,3 +131,4 @@ export class SendOtpUseCase implements ISendOtpUseCase {
     return emailRegex.test(email);
   }
 }
+

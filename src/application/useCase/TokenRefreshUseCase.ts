@@ -7,8 +7,13 @@ import { IJwtService } from "../../infrastructure/interface/services/IJwtService
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { AuthTokens } from "../interface/useCases/types";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
+import {
+  InvalidTokenError,
+  AccountSuspendedError,
+  OrganizationNotFoundError,
+  OrganizationSuspendedError,
+} from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class TokenRefreshUseCase implements ITokenRefreshUseCase {
@@ -22,21 +27,17 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
   async execute(refreshToken: string): Promise<AuthTokens> {
     try {
       const payload = this._jwtService.verifyRefreshToken(refreshToken);
-      if (!payload)
-        throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid refresh token");
+      if (!payload) throw new InvalidTokenError("Invalid refresh token");
 
       const user = await this._userRepo.findById(payload.id);
-      if (!user) throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+      if (!user) throw new EntityNotFoundError("User", payload.id);
 
       if (user.status !== "ACTIVE") {
         this._logger.warn("Token refresh attempt by blocked user", {
           userId: user.id,
           status: user.status,
         });
-        throw new HttpError(
-          StatusCodes.FORBIDDEN,
-          "Account suspended or disabled",
-        );
+        throw new AccountSuspendedError();
       }
 
       if (user.orgId) {
@@ -46,7 +47,7 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
             userId: user.id,
             orgId: user.orgId,
           });
-          throw new HttpError(StatusCodes.FORBIDDEN, "Organization not found");
+          throw new OrganizationNotFoundError();
         }
         if (org.status !== OrganizationStatus.ACTIVE) {
           this._logger.warn("Token refresh by user from suspended org", {
@@ -54,10 +55,7 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
             orgId: user.orgId,
             orgStatus: org.status,
           });
-          throw new HttpError(
-            StatusCodes.FORBIDDEN,
-            "Organization suspended or disabled",
-          );
+          throw new OrganizationSuspendedError();
         }
       }
 
@@ -72,8 +70,16 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
 
       return { accessToken, refreshToken: newRefresh, expiresIn: 3600 };
     } catch (error) {
+      if (
+        error instanceof AccountSuspendedError ||
+        error instanceof OrganizationNotFoundError ||
+        error instanceof OrganizationSuspendedError
+      ) {
+        throw error;
+      }
       this._logger.error("Token refresh failed", error as Error);
-      throw new HttpError(StatusCodes.UNAUTHORIZED, "Invalid refresh token");
+      throw new InvalidTokenError("Invalid refresh token");
     }
   }
 }
+

@@ -6,6 +6,8 @@ export interface Subscription {
   razorpayCustomerId: string;
   status:
     | "active"
+    | "created"
+    | "authenticated"
     | "canceled"
     | "incomplete"
     | "incomplete_expired"

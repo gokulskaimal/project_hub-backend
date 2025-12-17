@@ -1,8 +1,11 @@
 import nodemailer, { Transporter } from "nodemailer";
 import fs from "fs";
 import path from "path";
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { IEmailService } from "../interface/services/IEmailService";
+import { TYPES } from "../container/types";
+import { ILogger } from "../interface/services/ILogger";
+
 /**
  * Email Service Implementation
  * Provides email sending capabilities using NodeMailer
@@ -11,7 +14,9 @@ import { IEmailService } from "../interface/services/IEmailService";
 export class EmailService implements IEmailService {
   private transporter: Transporter;
 
-  constructor() {
+  constructor(
+    @inject(TYPES.ILogger) private readonly _logger: ILogger
+  ) {
     const host = process.env.SMTP_HOST;
     const port = Number(process.env.SMTP_PORT) || 587;
     const secure =
@@ -20,7 +25,7 @@ export class EmailService implements IEmailService {
     const pass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
 
     if (!host || !user || !pass) {
-      console.warn(
+      this._logger.warn(
         "Email service is not configured. Falling back to JSON transport for development.",
       );
       this.transporter = nodemailer.createTransport({ jsonTransport: true });
@@ -67,12 +72,12 @@ export class EmailService implements IEmailService {
         text: payload.text,
         html: payload.html,
       });
-      console.log(`Email sent to ${payload.to} `);
+      this._logger.info(`Email sent to ${payload.to}`);
       if (process.env.NODE_ENV !== "production" && payload.text) {
-        console.log(payload.text);
+        this._logger.debug(payload.text);
       }
     } catch (err: unknown) {
-      console.error("❌ Error sending email:", err);
+      this._logger.error("❌ Error sending email", err as Error);
       throw new Error(`Could not send email: ${(err as Error).message}`);
     }
   }

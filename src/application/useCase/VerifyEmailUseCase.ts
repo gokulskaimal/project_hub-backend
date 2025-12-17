@@ -4,8 +4,8 @@ import { IVerifyEmailUseCase } from "../interface/useCases/IVerifyEmailUseCase";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { HttpError } from "../../utils/asyncHandler";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
+import { InvalidTokenError } from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class VerifyEmailUseCase implements IVerifyEmailUseCase {
@@ -21,14 +21,10 @@ export class VerifyEmailUseCase implements IVerifyEmailUseCase {
     try {
       // you may prefer a dedicated verification token signed by jwtService
       const payload = this._jwtService.verifyAccessToken(token);
-      if (!payload)
-        throw new HttpError(
-          StatusCodes.BAD_REQUEST,
-          "Invalid verification token",
-        );
+      if (!payload) throw new InvalidTokenError();
 
       const user = await this._userRepo.findById(payload.id);
-      if (!user) throw new HttpError(StatusCodes.NOT_FOUND, "User not found");
+      if (!user) throw new EntityNotFoundError("User", payload.id);
 
       if (user.emailVerified)
         return { message: "Already verified", verified: true };
@@ -38,10 +34,8 @@ export class VerifyEmailUseCase implements IVerifyEmailUseCase {
       return { message: "Email verified", verified: true };
     } catch (error) {
       this._logger.error("Email verification failed", error as Error);
-      throw new HttpError(
-        StatusCodes.BAD_REQUEST,
-        "Invalid or expired verification token",
-      );
+      throw new InvalidTokenError("Invalid or expired verification token");
     }
   }
 }
+

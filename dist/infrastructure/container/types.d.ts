@@ -35,8 +35,14 @@ export declare const TYPES: {
     readonly IResetPasswordUseCase: symbol;
     readonly IUserProfileUseCase: symbol;
     readonly IOrganizationManagementUseCase: symbol;
+    readonly IOrganizationQueryUseCase: symbol;
+    readonly IUserQueryUseCase: symbol;
+    readonly IUserManagementUseCase: symbol;
+    readonly IAdminStatsUseCase: symbol;
     readonly AuthController: symbol;
-    readonly AdminController: symbol;
+    readonly AdminUserController: symbol;
+    readonly AdminOrgController: symbol;
+    readonly AdminPlanController: symbol;
     readonly ManagerController: symbol;
     readonly UserController: symbol;
     readonly ProjectController: symbol;
