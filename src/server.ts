@@ -18,7 +18,10 @@ import { createRoutes } from "./presentation/routes/index";
 
 // Import middleware
 // Import middleware
-import { errorHandler, notFoundHandler } from "./presentation/middleware/ErrorMiddleware"; // Correct path to robust handlers
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./presentation/middleware/ErrorMiddleware"; // Correct path to robust handlers
 // import { errorHandler, notFoundHandler } from "./utils/asyncHandler"; // Legacy handles
 import { IBootstrapService } from "./infrastructure/interface/services/IBootstrapService";
 
@@ -54,8 +57,8 @@ function setupMiddleware(app: express.Application): void {
       success: false,
       error: {
         code: "AUTH_RATE_LIMIT_EXCEEDED",
-        message: "Too many attempts, please try again later."
-      }
+        message: "Too many attempts, please try again later.",
+      },
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -154,10 +157,10 @@ function setupRoutes(app: express.Application): void {
   // Specific Protected Routes
   app.use("/api", routes.manager);
   app.use("/api", routes.admin);
-  app.use("/api/organizations", routes.organizations);
+  app.use("/api/organization", routes.organizations);
   app.use("/api/projects", routes.projects);
   app.use("/api/payments", routes.payments);
-  
+
   // Generic User Routes (Contains global auth middleware for /api/*)
   // Must be after all other /api routes that might need to be public
   app.use("/api", routes.user);

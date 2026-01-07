@@ -1,7 +1,8 @@
-import express, { Router } from "express";
+import { Router } from "express";
 import { Container } from "inversify";
 import { createAuthRoutes } from "./authRoutes";
 import { createAdminRoutes } from "./adminRoutes";
+import { createOrganizationRoutes } from "./organizationRoutes";
 import { createManagerRoutes } from "./managerRoutes";
 import { createUserRoutes } from "./userRoutes";
 import { createWebhookRoutes } from "./webhookRoutes";
@@ -32,16 +33,13 @@ export function createRoutes(container: Container): {
   // 4. User Routes
   const userRouter = createUserRoutes(container);
 
-  // 5. Placeholders (Strictly Typed)
-  const orgRouter = express.Router();
-  orgRouter.get("/", (_req, res) => {
-    res.json({ message: "Coming soon" });
-  });
+  // 5. Organization Routes
+  const orgRouter = createOrganizationRoutes(container);
 
-//   const projectRouter = express.Router();
-//   projectRouter.get("/", (_req, res) => {
-//     res.json({ message: "Coming soon" });
-//   });
+  //   const projectRouter = express.Router();
+  //   projectRouter.get("/", (_req, res) => {
+  //     res.json({ message: "Coming soon" });
+  //   });
   const projectRouter = createProjectRoutes(container);
 
   const webhookRouter = createWebhookRoutes(container);

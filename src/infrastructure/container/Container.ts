@@ -22,7 +22,6 @@ import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { ITaskRepo } from "../interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../interface/repositories/IProjectRepo";
 
-
 // Domain Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
 import { IRegisterUseCase } from "../../application/interface/useCases/IRegisterUseCase";
@@ -122,8 +121,14 @@ import { DeleteTaskUseCase } from "../../application/useCase/DeleteTaskUseCase";
 
 import { CreateProjectUseCase } from "../../application/useCase/CreateProjectUseCase";
 import { GetProjectUseCase } from "../../application/useCase/GetProjectUseCase";
+import { GetProjectByIdUseCase } from "../../application/useCase/GetProjectByIdUseCase";
 import { UpdateProjectUseCase } from "../../application/useCase/UpdateProjectUseCase";
 import { DeleteProjectUseCase } from "../../application/useCase/DeleteProjectUseCase";
+import { IGetMemberProjectsUseCase } from "../../application/interface/useCases/IGetMemberProjectsUseCase";
+import { GetMemberProjectsUseCase } from "../../application/useCase/GetMemberProjectsUseCase";
+import { IGetMemberTasksUseCase } from "../../application/interface/useCases/IGetMemberTasksUseCase";
+import { GetMemberTasksUseCase } from "../../application/useCase/GetMemberTasksUseCase";
+import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGetProjectByIdUseCase";
 
 // Presentation Controllers
 import { SessionController } from "../../presentation/controllers/auth/SessionController";
@@ -138,6 +143,7 @@ import { WebhookController } from "../../presentation/controllers/WebhookControl
 import { AdminUserController } from "../../presentation/controllers/admin/AdminUserController";
 import { AdminOrgController } from "../../presentation/controllers/admin/AdminOrgController";
 import { AdminPlanController } from "../../presentation/controllers/admin/AdminPlanController";
+import { OrganizationController } from "../../presentation/controllers/OrganizationController";
 
 import { TaskController } from "../../presentation/controllers/manager/TaskController";
 import { ProjectController } from "../../presentation/controllers/manager/ProjectController";
@@ -399,12 +405,26 @@ class DIContainer {
       .to(GetProjectUseCase)
       .inTransientScope();
     this._container
+      .bind<IGetProjectByIdUseCase>(TYPES.IGetProjectByIdUseCase)
+      .to(GetProjectByIdUseCase)
+      .inTransientScope();
+    this._container
       .bind<IUpdateProjectUseCase>(TYPES.IUpdateProjectUseCase)
       .to(UpdateProjectUseCase)
       .inTransientScope();
     this._container
       .bind<IDeleteProjectUseCase>(TYPES.IDeleteProjectUseCase)
       .to(DeleteProjectUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetMemberProjectsUseCase>(TYPES.IGetMemberProjectsUseCase)
+      .to(GetMemberProjectsUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetMemberTasksUseCase>(TYPES.IGetMemberTasksUseCase)
+      .to(GetMemberTasksUseCase)
       .inTransientScope();
   }
 
@@ -439,6 +459,10 @@ class DIContainer {
     this._container
       .bind<AdminOrgController>(TYPES.AdminOrgController)
       .to(AdminOrgController)
+      .inSingletonScope();
+    this._container
+      .bind<OrganizationController>(TYPES.OrganizationController)
+      .to(OrganizationController)
       .inSingletonScope();
     this._container
       .bind<AdminPlanController>(TYPES.AdminPlanController)

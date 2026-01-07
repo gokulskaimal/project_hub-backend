@@ -12,55 +12,77 @@ import { ValidationError } from "../../../domain/errors/CommonErrors";
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { toTaskDTO } from "../../../application/dto/TaskDTO";
 
-
+import { IGetMemberTasksUseCase } from "../../../application/interface/useCases/IGetMemberTasksUseCase";
 
 @injectable()
 export class TaskController {
-    constructor(
-        @inject(TYPES.ILogger) private _logger: ILogger,
-        @inject(TYPES.ICreateTaskUseCase) private _createTaskUC: ICreateTaskUseCase,
-        @inject(TYPES.IGetTaskUseCase) private _getTaskUC: IGetTaskUseCase,
-        @inject(TYPES.IUpdateTaskUseCase) private _updateTaskUC: IUpdateTaskUseCase,
-        @inject(TYPES.IDeleteTaskUseCase) private _deleteTaskUC: IDeleteTaskUseCase,
-    ) { }
+  constructor(
+    @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.ICreateTaskUseCase) private _createTaskUC: ICreateTaskUseCase,
+    @inject(TYPES.IGetTaskUseCase) private _getTaskUC: IGetTaskUseCase,
+    @inject(TYPES.IUpdateTaskUseCase) private _updateTaskUC: IUpdateTaskUseCase,
+    @inject(TYPES.IDeleteTaskUseCase) private _deleteTaskUC: IDeleteTaskUseCase,
+    @inject(TYPES.IGetMemberTasksUseCase)
+    private _getMemberTasksUC: IGetMemberTasksUseCase,
+  ) {}
 
-    createTask = asyncHandler(async (req: Request, res: Response) => {
-        const authReq = req as AuthenticatedRequest;
-        if (!authReq.user || !authReq.user.orgId) throw new ValidationError("Unauthorized: Missing user context");
-        const { projectId, title, description, priority, dueDate, assignedTo } = req.body;
-        if (!projectId || !title) throw new ValidationError("Project ID and Title are required");
+  createTask = asyncHandler(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user || !authReq.user.orgId)
+      throw new ValidationError("Unauthorized: Missing user context");
+    const { projectId, title, description, priority, dueDate, assignedTo } =
+      req.body;
+    if (!projectId || !title)
+      throw new ValidationError("Project ID and Title are required");
 
-        this._logger.info(`Creating task '${title}' in Project ${projectId}`);
-        const task = await this._createTaskUC.execute({
-            orgId: authReq.user.orgId,
-            projectId,
-            title,
-            description,
-            priority,
-            dueDate,
-            assignedTo
-        });
-        res.status(StatusCodes.CREATED).json({ success: true, data: toTaskDTO(task) });
-    })
+    this._logger.info(`Creating task '${title}' in Project ${projectId}`);
+    const task = await this._createTaskUC.execute({
+      orgId: authReq.user.orgId,
+      projectId,
+      title,
+      description,
+      priority,
+      dueDate,
+      assignedTo,
+    });
+    res
+      .status(StatusCodes.CREATED)
+      .json({ success: true, data: toTaskDTO(task) });
+  });
 
-    getAllTasks = asyncHandler(async (req: Request, res: Response) => {
-        const { projectId } = req.params;
-        this._logger.info(`Fetching tasks for Project ${projectId}`);
-        const tasks = await this._getTaskUC.execute(projectId);
-        res.status(StatusCodes.OK).json({ success: true, data: tasks.map(toTaskDTO) });
-    })
+  getAllTasks = asyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+    this._logger.info(`Fetching tasks for Project ${projectId}`);
+    const tasks = await this._getTaskUC.execute(projectId);
+    res
+      .status(StatusCodes.OK)
+      .json({ success: true, data: tasks.map(toTaskDTO) });
+  });
 
-    updateTask = asyncHandler(async (req: Request, res: Response) => {
-        const { id } = req.params;
-        this._logger.info(`Updating task ${id}`);
-        const task = await this._updateTaskUC.execute(id, req.body);
-        res.status(StatusCodes.OK).json({ success: true, data: toTaskDTO(task) });
-    })
+  getMemberTasks = asyncHandler(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const userId = authReq.user?.id;
+    if (!userId)
+      throw new ValidationError("Unauthorized: Missing user context");
 
-    deleteTask = asyncHandler(async (req: Request, res: Response) => {
-        const { id } = req.params;
-        this._logger.info(`Deleting task ${id}`);
-        await this._deleteTaskUC.execute(id);
-        res.status(StatusCodes.OK).json({ success: true, message: "Task deleted" });
-    })
+    this._logger.info(`Fetching tasks for member ${userId}`);
+    const tasks = await this._getMemberTasksUC.execute(userId);
+    res
+      .status(StatusCodes.OK)
+      .json({ success: true, data: tasks.map(toTaskDTO) });
+  });
+
+  updateTask = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    this._logger.info(`Updating task ${id}`);
+    const task = await this._updateTaskUC.execute(id, req.body);
+    res.status(StatusCodes.OK).json({ success: true, data: toTaskDTO(task) });
+  });
+
+  deleteTask = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    this._logger.info(`Deleting task ${id}`);
+    await this._deleteTaskUC.execute(id);
+    res.status(StatusCodes.OK).json({ success: true, message: "Task deleted" });
+  });
 }

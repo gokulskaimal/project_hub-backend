@@ -9,8 +9,6 @@ export const TYPES = {
   ICacheService: Symbol.for("ICacheService"),
   IGoogleAuthService: Symbol.for("IGoogleAuthService"),
   IRazorpayService: Symbol.for("IRazorpayService"),
-  
-  
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
@@ -41,6 +39,8 @@ export const TYPES = {
   IOrganizationQueryUseCase: Symbol.for("IOrganizationQueryUseCase"),
   IUserQueryUseCase: Symbol.for("IUserQueryUseCase"),
   IUserManagementUseCase: Symbol.for("IUserManagementUseCase"),
+  IGetMemberProjectsUseCase: Symbol.for("IGetMemberProjectsUseCase"),
+  IGetMemberTasksUseCase: Symbol.for("IGetMemberTasksUseCase"),
   IAdminStatsUseCase: Symbol.for("IAdminStatsUseCase"),
   ICreatePlanUseCase: Symbol.for("ICreatePlanUseCase"),
   IGetPlanUseCase: Symbol.for("IGetPlanUseCase"),
@@ -54,6 +54,7 @@ export const TYPES = {
   IDeleteTaskUseCase: Symbol.for("IDeleteTaskUseCase"),
   ICreateProjectUseCase: Symbol.for("ICreateProjectUseCase"),
   IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
+  IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
   IUpdateProjectUseCase: Symbol.for("IUpdateProjectUseCase"),
   IDeleteProjectUseCase: Symbol.for("IDeleteProjectUseCase"),
 
@@ -73,7 +74,7 @@ export const TYPES = {
   WebhookController: Symbol.for("WebhookController"),
   PaymentController: Symbol.for("PaymentController"),
   TaskController: Symbol.for("TaskController"),
-  
+  OrganizationController: Symbol.for("OrganizationController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),
