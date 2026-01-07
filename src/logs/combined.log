@@ -20199,3 +20199,7 @@
 {"duration":"16ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":200,"timestamp":"2025-12-16T12:13:06.073Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
 {"level":"info","message":"Fetching Subscritption Plans","timestamp":"2025-12-16T12:13:06.104Z"}
 {"duration":"13ms","ip":"::1","level":"info","message":"GET /api/admin/plans","method":"GET","statusCode":200,"timestamp":"2025-12-16T12:13:06.113Z","url":"/api/admin/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-01-07T10:16:12.682Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-01-07T10:16:12.717Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-01-07T10:16:12.798Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-01-07T10:16:12.799Z"}
