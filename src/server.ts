@@ -1,6 +1,10 @@
+import { SocketServer } from "./presentation/socket/SocketServer";
+import { ISocketService } from "./infrastructure/interface/services/ISocketService";
+import { SocketService } from "./infrastructure/services/SocketService";
 import "reflect-metadata";
 import "dotenv/config";
 import express from "express";
+import http from "http";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -17,12 +21,10 @@ import { ILogger } from "./infrastructure/interface/services/ILogger";
 import { createRoutes } from "./presentation/routes/index";
 
 // Import middleware
-// Import middleware
 import {
   errorHandler,
   notFoundHandler,
 } from "./presentation/middleware/ErrorMiddleware"; // Correct path to robust handlers
-// import { errorHandler, notFoundHandler } from "./utils/asyncHandler"; // Legacy handles
 import { IBootstrapService } from "./infrastructure/interface/services/IBootstrapService";
 
 let logger: ILogger;
@@ -246,8 +248,27 @@ async function startServer(): Promise<void> {
       await bootstrap.run();
     }
 
-    // 5. Listen
-    app.listen(port, () => {
+    // 5. Create HTTP Server explicitly to share with Socket.IO
+    const httpServer = http.createServer(app);
+
+    // 6. Initialize Socket.IO with the HTTP Server BEFORE listening (or after, but same instance)
+    try {
+      const socketServer = diContainer.get<SocketServer>(TYPES.SocketServer);
+      const io = socketServer.initialize(httpServer, [
+        process.env.FRONTEND_URL || "http://localhost:3000",
+      ]);
+
+      const socketService = diContainer.get<ISocketService>(
+        TYPES.ISocketService,
+      ) as SocketService;
+      socketService.setIO(io);
+      logger.info("Socket is Connected");
+    } catch (err) {
+      logger.error("Socket connection error", err as Error);
+    }
+
+    // 7. Listen using the HTTP Server, not app.listen
+    httpServer.listen(port, () => {
       logger.info(`Project Hub Server running on: http://localhost:${port}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
     });

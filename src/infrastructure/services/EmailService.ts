@@ -14,9 +14,7 @@ import { ILogger } from "../interface/services/ILogger";
 export class EmailService implements IEmailService {
   private transporter: Transporter;
 
-  constructor(
-    @inject(TYPES.ILogger) private readonly _logger: ILogger
-  ) {
+  constructor(@inject(TYPES.ILogger) private readonly _logger: ILogger) {
     const host = process.env.SMTP_HOST;
     const port = Number(process.env.SMTP_PORT) || 587;
     const secure =
@@ -143,10 +141,28 @@ export class EmailService implements IEmailService {
 
     const html = this.renderTemplate("inviteMember.html", variables);
 
+    const text = `${inviterName} has invited you to join ${orgName}. Click this link to accept: ${inviteUrl}\n\nThis invitation expires in 7 days.`;
+
+    // [TESTING-ONLY] Write to file for automated verification
+    if (process.env.NODE_ENV !== "production") {
+      try {
+        // Hardcoded path to artifacts dir for reliability in this specific env
+        const tempPath =
+          "c:/Users/gokul/.gemini/antigravity/brain/5dd41adf-753e-4b17-9d06-9543aaf15df8/temp_invite_link.txt";
+        fs.writeFileSync(tempPath, inviteUrl);
+        this._logger.info(`[Testing] Invite link written to ${tempPath}`);
+      } catch (error) {
+        this._logger.error(
+          "[Testing] Failed to write invite link to file",
+          error as Error,
+        );
+      }
+    }
+
     await this.sendEmail({
       to: email,
       subject: `You're invited to join ${orgName} on Project Hub!`,
-      text: `${inviterName} has invited you to join ${orgName}. Click this link to accept: ${inviteUrl}\n\nThis invitation expires in 7 days.`,
+      text: text,
       html: html ?? undefined,
     });
   }
@@ -163,6 +179,22 @@ export class EmailService implements IEmailService {
     };
 
     const html = this.renderTemplate("otp.html", variables);
+
+    // [TESTING-ONLY] Write to file for automated verification
+    if (process.env.NODE_ENV !== "production") {
+      try {
+        // Hardcoded path to artifacts dir
+        const tempPath =
+          "c:/Users/gokul/.gemini/antigravity/brain/5dd41adf-753e-4b17-9d06-9543aaf15df8/temp_otp.txt";
+        fs.writeFileSync(tempPath, otp);
+        this._logger.info(`[Testing] OTP written to ${tempPath}`);
+      } catch (error) {
+        this._logger.error(
+          "[Testing] Failed to write OTP to file",
+          error as Error,
+        );
+      }
+    }
 
     await this.sendEmail({
       to: email,

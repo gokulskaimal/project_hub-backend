@@ -9,6 +9,7 @@ export const TYPES = {
   ICacheService: Symbol.for("ICacheService"),
   IGoogleAuthService: Symbol.for("IGoogleAuthService"),
   IRazorpayService: Symbol.for("IRazorpayService"),
+  ISocketService: Symbol.for("ISocketService"),
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
@@ -83,6 +84,9 @@ export const TYPES = {
 
   // ===== DATABASE =====
   DatabaseConnection: Symbol.for("DatabaseConnection"),
+
+  // ===== SOCKET =====
+  SocketServer: Symbol.for("SocketServer"),
 
   // ===== CONFIGURATION =====
   AppConfig: Symbol.for("AppConfig"),

@@ -9,6 +9,9 @@ export class GetProjectByIdUseCase implements IGetProjectByIdUseCase {
   constructor(@inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo) {}
 
   async execute(projectId: string): Promise<Project | null> {
+    if (!projectId || !projectId.match(/^[0-9a-fA-F]{24}$/)) {
+      return null;
+    }
     return this._projectRepo.findById(projectId);
   }
 }

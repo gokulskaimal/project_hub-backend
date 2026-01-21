@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { Container } from "inversify";
 import { TYPES } from "./types";
 
-// Domain Interfaces - Services
+//Interfaces - Services
 import { ILogger } from "../interface/services/ILogger";
 import { IHashService } from "../interface/services/IHashService";
 import { IJwtService } from "../interface/services/IJwtService";
@@ -14,15 +14,16 @@ import { IGoogleAuthService } from "../interface/services/IGoogleAuthService ";
 import { IRazorpayService } from "../interface/services/IRazorpayService";
 import { IPlanRepo } from "../interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
+import { ISocketService } from "../interface/services/ISocketService";
 
-// Domain Interfaces - Repositories
+//Interfaces - Repositories
 import { IUserRepo } from "../interface/repositories/IUserRepo";
 import { IOrgRepo } from "../interface/repositories/IOrgRepo";
 import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { ITaskRepo } from "../interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../interface/repositories/IProjectRepo";
 
-// Domain Interfaces - Use Cases
+//Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
 import { IRegisterUseCase } from "../../application/interface/useCases/IRegisterUseCase";
 import { IGoogleSignInUseCase } from "../../application/interface/useCases/IGoogleSignInUseCase";
@@ -73,6 +74,8 @@ import { JsonWebTokenProvider } from "../services/providers/JsonWebTokenProvider
 import { RedisCacheService } from "../services/RedisCacheService";
 import { InMemoryCacheService } from "../services/InMemoryCacheService";
 import { RazorpayService } from "../services/RazorpayService";
+import { SocketService } from "../services/SocketService";
+import { SocketServer } from "../../presentation/socket/SocketServer";
 
 // Domain Interfaces - Providers
 import { IJwtProvider } from "../interface/services/IJwtProvider";
@@ -225,6 +228,14 @@ class DIContainer {
     this._container
       .bind<IRazorpayService>(TYPES.IRazorpayService)
       .to(RazorpayService)
+      .inSingletonScope();
+    this._container
+      .bind<ISocketService>(TYPES.ISocketService)
+      .to(SocketService)
+      .inSingletonScope();
+    this._container
+      .bind<SocketServer>(TYPES.SocketServer)
+      .to(SocketServer)
       .inSingletonScope();
 
     const useRedis =
