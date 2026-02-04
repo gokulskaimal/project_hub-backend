@@ -166,6 +166,7 @@ function setupRoutes(app: express.Application): void {
   // Generic User Routes (Contains global auth middleware for /api/*)
   // Must be after all other /api routes that might need to be public
   app.use("/api", routes.user);
+  app.use("/api/notifications", routes.notifications);
 
   // Container diagnostic endpoint (development only)
   if (process.env.NODE_ENV === "development") {

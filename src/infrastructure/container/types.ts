@@ -60,6 +60,11 @@ export const TYPES = {
   IUpdateProjectUseCase: Symbol.for("IUpdateProjectUseCase"),
   IDeleteProjectUseCase: Symbol.for("IDeleteProjectUseCase"),
   ICreateNotificationUseCase: Symbol.for("ICreateNotificationUseCase"),
+  IGetNotificationsUseCase: Symbol.for("IGetNotificationsUseCase"),
+  IMarkNotificationReadUseCase: Symbol.for("IMarkNotificationReadUseCase"),
+  IMarkAllNotificationsReadUseCase: Symbol.for(
+    "IMarkAllNotificationsReadUseCase",
+  ),
 
   // ===== CONTROLLERS =====
   // AuthController: Symbol.for("AuthController"), // Removed in favor of split controllers

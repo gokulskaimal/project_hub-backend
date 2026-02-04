@@ -129,6 +129,12 @@ import { GetTaskUseCase } from "../../application/useCase/GetTaskUseCase";
 import { UpdateTaskUseCase } from "../../application/useCase/UpdateTaskUseCase";
 import { DeleteTaskUseCase } from "../../application/useCase/DeleteTaskUseCase";
 import { CreateNotificationUseCase } from "../../application/useCase/CreateNotificationUseCase";
+import { GetNotificationsUseCase } from "../../application/useCase/GetNotificationsUseCase";
+import { MarkNotificationReadUseCase } from "../../application/useCase/MarkNotificationReadUseCase";
+import { MarkAllNotificationsReadUseCase } from "../../application/useCase/MarkAllNotificationsReadUseCase";
+import { IGetNotificationsUseCase } from "../../application/interface/useCases/IGetNotificationsUseCase";
+import { IMarkNotificationReadUseCase } from "../../application/interface/useCases/IMarkNotificationReadUseCase";
+import { IMarkAllNotificationsReadUseCase } from "../../application/interface/useCases/IMarkAllNotificationsReadUseCase";
 
 import { CreateProjectUseCase } from "../../application/useCase/CreateProjectUseCase";
 import { GetProjectUseCase } from "../../application/useCase/GetProjectUseCase";
@@ -452,6 +458,23 @@ class DIContainer {
     this._container
       .bind<ICreateNotificationUseCase>(TYPES.ICreateNotificationUseCase)
       .to(CreateNotificationUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetNotificationsUseCase>(TYPES.IGetNotificationsUseCase)
+      .to(GetNotificationsUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IMarkNotificationReadUseCase>(TYPES.IMarkNotificationReadUseCase)
+      .to(MarkNotificationReadUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IMarkAllNotificationsReadUseCase>(
+        TYPES.IMarkAllNotificationsReadUseCase,
+      )
+      .to(MarkAllNotificationsReadUseCase)
       .inTransientScope();
   }
 

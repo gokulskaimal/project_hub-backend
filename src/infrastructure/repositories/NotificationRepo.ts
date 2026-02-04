@@ -16,7 +16,7 @@ export class NotificationRepo implements INotificationRepo {
   async findByUser(userId: string): Promise<Notification[]> {
     const docs = await NotificationModel.find({ userId })
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(100);
     return docs.map((doc) => this.toEntity(doc));
   }
 

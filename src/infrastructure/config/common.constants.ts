@@ -35,3 +35,7 @@ export const ROLES = {
   ORG_MANAGER: "ORG_MANAGER",
   TEAM_MEMBER: "TEAM_MEMBER",
 } as const;
+
+export const PLAN_DEFAULTS = {
+  PROJECT_LIMIT: 1, // Fallback if no specific plan limit is found
+} as const;

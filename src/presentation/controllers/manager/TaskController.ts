@@ -36,15 +36,18 @@ export class TaskController {
       throw new ValidationError("Project ID and Title are required");
 
     this._logger.info(`Creating task '${title}' in Project ${projectId}`);
-    const task = await this._createTaskUC.execute({
-      orgId: authReq.user.orgId,
-      projectId,
-      title,
-      description,
-      priority,
-      dueDate,
-      assignedTo,
-    });
+    const task = await this._createTaskUC.execute(
+      {
+        orgId: authReq.user.orgId,
+        projectId,
+        title,
+        description,
+        priority,
+        dueDate,
+        assignedTo,
+      },
+      authReq.user.id,
+    );
     res
       .status(StatusCodes.CREATED)
       .json({ success: true, data: toTaskDTO(task) });
@@ -74,8 +77,15 @@ export class TaskController {
 
   updateTask = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    this._logger.info(`Updating task ${id}`);
-    const task = await this._updateTaskUC.execute(id, req.body);
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
+
+    this._logger.info(`Updating task ${id} by user ${authReq.user.id}`);
+    const task = await this._updateTaskUC.execute(
+      id,
+      req.body,
+      authReq.user.id,
+    );
     res.status(StatusCodes.OK).json({ success: true, data: toTaskDTO(task) });
   });
 

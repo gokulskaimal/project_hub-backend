@@ -9,6 +9,7 @@ import { createWebhookRoutes } from "./webhookRoutes";
 import { createPaymentRoutes } from "./paymentRoutes";
 import { createPlanRoutes } from "./planRoutes";
 import { createProjectRoutes } from "./projectRoutes";
+import { createNotificationRoutes } from "./notificationRoutes";
 
 export function createRoutes(container: Container): {
   auth: Router;
@@ -20,6 +21,7 @@ export function createRoutes(container: Container): {
   webhooks: Router;
   payments: Router;
   plans: Router;
+  notifications: Router;
 } {
   // 1. Auth Routes
   const authRouter = createAuthRoutes(container);
@@ -46,6 +48,8 @@ export function createRoutes(container: Container): {
   const paymentRouter = createPaymentRoutes(container);
   const planRouter = createPlanRoutes(container);
 
+  const notificationRouter = createNotificationRoutes(container);
+
   return {
     auth: authRouter,
     admin: adminRouter,
@@ -56,5 +60,6 @@ export function createRoutes(container: Container): {
     webhooks: webhookRouter,
     payments: paymentRouter,
     plans: planRouter,
+    notifications: notificationRouter,
   };
 }
