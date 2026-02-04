@@ -19,6 +19,7 @@ export const TYPES = {
   ISubscriptionRepo: Symbol.for("ISubscriptionRepo"),
   ITaskRepo: Symbol.for("ITaskRepo"),
   IProjectRepo: Symbol.for("IProjectRepo"),
+  INotificationRepo: Symbol.for("INotificationRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -58,6 +59,7 @@ export const TYPES = {
   IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
   IUpdateProjectUseCase: Symbol.for("IUpdateProjectUseCase"),
   IDeleteProjectUseCase: Symbol.for("IDeleteProjectUseCase"),
+  ICreateNotificationUseCase: Symbol.for("ICreateNotificationUseCase"),
 
   // ===== CONTROLLERS =====
   // AuthController: Symbol.for("AuthController"), // Removed in favor of split controllers
@@ -76,6 +78,7 @@ export const TYPES = {
   PaymentController: Symbol.for("PaymentController"),
   TaskController: Symbol.for("TaskController"),
   OrganizationController: Symbol.for("OrganizationController"),
+  NotificationController: Symbol.for("NotificationController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),

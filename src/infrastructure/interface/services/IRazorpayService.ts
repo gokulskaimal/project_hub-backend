@@ -5,6 +5,7 @@ export interface RazorpayOrder {
   receipt: string;
   status: string;
   created_at: number;
+  notes?: Record<string, string | number>;
 }
 
 export interface RazorpayCustomer {

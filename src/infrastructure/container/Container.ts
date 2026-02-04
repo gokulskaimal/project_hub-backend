@@ -22,6 +22,7 @@ import { IOrgRepo } from "../interface/repositories/IOrgRepo";
 import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { ITaskRepo } from "../interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../interface/repositories/IProjectRepo";
+import { INotificationRepo } from "../interface/repositories/INotificationRepo";
 
 //Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
@@ -56,11 +57,16 @@ import { ICreateProjectUseCase } from "../../application/interface/useCases/ICre
 import { IGetProjectUseCase } from "../../application/interface/useCases/IGetProjectUseCase";
 import { IUpdateProjectUseCase } from "../../application/interface/useCases/IUpdateProjectUseCase";
 import { IDeleteProjectUseCase } from "../../application/interface/useCases/IDeleteProjectUseCase";
+import { IGetMemberProjectsUseCase } from "../../application/interface/useCases/IGetMemberProjectsUseCase";
+import { IGetMemberTasksUseCase } from "../../application/interface/useCases/IGetMemberTasksUseCase";
+import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGetProjectByIdUseCase";
 
 import { ICreateTaskUseCase } from "../../application/interface/useCases/ICreateTaskUseCase";
 import { IGetTaskUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
 import { IUpdateTaskUseCase } from "../../application/interface/useCases/IUpdateTaskUseCase";
 import { IDeleteTaskUseCase } from "../../application/interface/useCases/IDeleteTaskUseCase";
+
+import { ICreateNotificationUseCase } from "../../application/interface/useCases/ICreateNotificationUseCase";
 
 // Infrastructure Implementations - Services
 import { Logger } from "../services/Logger";
@@ -88,6 +94,7 @@ import { PlanRepo } from "../repositories/PlanRepo";
 import { SubscriptionRepo } from "../repositories/SubscriptionRepo";
 import { TaskRepo } from "../repositories/TaskRepo";
 import { ProjectRepo } from "../repositories/ProjectRepo";
+import { NotificationRepo } from "../repositories/NotificationRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -121,17 +128,15 @@ import { CreateTaskUseCase } from "../../application/useCase/CreateTaskUseCase";
 import { GetTaskUseCase } from "../../application/useCase/GetTaskUseCase";
 import { UpdateTaskUseCase } from "../../application/useCase/UpdateTaskUseCase";
 import { DeleteTaskUseCase } from "../../application/useCase/DeleteTaskUseCase";
+import { CreateNotificationUseCase } from "../../application/useCase/CreateNotificationUseCase";
 
 import { CreateProjectUseCase } from "../../application/useCase/CreateProjectUseCase";
 import { GetProjectUseCase } from "../../application/useCase/GetProjectUseCase";
 import { GetProjectByIdUseCase } from "../../application/useCase/GetProjectByIdUseCase";
 import { UpdateProjectUseCase } from "../../application/useCase/UpdateProjectUseCase";
 import { DeleteProjectUseCase } from "../../application/useCase/DeleteProjectUseCase";
-import { IGetMemberProjectsUseCase } from "../../application/interface/useCases/IGetMemberProjectsUseCase";
 import { GetMemberProjectsUseCase } from "../../application/useCase/GetMemberProjectsUseCase";
-import { IGetMemberTasksUseCase } from "../../application/interface/useCases/IGetMemberTasksUseCase";
 import { GetMemberTasksUseCase } from "../../application/useCase/GetMemberTasksUseCase";
-import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGetProjectByIdUseCase";
 
 // Presentation Controllers
 import { SessionController } from "../../presentation/controllers/auth/SessionController";
@@ -150,6 +155,7 @@ import { OrganizationController } from "../../presentation/controllers/Organizat
 
 import { TaskController } from "../../presentation/controllers/manager/TaskController";
 import { ProjectController } from "../../presentation/controllers/manager/ProjectController";
+import { NotificationController } from "../../presentation/controllers/NotificationController";
 
 /**
  * Service interface for async initialization/cleanup
@@ -281,6 +287,11 @@ class DIContainer {
     this._container
       .bind<IProjectRepo>(TYPES.IProjectRepo)
       .to(ProjectRepo)
+      .inSingletonScope();
+
+    this._container
+      .bind<INotificationRepo>(TYPES.INotificationRepo)
+      .to(NotificationRepo)
       .inSingletonScope();
   }
 
@@ -437,6 +448,11 @@ class DIContainer {
       .bind<IGetMemberTasksUseCase>(TYPES.IGetMemberTasksUseCase)
       .to(GetMemberTasksUseCase)
       .inTransientScope();
+
+    this._container
+      .bind<ICreateNotificationUseCase>(TYPES.ICreateNotificationUseCase)
+      .to(CreateNotificationUseCase)
+      .inTransientScope();
   }
 
   private _bindControllers(): void {
@@ -502,6 +518,11 @@ class DIContainer {
     this._container
       .bind<ProjectController>(TYPES.ProjectController)
       .to(ProjectController)
+      .inSingletonScope();
+
+    this._container
+      .bind<NotificationController>(TYPES.NotificationController)
+      .to(NotificationController)
       .inSingletonScope();
   }
 
