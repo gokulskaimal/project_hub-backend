@@ -17,12 +17,17 @@ const JsonWebTokenProvider_1 = require("../services/providers/JsonWebTokenProvid
 const RedisCacheService_1 = require("../services/RedisCacheService");
 const InMemoryCacheService_1 = require("../services/InMemoryCacheService");
 const RazorpayService_1 = require("../services/RazorpayService");
+const SocketService_1 = require("../services/SocketService");
+const SocketServer_1 = require("../../presentation/socket/SocketServer");
 // Infrastructure Implementations - Repositories
 const UserRepo_1 = require("../repositories/UserRepo");
 const OrgRepo_1 = require("../repositories/OrgRepo");
 const InviteRepo_1 = require("../repositories/InviteRepo");
 const PlanRepo_1 = require("../repositories/PlanRepo");
 const SubscriptionRepo_1 = require("../repositories/SubscriptionRepo");
+const TaskRepo_1 = require("../repositories/TaskRepo");
+const ProjectRepo_1 = require("../repositories/ProjectRepo");
+const NotificationRepo_1 = require("../repositories/NotificationRepo");
 // Application Use Cases
 const LoginUseCase_1 = require("../../application/useCase/LoginUseCase");
 const RegisterUseCase_1 = require("../../application/useCase/RegisterUseCase");
@@ -50,15 +55,44 @@ const OrganizationQueryUseCase_1 = require("../../application/useCase/Organizati
 const UserQueryUseCase_1 = require("../../application/useCase/UserQueryUseCase");
 const UserManagementUseCase_1 = require("../../application/useCase/UserManagementUseCase");
 const AdminStatsUseCase_1 = require("../../application/useCase/AdminStatsUseCase");
+const CreateTaskUseCase_1 = require("../../application/useCase/CreateTaskUseCase");
+const GetTaskUseCase_1 = require("../../application/useCase/GetTaskUseCase");
+const UpdateTaskUseCase_1 = require("../../application/useCase/UpdateTaskUseCase");
+const DeleteTaskUseCase_1 = require("../../application/useCase/DeleteTaskUseCase");
+const CreateNotificationUseCase_1 = require("../../application/useCase/CreateNotificationUseCase");
+const GetNotificationsUseCase_1 = require("../../application/useCase/GetNotificationsUseCase");
+const MarkNotificationReadUseCase_1 = require("../../application/useCase/MarkNotificationReadUseCase");
+const MarkAllNotificationsReadUseCase_1 = require("../../application/useCase/MarkAllNotificationsReadUseCase");
+const CreateProjectUseCase_1 = require("../../application/useCase/CreateProjectUseCase");
+const GetProjectUseCase_1 = require("../../application/useCase/GetProjectUseCase");
+const GetProjectByIdUseCase_1 = require("../../application/useCase/GetProjectByIdUseCase");
+const UpdateProjectUseCase_1 = require("../../application/useCase/UpdateProjectUseCase");
+const DeleteProjectUseCase_1 = require("../../application/useCase/DeleteProjectUseCase");
+const GetMemberProjectsUseCase_1 = require("../../application/useCase/GetMemberProjectsUseCase");
+const GetMemberTasksUseCase_1 = require("../../application/useCase/GetMemberTasksUseCase");
 // Presentation Controllers
-const AuthController_1 = require("../../presentation/controllers/AuthController");
-const UserController_1 = require("../../presentation/controllers/UserController");
-const ManagerController_1 = require("../../presentation/controllers/ManagerController");
+const SessionController_1 = require("../../presentation/controllers/auth/SessionController");
+const RegistrationController_1 = require("../../presentation/controllers/auth/RegistrationController");
+const InviteController_1 = require("../../presentation/controllers/auth/InviteController");
+const PasswordController_1 = require("../../presentation/controllers/auth/PasswordController");
+const UserController_1 = require("../../presentation/controllers/user/UserController");
+const ManagerController_1 = require("../../presentation/controllers/manager/ManagerController");
 const PaymentController_1 = require("../../presentation/controllers/PaymentController");
 const WebhookController_1 = require("../../presentation/controllers/WebhookController");
-const AdminUserController_1 = require("../../presentation/controllers/AdminUserController");
-const AdminOrgController_1 = require("../../presentation/controllers/AdminOrgController");
-const AdminPlanController_1 = require("../../presentation/controllers/AdminPlanController");
+const AdminUserController_1 = require("../../presentation/controllers/admin/AdminUserController");
+const AdminOrgController_1 = require("../../presentation/controllers/admin/AdminOrgController");
+const AdminPlanController_1 = require("../../presentation/controllers/admin/AdminPlanController");
+const OrganizationController_1 = require("../../presentation/controllers/OrganizationController");
+const TaskController_1 = require("../../presentation/controllers/manager/TaskController");
+const ProjectController_1 = require("../../presentation/controllers/manager/ProjectController");
+const NotificationController_1 = require("../../presentation/controllers/NotificationController");
+const ChatController_1 = require("../../presentation/controllers/ChatController");
+// Chat Implementations
+const ChatRepo_1 = require("../repositories/ChatRepo");
+const SendMessageUseCase_1 = require("../../application/useCase/SendMessageUseCase");
+const GetProjectMessagesUseCase_1 = require("../../application/useCase/GetProjectMessagesUseCase");
+const EditMessageUseCase_1 = require("../../application/useCase/EditMessageUseCase");
+const DeleteMessageUseCase_1 = require("../../application/useCase/DeleteMessageUseCase");
 /**
  * DIContainer
  *
@@ -115,6 +149,14 @@ class DIContainer {
             .bind(types_1.TYPES.IRazorpayService)
             .to(RazorpayService_1.RazorpayService)
             .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ISocketService)
+            .to(SocketService_1.SocketService)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.SocketServer)
+            .to(SocketServer_1.SocketServer)
+            .inSingletonScope();
         const useRedis = String(process.env.USE_REDIS || "").toLowerCase() === "true";
         if (useRedis) {
             this._container
@@ -149,6 +191,22 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.ISubscriptionRepo)
             .to(SubscriptionRepo_1.SubscriptionRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ITaskRepo)
+            .to(TaskRepo_1.TaskRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IProjectRepo)
+            .to(ProjectRepo_1.ProjectRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.INotificationRepo)
+            .to(NotificationRepo_1.NotificationRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IChatRepo)
+            .to(ChatRepo_1.ChatRepo)
             .inSingletonScope();
     }
     _bindUseCases() {
@@ -256,11 +314,105 @@ class DIContainer {
             .bind(types_1.TYPES.IAdminStatsUseCase)
             .to(AdminStatsUseCase_1.AdminStatsUseCase)
             .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ICreateTaskUseCase)
+            .to(CreateTaskUseCase_1.CreateTaskUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetTaskUseCase)
+            .to(GetTaskUseCase_1.GetTaskUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IUpdateTaskUseCase)
+            .to(UpdateTaskUseCase_1.UpdateTaskUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IDeleteTaskUseCase)
+            .to(DeleteTaskUseCase_1.DeleteTaskUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ICreateProjectUseCase)
+            .to(CreateProjectUseCase_1.CreateProjectUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetProjectUseCase)
+            .to(GetProjectUseCase_1.GetProjectUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetProjectByIdUseCase)
+            .to(GetProjectByIdUseCase_1.GetProjectByIdUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IUpdateProjectUseCase)
+            .to(UpdateProjectUseCase_1.UpdateProjectUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IDeleteProjectUseCase)
+            .to(DeleteProjectUseCase_1.DeleteProjectUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetMemberProjectsUseCase)
+            .to(GetMemberProjectsUseCase_1.GetMemberProjectsUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetMemberTasksUseCase)
+            .to(GetMemberTasksUseCase_1.GetMemberTasksUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ICreateNotificationUseCase)
+            .to(CreateNotificationUseCase_1.CreateNotificationUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetNotificationsUseCase)
+            .to(GetNotificationsUseCase_1.GetNotificationsUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IMarkNotificationReadUseCase)
+            .to(MarkNotificationReadUseCase_1.MarkNotificationReadUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IMarkAllNotificationsReadUseCase)
+            .to(MarkAllNotificationsReadUseCase_1.MarkAllNotificationsReadUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.ISendMessageUseCase)
+            .to(SendMessageUseCase_1.SendMessageUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IGetProjectMessagesUseCase)
+            .to(GetProjectMessagesUseCase_1.GetProjectMessagesUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IEditMessageUseCase)
+            .to(EditMessageUseCase_1.EditMessageUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IDeleteMessageUseCase)
+            .to(DeleteMessageUseCase_1.DeleteMessageUseCase)
+            .inTransientScope();
     }
     _bindControllers() {
+        /*
         this._container
-            .bind(types_1.TYPES.AuthController)
-            .to(AuthController_1.AuthController)
+          .bind<AuthController>(TYPES.AuthController)
+          .to(AuthController)
+          .inSingletonScope();
+        */
+        this._container
+            .bind(types_1.TYPES.SessionController)
+            .to(SessionController_1.SessionController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.RegistrationController)
+            .to(RegistrationController_1.RegistrationController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.InviteController)
+            .to(InviteController_1.InviteController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.PasswordController)
+            .to(PasswordController_1.PasswordController)
             .inSingletonScope();
         this._container
             .bind(types_1.TYPES.AdminUserController)
@@ -269,6 +421,10 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.AdminOrgController)
             .to(AdminOrgController_1.AdminOrgController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.OrganizationController)
+            .to(OrganizationController_1.OrganizationController)
             .inSingletonScope();
         this._container
             .bind(types_1.TYPES.AdminPlanController)
@@ -289,6 +445,22 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.WebhookController)
             .to(WebhookController_1.WebhookController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.TaskController)
+            .to(TaskController_1.TaskController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ProjectController)
+            .to(ProjectController_1.ProjectController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.NotificationController)
+            .to(NotificationController_1.NotificationController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ChatController)
+            .to(ChatController_1.ChatController)
             .inSingletonScope();
     }
     /**

@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ResetPasswordUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
-const asyncHandler_1 = require("../../utils/asyncHandler");
-const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const AuthErrors_1 = require("../../domain/errors/AuthErrors");
+const CommonErrors_1 = require("../../domain/errors/CommonErrors");
 let ResetPasswordUseCase = class ResetPasswordUseCase {
     constructor(userRepo, hashService, jwtService, emailService, logger) {
         this._userRepo = userRepo;
@@ -26,7 +26,7 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
         this._logger = logger;
     }
     /**
-     * ✅ ADDED: Request password reset (send email with reset link)
+     * Request password reset (send email with reset link)
      */
     async requestReset(email) {
         this._logger.info("Processing password reset request", { email });
@@ -45,9 +45,10 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             });
             // Business Rule: Set token expiry (1 hour)
             const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+            const hashedToken = await this._hashService.hashToken(resetToken);
             // Store reset token in database
-            await this._userRepo.setResetPasswordToken(email, resetToken, expiresAt);
-            // ✅ FIXED: Use sendResetPasswordEmail instead of sendPasswordResetEmail
+            await this._userRepo.setResetPasswordToken(email, hashedToken, expiresAt);
+            // Use sendResetPasswordEmail instead of sendPasswordResetEmail
             await this._emailService.sendResetPasswordEmail(email, resetToken);
             this._logger.info("Password reset email sent", {
                 email,
@@ -55,18 +56,18 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             });
             return {
                 message: "Password reset email sent successfully",
-                token: resetToken, // Only in development - remove in production
+                token: hashedToken, // Only in development - remove in production
             };
         }
         catch (error) {
             this._logger.error("Password reset request failed", error, {
                 email,
             });
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR, "Failed to process password reset request");
+            throw error;
         }
     }
     /**
-     * ✅ ADDED: Reset password using token
+     * Reset password using token
      */
     async resetWithToken(token, newPassword) {
         this._logger.info("Processing password reset with token");
@@ -74,12 +75,13 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
             // Business Rule: Verify reset token
             const payload = this._jwtService.verifyResetToken(token);
             if (!payload) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid or expired reset token");
+                throw new AuthErrors_1.InvalidTokenError("Invalid or expired reset token");
             }
+            const hashedToken = await this._hashService.hashToken(token);
             // Business Rule: Find user by reset token
-            const user = await this._userRepo.findByResetToken(token);
+            const user = await this._userRepo.findByResetToken(hashedToken);
             if (!user) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid or expired reset token");
+                throw new AuthErrors_1.InvalidTokenError("Invalid or expired reset token");
             }
             // Business Rule: Validate new password
             this._validatePassword(newPassword);
@@ -96,14 +98,14 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
         }
     }
     /**
-     * ✅ ADDED: Complete password reset process
+     * Complete password reset process
      */
     async completeReset(token, password) {
         // This is an alias to resetWithToken for backward compatibility
         return this.resetWithToken(token, password);
     }
     /**
-     * ✅ ADDED: Validate reset token
+     * Validate reset token
      */
     async validateResetToken(token) {
         try {
@@ -113,7 +115,8 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
                 return false;
             }
             // Check if token exists in database
-            const user = await this._userRepo.findByResetToken(token);
+            const hashedToken = await this._hashService.hashToken(token);
+            const user = await this._userRepo.findByResetToken(hashedToken);
             return !!user;
         }
         catch (error) {
@@ -127,16 +130,16 @@ let ResetPasswordUseCase = class ResetPasswordUseCase {
      */
     _validatePassword(password) {
         if (!password || typeof password !== "string") {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is required");
+            throw new CommonErrors_1.ValidationError("Password is required");
         }
         if (password.length < 8) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be at least 8 characters long");
+            throw new CommonErrors_1.ValidationError("Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one lowercase letter, one uppercase letter, and one number");
+            throw new CommonErrors_1.ValidationError("Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one special character");
+            throw new CommonErrors_1.ValidationError("Password must contain at least one special character");
         }
     }
 };

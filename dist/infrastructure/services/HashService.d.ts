@@ -44,5 +44,6 @@ export declare class HashService implements IHashService {
      * @returns Whether the data matches the hash
      */
     compareSync(data: string, hash: string): boolean;
+    hashToken(token: string): string;
 }
 //# sourceMappingURL=HashService.d.ts.map

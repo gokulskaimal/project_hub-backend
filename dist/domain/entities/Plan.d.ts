@@ -5,6 +5,7 @@ export interface Plan {
     price: number;
     currency: string;
     features: string[];
+    duration?: number;
     type: "STARTER" | "PRO" | "ENTERPRISE";
     isActive: boolean;
     razorpayPlanId: string;

@@ -3,7 +3,7 @@ import { Plan } from "../../domain/entities/Plan";
 export interface IPlanDoc extends Document, Omit<Plan, "id"> {
 }
 declare const _default: mongoose.Model<IPlanDoc, {}, {}, {}, mongoose.Document<unknown, {}, IPlanDoc, {}, {}> & IPlanDoc & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

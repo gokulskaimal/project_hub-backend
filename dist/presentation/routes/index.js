@@ -1,17 +1,17 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createRoutes = createRoutes;
-const express_1 = __importDefault(require("express"));
 const authRoutes_1 = require("./authRoutes");
 const adminRoutes_1 = require("./adminRoutes");
+const organizationRoutes_1 = require("./organizationRoutes");
 const managerRoutes_1 = require("./managerRoutes");
 const userRoutes_1 = require("./userRoutes");
 const webhookRoutes_1 = require("./webhookRoutes");
 const paymentRoutes_1 = require("./paymentRoutes");
 const planRoutes_1 = require("./planRoutes");
+const projectRoutes_1 = require("./projectRoutes");
+const notificationRoutes_1 = require("./notificationRoutes");
+const chatRoutes_1 = require("./chatRoutes");
 function createRoutes(container) {
     // 1. Auth Routes
     const authRouter = (0, authRoutes_1.createAuthRoutes)(container);
@@ -21,18 +21,18 @@ function createRoutes(container) {
     const managerRouter = (0, managerRoutes_1.createManagerRoutes)(container);
     // 4. User Routes
     const userRouter = (0, userRoutes_1.createUserRoutes)(container);
-    // 5. Placeholders (Strictly Typed)
-    const orgRouter = express_1.default.Router();
-    orgRouter.get("/", (_req, res) => {
-        res.json({ message: "Coming soon" });
-    });
-    const projectRouter = express_1.default.Router();
-    projectRouter.get("/", (_req, res) => {
-        res.json({ message: "Coming soon" });
-    });
+    // 5. Organization Routes
+    const orgRouter = (0, organizationRoutes_1.createOrganizationRoutes)(container);
+    //   const projectRouter = express.Router();
+    //   projectRouter.get("/", (_req, res) => {
+    //     res.json({ message: "Coming soon" });
+    //   });
+    const projectRouter = (0, projectRoutes_1.createProjectRoutes)(container);
     const webhookRouter = (0, webhookRoutes_1.createWebhookRoutes)(container);
     const paymentRouter = (0, paymentRoutes_1.createPaymentRoutes)(container);
     const planRouter = (0, planRoutes_1.createPlanRoutes)(container);
+    const notificationRouter = (0, notificationRoutes_1.createNotificationRoutes)(container);
+    const chatRouter = (0, chatRoutes_1.createChatRoutes)(container);
     return {
         auth: authRouter,
         admin: adminRouter,
@@ -43,6 +43,8 @@ function createRoutes(container) {
         webhooks: webhookRouter,
         payments: paymentRouter,
         plans: planRouter,
+        notifications: notificationRouter,
+        chat: chatRouter,
     };
 }
 //# sourceMappingURL=index.js.map

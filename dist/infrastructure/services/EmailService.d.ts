@@ -1,11 +1,13 @@
 import { IEmailService } from "../interface/services/IEmailService";
+import { ILogger } from "../interface/services/ILogger";
 /**
  * Email Service Implementation
  * Provides email sending capabilities using NodeMailer
  */
 export declare class EmailService implements IEmailService {
+    private readonly _logger;
     private transporter;
-    constructor();
+    constructor(_logger: ILogger);
     private renderTemplate;
     sendEmail(payload: {
         to: string;

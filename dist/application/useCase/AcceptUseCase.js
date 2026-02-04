@@ -44,7 +44,8 @@ let AcceptUseCase = class AcceptUseCase {
                 throw new Error("Token, password, first name, and last name are required");
             }
             // Business Rule: Find and validate invitation
-            const invite = await this._inviteRepo.findByToken(token);
+            const hashedToken = this._hashService.hashToken(token);
+            const invite = await this._inviteRepo.findByToken(hashedToken);
             if (!invite) {
                 this._logger.warn("Invitation not found", {
                     token: token.substring(0, 8) + "...",
@@ -120,7 +121,7 @@ let AcceptUseCase = class AcceptUseCase {
                 email: newUser.email,
             });
             // Mark invitation as accepted
-            await this._inviteRepo.markAccepted(token);
+            await this._inviteRepo.markAccepted(hashedToken);
             this._logger.info("Invitation accepted successfully", {
                 userId: newUser.id,
                 email: invite.email,
@@ -169,7 +170,8 @@ let AcceptUseCase = class AcceptUseCase {
             if (!token) {
                 return { valid: false };
             }
-            const invite = await this._inviteRepo.findByToken(token);
+            const hashedToken = this._hashService.hashToken(token);
+            const invite = await this._inviteRepo.findByToken(hashedToken);
             if (!invite) {
                 return { valid: false };
             }

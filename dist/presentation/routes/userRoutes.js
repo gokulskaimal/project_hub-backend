@@ -11,7 +11,6 @@ function createUserRoutes(container) {
     // Protect all user routes
     router.use(AuthMiddleware_1.authMiddleware);
     router.get(constants_1.API_ROUTES.USER.PROFILE, (req, res, next) => {
-        console.log("UserRoutes: Reached /user/profile handler");
         controller.getProfile(req, res, next);
     });
     router.put(constants_1.API_ROUTES.USER.PROFILE, (req, res, next) => controller.updateProfile(req, res, next));

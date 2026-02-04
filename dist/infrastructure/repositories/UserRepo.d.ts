@@ -1,10 +1,12 @@
-import { BaseRepository } from "./BaseRepository";
+import { BaseRepository } from "./BaseRepo";
 import { IUserRepo } from "../interface/repositories/IUserRepo";
 import { User } from "../../domain/entities/User";
 import { Organization } from "../../domain/entities/Organization";
 import { IUserDoc } from "../models/UserModel";
+import { ILogger } from "../interface/services/ILogger";
 export declare class UserRepo extends BaseRepository<User, IUserDoc> implements IUserRepo {
-    constructor();
+    private readonly _logger;
+    constructor(_logger: ILogger);
     protected toDomain(doc: IUserDoc): User;
     storeOtp(email: string, otp: string, expiry: Date): Promise<void>;
     getOtp(email: string): Promise<{

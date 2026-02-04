@@ -12,26 +12,26 @@ export declare class ResetPasswordUseCase implements IResetPasswordUseCase {
     private readonly _logger;
     constructor(userRepo: IUserRepo, hashService: IHashService, jwtService: IJwtService, emailService: IEmailService, logger: ILogger);
     /**
-     * ✅ ADDED: Request password reset (send email with reset link)
+     * Request password reset (send email with reset link)
      */
     requestReset(email: string): Promise<{
         message: string;
         token?: string;
     }>;
     /**
-     * ✅ ADDED: Reset password using token
+     * Reset password using token
      */
     resetWithToken(token: string, newPassword: string): Promise<{
         message: string;
     }>;
     /**
-     * ✅ ADDED: Complete password reset process
+     * Complete password reset process
      */
     completeReset(token: string, password: string): Promise<{
         message: string;
     }>;
     /**
-     * ✅ ADDED: Validate reset token
+     * Validate reset token
      */
     validateResetToken(token: string): Promise<boolean>;
     /**

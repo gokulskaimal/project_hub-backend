@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlanRepo = void 0;
 const inversify_1 = require("inversify");
-const BaseRepository_1 = require("./BaseRepository");
+const BaseRepo_1 = require("./BaseRepo");
 const PlanModel_1 = __importDefault(require("../models/PlanModel"));
-let PlanRepo = class PlanRepo extends BaseRepository_1.BaseRepository {
+let PlanRepo = class PlanRepo extends BaseRepo_1.BaseRepository {
     constructor() {
         super(PlanModel_1.default);
     }
@@ -41,9 +41,22 @@ let PlanRepo = class PlanRepo extends BaseRepository_1.BaseRepository {
         const doc = await this.model.create(data);
         return this.toDomain(doc);
     }
-    async findAll(filter = { isActive: true }) {
-        const docs = await this.model.find(filter);
-        return docs.map((d) => this.toDomain(d));
+    async findAll(filter) {
+        try {
+            // If no filter is provided, default to { isActive: true }
+            // If filter IS provided (even empty {}), use it.
+            // Ideally, the caller should be explicit.
+            // But for safety, let's just pass the filter blindly if provided.
+            // However, the issue is that arguments defaults only apply if undefined.
+            const query = filter === undefined ? { isActive: true } : filter;
+            // console.log("PlanRepo.findAll query:", query);
+            const docs = await this.model.find(query);
+            return docs.map((d) => this.toDomain(d));
+        }
+        catch (error) {
+            console.error("PlanRepo.findAll failed:", error);
+            throw error;
+        }
     }
     async findById(id) {
         const docs = await this.model.findById(id);

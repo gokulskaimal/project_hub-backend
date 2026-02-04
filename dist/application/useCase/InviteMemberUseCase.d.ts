@@ -1,23 +1,29 @@
 import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
 import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { IInviteMemberUseCase } from "../interface/useCases/IInviteMemberUseCase";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
+import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
 export declare class InviteMemberUseCase implements IInviteMemberUseCase {
     private readonly _inviteRepo;
     private readonly _emailService;
     private readonly _logger;
     private readonly _orgRepo;
     private readonly _userRepo;
-    constructor(_inviteRepo: IInviteRepo, _emailService: IEmailService, _logger: ILogger, _orgRepo: IOrgRepo, _userRepo: IUserRepo);
-    execute(email: string, orgId: string, role?: string): Promise<{
+    private readonly _subRepo;
+    private readonly _planRepo;
+    private readonly _hashService;
+    constructor(_inviteRepo: IInviteRepo, _emailService: IEmailService, _logger: ILogger, _orgRepo: IOrgRepo, _userRepo: IUserRepo, _subRepo: ISubscriptionRepo, _planRepo: IPlanRepo, _hashService: IHashService);
+    execute(email: string, orgId: string, role?: string, expiresIn?: number): Promise<{
         invitationId: string;
         token: string;
         expiresAt: Date;
         message: string;
     }>;
-    bulkInvite(emails: string[], orgId: string, role?: string): Promise<{
+    bulkInvite(emails: string[], orgId: string, role?: string, expiresIn?: number): Promise<{
         successful: Array<{
             email: string;
             invitationId: string;

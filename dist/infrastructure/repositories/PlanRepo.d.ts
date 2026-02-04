@@ -1,4 +1,4 @@
-import { BaseRepository } from "./BaseRepository";
+import { BaseRepository } from "./BaseRepo";
 import { Plan } from "../../domain/entities/Plan";
 import { IPlanRepo } from "../interface/repositories/IPlanRepo";
 import { IPlanDoc } from "../models/PlanModel";

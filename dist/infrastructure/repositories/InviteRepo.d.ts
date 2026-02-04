@@ -1,4 +1,4 @@
-import { BaseRepository } from "./BaseRepository";
+import { BaseRepository } from "./BaseRepo";
 import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { Invite } from "../../domain/entities/Invite";
 import { Document } from "mongoose";

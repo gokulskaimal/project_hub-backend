@@ -15,9 +15,13 @@ async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(" ")[1];
     if (!token) {
-        res
-            .status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED)
-            .json({ error: common_constants_1.COMMON_MESSAGES.UNAUTHORIZED });
+        res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({
+            success: false,
+            error: {
+                code: "AUTH_TOKEN_MISSING",
+                message: common_constants_1.COMMON_MESSAGES.UNAUTHORIZED,
+            },
+        });
         return;
     }
     try {
@@ -27,31 +31,47 @@ async function authMiddleware(req, res, next) {
             // Fetch latest user state from DB to ensure status/org checks
             const userDoc = await UserModel_1.default.findById(payload.id);
             if (!userDoc) {
-                res
-                    .status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED)
-                    .json({ error: common_constants_1.COMMON_MESSAGES.UNAUTHORIZED });
+                res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({
+                    success: false,
+                    error: {
+                        code: "AUTH_USER_NOT_FOUND",
+                        message: common_constants_1.COMMON_MESSAGES.UNAUTHORIZED,
+                    },
+                });
                 return;
             }
             // If user is not ACTIVE, deny access
             if (userDoc.status !== "ACTIVE") {
-                res
-                    .status(statusCodes_enum_1.StatusCodes.FORBIDDEN)
-                    .json({ error: "User account suspended or disabled" });
+                res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({
+                    success: false,
+                    error: {
+                        code: "AUTH_ACCOUNT_SUSPENDED",
+                        message: "User account suspended or disabled",
+                    },
+                });
                 return;
             }
             // If user's organization exists and is not ACTIVE, deny access
             if (userDoc.orgId) {
                 const orgDoc = await OrgModel_1.default.findById(userDoc.orgId);
                 if (!orgDoc) {
-                    res
-                        .status(statusCodes_enum_1.StatusCodes.FORBIDDEN)
-                        .json({ error: "Organization not found" });
+                    res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({
+                        success: false,
+                        error: {
+                            code: "AUTH_ORG_NOT_FOUND",
+                            message: "Organization not found",
+                        },
+                    });
                     return;
                 }
                 if (orgDoc.status !== Organization_1.OrganizationStatus.ACTIVE) {
-                    res
-                        .status(statusCodes_enum_1.StatusCodes.FORBIDDEN)
-                        .json({ error: "Organization suspended or disabled" });
+                    res.status(statusCodes_enum_1.StatusCodes.FORBIDDEN).json({
+                        success: false,
+                        error: {
+                            code: "AUTH_ORG_SUSPENDED",
+                            message: "Organization suspended or disabled",
+                        },
+                    });
                     return;
                 }
             }
@@ -63,13 +83,22 @@ async function authMiddleware(req, res, next) {
         // Check if the error is a JWT expiration error
         if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
             res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({
-                error: "JWT token expired",
-                code: "TOKEN_EXPIRED",
+                success: false,
+                error: {
+                    code: "TOKEN_EXPIRED",
+                    message: "JWT token expired",
+                },
             });
             return;
         }
         const message = error instanceof Error ? error.message : common_constants_1.COMMON_MESSAGES.UNAUTHORIZED;
-        res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({ error: message });
+        res.status(statusCodes_enum_1.StatusCodes.UNAUTHORIZED).json({
+            success: false,
+            error: {
+                code: "AUTH_INVALID_TOKEN",
+                message,
+            },
+        });
     }
 }
 //# sourceMappingURL=AuthMiddleware.js.map

@@ -10,6 +10,7 @@ import { createPaymentRoutes } from "./paymentRoutes";
 import { createPlanRoutes } from "./planRoutes";
 import { createProjectRoutes } from "./projectRoutes";
 import { createNotificationRoutes } from "./notificationRoutes";
+import { createChatRoutes } from "./chatRoutes";
 
 export function createRoutes(container: Container): {
   auth: Router;
@@ -22,6 +23,7 @@ export function createRoutes(container: Container): {
   payments: Router;
   plans: Router;
   notifications: Router;
+  chat: Router;
 } {
   // 1. Auth Routes
   const authRouter = createAuthRoutes(container);
@@ -49,6 +51,7 @@ export function createRoutes(container: Container): {
   const planRouter = createPlanRoutes(container);
 
   const notificationRouter = createNotificationRoutes(container);
+  const chatRouter = createChatRoutes(container);
 
   return {
     auth: authRouter,
@@ -61,5 +64,6 @@ export function createRoutes(container: Container): {
     payments: paymentRouter,
     plans: planRouter,
     notifications: notificationRouter,
+    chat: chatRouter,
   };
 }

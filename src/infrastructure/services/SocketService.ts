@@ -24,4 +24,10 @@ export class SocketService implements ISocketService {
       console.warn("[SocketService] IO instance not set!");
     }
   }
+
+  emitToProject<T>(projectId: string, event: string, data: T): void {
+    if (this._io) {
+      this._io.to(`project:${projectId}`).emit(event, data);
+    }
+  }
 }

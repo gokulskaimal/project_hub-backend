@@ -162,6 +162,21 @@ import { OrganizationController } from "../../presentation/controllers/Organizat
 import { TaskController } from "../../presentation/controllers/manager/TaskController";
 import { ProjectController } from "../../presentation/controllers/manager/ProjectController";
 import { NotificationController } from "../../presentation/controllers/NotificationController";
+import { ChatController } from "../../presentation/controllers/ChatController";
+
+// Chat Interfaces
+import { IChatRepo } from "../interface/repositories/IChatRepo";
+import { ISendMessageUseCase } from "../../application/interface/useCases/ISendMessageUseCase";
+import { IGetProjectMessagesUseCase } from "../../application/interface/useCases/IGetProjectMessagesUseCase";
+
+// Chat Implementations
+import { ChatRepo } from "../repositories/ChatRepo";
+import { SendMessageUseCase } from "../../application/useCase/SendMessageUseCase";
+import { GetProjectMessagesUseCase } from "../../application/useCase/GetProjectMessagesUseCase";
+import { IEditMessageUseCase } from "../../application/interface/useCases/IEditMessageUseCase";
+import { IDeleteMessageUseCase } from "../../application/interface/useCases/IDeleteMessageUseCase";
+import { EditMessageUseCase } from "../../application/useCase/EditMessageUseCase";
+import { DeleteMessageUseCase } from "../../application/useCase/DeleteMessageUseCase";
 
 /**
  * Service interface for async initialization/cleanup
@@ -298,6 +313,11 @@ class DIContainer {
     this._container
       .bind<INotificationRepo>(TYPES.INotificationRepo)
       .to(NotificationRepo)
+      .inSingletonScope();
+
+    this._container
+      .bind<IChatRepo>(TYPES.IChatRepo)
+      .to(ChatRepo)
       .inSingletonScope();
   }
 
@@ -476,6 +496,26 @@ class DIContainer {
       )
       .to(MarkAllNotificationsReadUseCase)
       .inTransientScope();
+
+    this._container
+      .bind<ISendMessageUseCase>(TYPES.ISendMessageUseCase)
+      .to(SendMessageUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetProjectMessagesUseCase>(TYPES.IGetProjectMessagesUseCase)
+      .to(GetProjectMessagesUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IEditMessageUseCase>(TYPES.IEditMessageUseCase)
+      .to(EditMessageUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IDeleteMessageUseCase>(TYPES.IDeleteMessageUseCase)
+      .to(DeleteMessageUseCase)
+      .inTransientScope();
   }
 
   private _bindControllers(): void {
@@ -546,6 +586,11 @@ class DIContainer {
     this._container
       .bind<NotificationController>(TYPES.NotificationController)
       .to(NotificationController)
+      .inSingletonScope();
+
+    this._container
+      .bind<ChatController>(TYPES.ChatController)
+      .to(ChatController)
       .inSingletonScope();
   }
 

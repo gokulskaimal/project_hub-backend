@@ -8,19 +8,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRepo = void 0;
 const inversify_1 = require("inversify");
-const BaseRepository_1 = require("./BaseRepository");
+const BaseRepo_1 = require("./BaseRepo");
 const UserModel_1 = __importDefault(require("../models/UserModel"));
 const UserRole_1 = require("../../domain/enums/UserRole");
 const OrgModel_1 = __importDefault(require("../models/OrgModel"));
-let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
-    constructor() {
+const types_1 = require("../container/types");
+let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
+    constructor(_logger) {
         super(UserModel_1.default);
+        this._logger = _logger;
     }
     toDomain(doc) {
         const plain = doc.toObject();
@@ -50,6 +55,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             await UserModel_1.default.findOneAndUpdate({ email }, { otp, otpExpiry: expiry }, { upsert: false });
         }
         catch (error) {
+            this._logger.error(`Failed to store OTP`, error, { email });
             throw new Error(`Failed to store OTP: ${error.message}`);
         }
     }
@@ -65,6 +71,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             };
         }
         catch (error) {
+            this._logger.error(`Failed to get OTP`, error, { email });
             throw new Error(`Failed to get OTP: ${error.message}`);
         }
     }
@@ -74,6 +81,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return org ? org.toObject() : null;
         }
         catch (error) {
+            this._logger.error(`Failed to find organization by id`, error, { orgId });
             throw new Error(`Failed to find organization by id: ${error.message}`);
         }
     }
@@ -119,8 +127,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
         return user ? this.toDomainUser(user) : null;
     }
     async findById(id) {
-        const user = await UserModel_1.default.findById(id);
-        return user ? this.toDomainUser(user) : null;
+        const doc = await this.model.findById(id);
+        return doc ? this.toDomain(doc) : null;
     }
     async updatePassword(id, hashedPassword) {
         await UserModel_1.default.findByIdAndUpdate(id, {
@@ -187,8 +195,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error("Error finding users by role:", error);
-            return [];
+            this._logger.error("Error finding users by role:", error, { role });
+            throw error;
         }
     }
     async findByOrgAndRole(orgId, role) {
@@ -197,8 +205,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error("Error finding users by org and role:", error);
-            return [];
+            this._logger.error("Error finding users by org and role:", error, { orgId, role });
+            throw error;
         }
     }
     async updateStatus(id, status) {
@@ -209,10 +217,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return this.toDomainUser(updated);
         }
         catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Failed to update user status: ${error.message}`);
-            }
-            throw new Error("Failed to update user status: Unknown error");
+            this._logger.error(`Failed to update user status`, error, { userId: id, status });
+            throw error;
         }
     }
     async removeFromOrg(userId, _orgId) {
@@ -222,10 +228,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             });
         }
         catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Failed to remove user from org: ${error.message}`);
-            }
-            throw new Error("Failed to remove user from org: Unknown error");
+            this._logger.error(`Failed to remove user from org`, error, { userId, orgId: _orgId });
+            throw error;
         }
     }
     async updateLastLogin(id, loginTime) {
@@ -235,7 +239,7 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             });
         }
         catch (error) {
-            console.error("Error updating last login:", error);
+            this._logger.error("Error updating last login:", error, { userId: id });
         }
     }
     async findPaginated(limit, offset, searchTerm, filters) {
@@ -273,12 +277,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             };
         }
         catch (error) {
-            console.error("Error finding paginated users:", error);
-            return {
-                users: [],
-                total: 0,
-                hasMore: false,
-            };
+            this._logger.error("Error finding paginated users:", error);
+            throw error;
         }
     }
     async countByOrg(orgId) {
@@ -286,8 +286,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return await UserModel_1.default.countDocuments({ orgId });
         }
         catch (error) {
-            console.error("Error counting users by org:", error);
-            return 0;
+            this._logger.error("Error counting users by org:", error, { orgId });
+            throw error;
         }
     }
     async countByRole(role) {
@@ -295,8 +295,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return await UserModel_1.default.countDocuments({ role });
         }
         catch (error) {
-            console.error("Error counting users by role:", error);
-            return 0;
+            this._logger.error("Error counting users by role:", error, { role });
+            throw error;
         }
     }
     async count() {
@@ -304,8 +304,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return await UserModel_1.default.countDocuments();
         }
         catch (error) {
-            console.error("Error counting users:", error);
-            return 0;
+            this._logger.error("Error counting users:", error);
+            throw error;
         }
     }
     async findByStatus(status) {
@@ -314,8 +314,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error("Error finding users by status:", error);
-            return [];
+            this._logger.error("Error finding users by status:", error, { status });
+            throw error;
         }
     }
     async findUsersWithExpiredOtp() {
@@ -327,8 +327,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            console.error("Error finding users with expired OTP:", error);
-            return [];
+            this._logger.error("Error finding users with expired OTP:", error);
+            throw error;
         }
     }
     async cleanExpiredOtps() {
@@ -337,8 +337,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return result.modifiedCount;
         }
         catch (error) {
-            console.error("Error cleaning expired OTPs:", error);
-            return 0;
+            this._logger.error("Error cleaning expired OTPs:", error);
+            throw error;
         }
     }
     async emailExists(email, excludeUserId) {
@@ -351,8 +351,8 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             return !!existing;
         }
         catch (error) {
-            console.error("Error checking if email exists:", error);
-            return false;
+            this._logger.error("Error checking if email exists:", error, { email });
+            throw error;
         }
     }
     async getStats() {
@@ -386,22 +386,15 @@ let UserRepo = class UserRepo extends BaseRepository_1.BaseRepository {
             };
         }
         catch (error) {
-            console.error("Error getting user stats:", error);
-            return {
-                total: 0,
-                active: 0,
-                inactive: 0,
-                pending: 0,
-                verified: 0,
-                unverified: 0,
-                byRole: {},
-            };
+            this._logger.error("Error getting user stats:", error);
+            throw error;
         }
     }
 };
 exports.UserRepo = UserRepo;
 exports.UserRepo = UserRepo = __decorate([
     (0, inversify_1.injectable)(),
-    __metadata("design:paramtypes", [])
+    __param(0, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
+    __metadata("design:paramtypes", [Object])
 ], UserRepo);
 //# sourceMappingURL=UserRepo.js.map

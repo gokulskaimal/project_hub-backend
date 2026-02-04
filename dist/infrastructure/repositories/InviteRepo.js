@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteRepo = void 0;
 const inversify_1 = require("inversify");
-const BaseRepository_1 = require("./BaseRepository");
+const BaseRepo_1 = require("./BaseRepo");
 const InviteModel_1 = __importDefault(require("../models/InviteModel"));
-let InviteRepo = class InviteRepo extends BaseRepository_1.BaseRepository {
+let InviteRepo = class InviteRepo extends BaseRepo_1.BaseRepository {
     constructor() {
         // Cast to unknown first to resolve strict Mongoose type incompatibilities
         super(InviteModel_1.default);

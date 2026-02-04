@@ -15,9 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserProfileUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
-const asyncHandler_1 = require("../../utils/asyncHandler");
-const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
 const UserDTO_1 = require("../../application/dto/UserDTO");
+const CommonErrors_1 = require("../../domain/errors/CommonErrors");
+const AuthErrors_1 = require("../../domain/errors/AuthErrors");
 let UserProfileUseCase = class UserProfileUseCase {
     constructor(_userRepo, _orgRepo, _hashService, _logger) {
         this._userRepo = _userRepo;
@@ -50,7 +50,7 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
+                throw new CommonErrors_1.EntityNotFoundError("User", userId);
             }
             let organizationName;
             if (user.orgId) {
@@ -86,7 +86,7 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const existingUser = await this._userRepo.findById(userId);
             if (!existingUser) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
+                throw new CommonErrors_1.EntityNotFoundError("User", userId);
             }
             const filteredUpdateData = {};
             if (updateData.firstName)
@@ -100,7 +100,7 @@ let UserProfileUseCase = class UserProfileUseCase {
             }
             const updatedUser = await this._userRepo.update(userId, filteredUpdateData);
             if (!updatedUser) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found after update");
+                throw new CommonErrors_1.EntityNotFoundError("User not found after update");
             }
             return (0, UserDTO_1.toUserDTO)({ ...updatedUser });
         }
@@ -116,16 +116,16 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
+                throw new CommonErrors_1.EntityNotFoundError("User", userId);
             }
             const isCurrentPasswordValid = await this._hashService.compare(currentPassword, user.password);
             if (!isCurrentPasswordValid) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.UNAUTHORIZED, "Current password is incorrect");
+                throw new AuthErrors_1.InvalidCredentialsError();
             }
             this._validatePassword(newPassword);
             const isSamePassword = await this._hashService.compare(newPassword, user.password);
             if (isSamePassword) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "New password must be different from current password");
+                throw new CommonErrors_1.ValidationError("New password must be different from current password");
             }
             const hashedNewPassword = await this._hashService.hash(newPassword);
             await this._userRepo.updatePassword(userId, hashedNewPassword);
@@ -143,11 +143,11 @@ let UserProfileUseCase = class UserProfileUseCase {
         try {
             const user = await this._userRepo.findById(userId);
             if (!user) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "User not found");
+                throw new CommonErrors_1.EntityNotFoundError("User", userId);
             }
             const isPasswordValid = await this._hashService.compare(password, user.password);
             if (!isPasswordValid) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.UNAUTHORIZED, "Invalid password");
+                throw new AuthErrors_1.InvalidCredentialsError();
             }
             await this._userRepo.update(userId, {
                 status: "INACTIVE",
@@ -201,16 +201,16 @@ let UserProfileUseCase = class UserProfileUseCase {
     }
     _validatePassword(password) {
         if (!password || typeof password !== "string") {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password is required");
+            throw new CommonErrors_1.ValidationError("Password is required");
         }
         if (password.length < 8) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must be at least 8 characters long");
+            throw new CommonErrors_1.ValidationError("Password must be at least 8 characters long");
         }
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one lowercase letter, one uppercase letter, and one number");
+            throw new CommonErrors_1.ValidationError("Password must contain at least one lowercase letter, one uppercase letter, and one number");
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Password must contain at least one special character");
+            throw new CommonErrors_1.ValidationError("Password must contain at least one special character");
         }
     }
 };

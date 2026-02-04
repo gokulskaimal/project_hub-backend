@@ -20,6 +20,7 @@ export const TYPES = {
   ITaskRepo: Symbol.for("ITaskRepo"),
   IProjectRepo: Symbol.for("IProjectRepo"),
   INotificationRepo: Symbol.for("INotificationRepo"),
+  IChatRepo: Symbol.for("IChatRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -65,6 +66,10 @@ export const TYPES = {
   IMarkAllNotificationsReadUseCase: Symbol.for(
     "IMarkAllNotificationsReadUseCase",
   ),
+  ISendMessageUseCase: Symbol.for("ISendMessageUseCase"),
+  IGetProjectMessagesUseCase: Symbol.for("IGetProjectMessagesUseCase"),
+  IEditMessageUseCase: Symbol.for("IEditMessageUseCase"),
+  IDeleteMessageUseCase: Symbol.for("IDeleteMessageUseCase"),
 
   // ===== CONTROLLERS =====
   // AuthController: Symbol.for("AuthController"), // Removed in favor of split controllers
@@ -84,6 +89,7 @@ export const TYPES = {
   TaskController: Symbol.for("TaskController"),
   OrganizationController: Symbol.for("OrganizationController"),
   NotificationController: Symbol.for("NotificationController"),
+  ChatController: Symbol.for("ChatController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),

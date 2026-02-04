@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HashService = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const inversify_1 = require("inversify");
+const crypto_1 = __importDefault(require("crypto"));
 /**
  * Hash Service Implementation
  * Provides password hashing and verification using bcrypt
@@ -98,6 +99,9 @@ let HashService = class HashService {
         catch (error) {
             throw new Error(`Failed to compare data synchronously: ${error.message}`);
         }
+    }
+    hashToken(token) {
+        return crypto_1.default.createHash('sha256').update(token).digest('hex');
     }
 };
 exports.HashService = HashService;

@@ -30,6 +30,14 @@ const UserSchema = new mongoose_1.default.Schema({
     },
     lastLoginAt: { type: Date },
 }, { timestamps: true });
+// Optimize "Get All Organization Members" (filtering by role)
+UserSchema.index({ orgId: 1, role: 1 });
+// Optimize "Filter by Status"
+UserSchema.index({ status: 1 });
+// Optimize "Find by Email" (already unique, but ensuring it's explicit if needed)
+// UserSchema.index({ email: 1 }, { unique: true }); // Mongoose handles this via schema definition
+// Optimize "Find by Verification Token"
+UserSchema.index({ otp: 1 });
 exports.UserModel = mongoose_1.default.model("User", UserSchema);
 exports.default = exports.UserModel;
 //# sourceMappingURL=UserModel.js.map

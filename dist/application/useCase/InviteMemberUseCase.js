@@ -15,29 +15,46 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InviteMemberUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
-const asyncHandler_1 = require("../../utils/asyncHandler");
-const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const CommonErrors_1 = require("../../domain/errors/CommonErrors");
+const CommonErrors_2 = require("../../domain/errors/CommonErrors");
+const AuthErrors_1 = require("../../domain/errors/AuthErrors");
 let InviteMemberUseCase = class InviteMemberUseCase {
-    constructor(_inviteRepo, _emailService, _logger, _orgRepo, _userRepo) {
+    constructor(_inviteRepo, _emailService, _logger, _orgRepo, _userRepo, _subRepo, _planRepo, _hashService) {
         this._inviteRepo = _inviteRepo;
         this._emailService = _emailService;
         this._logger = _logger;
         this._orgRepo = _orgRepo;
         this._userRepo = _userRepo;
+        this._subRepo = _subRepo;
+        this._planRepo = _planRepo;
+        this._hashService = _hashService;
     }
-    async execute(email, orgId, role) {
+    async execute(email, orgId, role, expiresIn = 1) {
         this._logger.info("Processing member invitation", { email, orgId, role });
         try {
             this._validateInput(email, orgId);
             const organization = await this._orgRepo.findById(orgId);
             if (!organization) {
                 this._logger.warn("Organization not found for invitation", { orgId });
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.NOT_FOUND, "Organization not found");
+                throw new AuthErrors_1.OrganizationNotFoundError();
+            }
+            // Check Plan Limits
+            if (organization.createdBy) {
+                const subscription = await this._subRepo.findByUserId(organization.createdBy); // Owner pays
+                if (subscription) {
+                    const plan = await this._planRepo.findById(subscription.planId);
+                    if (plan && plan.limits && plan.limits.members !== -1) {
+                        const currentMembers = await this._userRepo.countByOrg(orgId);
+                        if (currentMembers >= plan.limits.members) {
+                            throw new CommonErrors_1.QuotaExceededError(`Member limit of ${plan.limits.members} reached for this plan.`);
+                        }
+                    }
+                }
             }
             const existingUser = await this._userRepo.findByEmail(email);
             if (existingUser) {
                 this._logger.warn("User already exists", { email });
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "User with this email already exists");
+                throw new CommonErrors_2.ConflictError("User with this email already exists");
             }
             const existingInvite = await this._inviteRepo.findPendingByEmail(email, orgId);
             if (existingInvite) {
@@ -45,15 +62,16 @@ let InviteMemberUseCase = class InviteMemberUseCase {
                     email,
                     orgId,
                 });
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.CONFLICT, "An invitation to this email is already pending");
+                throw new CommonErrors_2.ConflictError("An invitation to this email is already pending");
             }
             const token = this._generateInvitationToken();
-            const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            const hashedToken = await this._hashService.hashToken(token);
+            const expiry = new Date(Date.now() + expiresIn * 24 * 60 * 60 * 1000);
             // Use const assertion for status
             const inviteData = {
                 email,
                 orgId,
-                token,
+                token: hashedToken,
                 status: "PENDING",
                 expiry,
                 role: role || "TEAM_MEMBER",
@@ -83,7 +101,7 @@ let InviteMemberUseCase = class InviteMemberUseCase {
             throw error;
         }
     }
-    async bulkInvite(emails, orgId, role) {
+    async bulkInvite(emails, orgId, role, expiresIn) {
         this._logger.info("Processing bulk member invitations", {
             emailCount: emails.length,
             orgId,
@@ -93,7 +111,7 @@ let InviteMemberUseCase = class InviteMemberUseCase {
         const failed = [];
         for (const email of emails) {
             try {
-                const result = await this.execute(email, orgId, role);
+                const result = await this.execute(email, orgId, role, expiresIn);
                 successful.push({
                     email,
                     invitationId: result.invitationId,
@@ -126,17 +144,17 @@ let InviteMemberUseCase = class InviteMemberUseCase {
     }
     _validateInput(email, orgId) {
         if (!email || typeof email !== "string") {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email is required");
+            throw new CommonErrors_2.ValidationError("Email is required");
         }
         if (!orgId || typeof orgId !== "string") {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Organization ID is required");
+            throw new CommonErrors_2.ValidationError("Organization ID is required");
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
+            throw new CommonErrors_2.ValidationError("Invalid email format");
         }
         if (email.length > 254) {
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email address is too long");
+            throw new CommonErrors_2.ValidationError("Email address is too long");
         }
     }
     _generateInvitationToken() {
@@ -157,7 +175,8 @@ let InviteMemberUseCase = class InviteMemberUseCase {
                 email,
                 orgName,
             });
-            throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.INTERNAL_SERVER_ERROR, "Failed to send invitation email");
+            // Throw standard Error for internal failures, middleware will handle as 500
+            throw new Error("Failed to send invitation email");
         }
     }
 };
@@ -169,6 +188,9 @@ exports.InviteMemberUseCase = InviteMemberUseCase = __decorate([
     __param(2, (0, inversify_1.inject)(types_1.TYPES.ILogger)),
     __param(3, (0, inversify_1.inject)(types_1.TYPES.IOrgRepo)),
     __param(4, (0, inversify_1.inject)(types_1.TYPES.IUserRepo)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
+    __param(5, (0, inversify_1.inject)(types_1.TYPES.ISubscriptionRepo)),
+    __param(6, (0, inversify_1.inject)(types_1.TYPES.IPlanRepo)),
+    __param(7, (0, inversify_1.inject)(types_1.TYPES.IHashService)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object, Object])
 ], InviteMemberUseCase);
 //# sourceMappingURL=InviteMemberUseCase.js.map

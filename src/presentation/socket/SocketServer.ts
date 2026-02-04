@@ -47,6 +47,20 @@ export class SocketServer {
 
     this.io.on("connection", (socket) => {
       this.handleConnection(socket);
+
+      socket.on("join-project", (projectId: string) => {
+        this._logger.info(
+          `User ${socket.data.user?.id} joined project room: project:${projectId}`,
+        );
+        socket.join(`project:${projectId}`);
+      });
+
+      socket.on("leave-project", (projectId: string) => {
+        this._logger.info(
+          `User ${socket.data.user?.id} left project room: project:${projectId}`,
+        );
+        socket.leave(`project:${projectId}`);
+      });
     });
 
     this._logger.info("Socket is initialized");

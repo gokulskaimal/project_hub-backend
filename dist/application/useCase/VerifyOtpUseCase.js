@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.VerifyOtpUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
-const asyncHandler_1 = require("../../utils/asyncHandler");
-const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const CommonErrors_1 = require("../../domain/errors/CommonErrors");
+const AuthErrors_1 = require("../../domain/errors/AuthErrors");
 let VerifyOtpUseCase = class VerifyOtpUseCase {
     constructor(_userRepo, _logger, _cache) {
         this._userRepo = _userRepo;
@@ -27,7 +27,7 @@ let VerifyOtpUseCase = class VerifyOtpUseCase {
         this._logger.info("Verifying OTP", { email });
         try {
             if (!email || !otp) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Email and OTP are required");
+                throw new CommonErrors_1.ValidationError("Email and OTP are required");
             }
             const user = await this._userRepo.verifyOtp(email, otp);
             if (!user) {
@@ -41,7 +41,7 @@ let VerifyOtpUseCase = class VerifyOtpUseCase {
                 const message = attemptsRemaining > 0
                     ? `Invalid OTP. ${attemptsRemaining} attempts remaining.`
                     : "Invalid OTP. Too many attempts. Please request a new OTP.";
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, message);
+                throw new AuthErrors_1.InvalidCredentialsError(message);
             }
             await this._userRepo.verifyEmail(user.id);
             await this._userRepo.saveOtp(email, "", new Date());

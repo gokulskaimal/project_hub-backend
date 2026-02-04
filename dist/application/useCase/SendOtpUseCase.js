@@ -15,8 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SendOtpUseCase = void 0;
 const inversify_1 = require("inversify");
 const types_1 = require("../../infrastructure/container/types");
-const asyncHandler_1 = require("../../utils/asyncHandler");
-const statusCodes_enum_1 = require("../../infrastructure/config/statusCodes.enum");
+const CommonErrors_1 = require("../../domain/errors/CommonErrors");
 let SendOtpUseCase = class SendOtpUseCase {
     constructor(_userRepo, _otpService, _emailService, _logger, _cache) {
         this._userRepo = _userRepo;
@@ -33,12 +32,12 @@ let SendOtpUseCase = class SendOtpUseCase {
         try {
             // Business Rule: Validate email format
             if (!this._isValidEmail(email)) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, "Invalid email format");
+                throw new CommonErrors_1.ValidationError("Invalid email format");
             }
             // Business Rule: Check rate limiting
             const attemptsRemaining = await this._checkRateLimit(email);
             if (attemptsRemaining <= 0) {
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.TOO_MANY_REQUESTS, "Too many OTP requests. Please wait before requesting again.");
+                throw new CommonErrors_1.TooManyRequestsError("Too many OTP requests. Please wait before requesting again.");
             }
             const otp = this._otpService.generateOtp(6); // 6-digit OTP
             const expiresAt = this._otpService.generateExpiry(1); // 1 minute from now
@@ -67,7 +66,7 @@ let SendOtpUseCase = class SendOtpUseCase {
             const existingOtp = await this._userRepo.getOtp(email);
             if (existingOtp && existingOtp.expiresAt > new Date()) {
                 const remainingTime = Math.ceil((existingOtp.expiresAt.getTime() - Date.now()) / 1000 / 60);
-                throw new asyncHandler_1.HttpError(statusCodes_enum_1.StatusCodes.BAD_REQUEST, `OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`);
+                throw new CommonErrors_1.InvalidOperationError(`OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`);
             }
             // Use the same logic as execute
             return this.execute(email);
