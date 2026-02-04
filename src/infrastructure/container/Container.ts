@@ -15,6 +15,7 @@ import { IRazorpayService } from "../interface/services/IRazorpayService";
 import { IPlanRepo } from "../interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
 import { ISocketService } from "../interface/services/ISocketService";
+import { IFileService } from "../interface/services/IFileService";
 
 //Interfaces - Repositories
 import { IUserRepo } from "../interface/repositories/IUserRepo";
@@ -82,6 +83,7 @@ import { InMemoryCacheService } from "../services/InMemoryCacheService";
 import { RazorpayService } from "../services/RazorpayService";
 import { SocketService } from "../services/SocketService";
 import { SocketServer } from "../../presentation/socket/SocketServer";
+import { CloudinaryService } from "../services/CloudinaryService";
 
 // Domain Interfaces - Providers
 import { IJwtProvider } from "../interface/services/IJwtProvider";
@@ -163,6 +165,7 @@ import { TaskController } from "../../presentation/controllers/manager/TaskContr
 import { ProjectController } from "../../presentation/controllers/manager/ProjectController";
 import { NotificationController } from "../../presentation/controllers/NotificationController";
 import { ChatController } from "../../presentation/controllers/ChatController";
+import { UploadController } from "../../presentation/controllers/UploadController";
 
 // Chat Interfaces
 import { IChatRepo } from "../interface/repositories/IChatRepo";
@@ -263,6 +266,11 @@ class DIContainer {
     this._container
       .bind<SocketServer>(TYPES.SocketServer)
       .to(SocketServer)
+      .inSingletonScope();
+
+    this._container
+      .bind<IFileService>(TYPES.IFileService)
+      .to(CloudinaryService)
       .inSingletonScope();
 
     const useRedis =
@@ -591,6 +599,11 @@ class DIContainer {
     this._container
       .bind<ChatController>(TYPES.ChatController)
       .to(ChatController)
+      .inSingletonScope();
+
+    this._container
+      .bind<UploadController>(TYPES.UploadController)
+      .to(UploadController)
       .inSingletonScope();
   }
 

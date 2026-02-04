@@ -8,5 +8,6 @@ export class ChatMessage {
     public fileUrl: string | null,
     public createdAt: Date,
     public senderName?: string, // Populated field
+    public senderAvatar?: string, // Populated field
   ) {}
 }

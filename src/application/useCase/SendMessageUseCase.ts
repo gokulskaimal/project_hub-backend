@@ -29,6 +29,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     projectId: string,
     content: string,
     type?: "TEXT" | "FILE",
+    fileUrl?: string,
   ): Promise<ChatMessage> {
     const project = await this._projectRepo.findById(projectId);
     if (!project) {
@@ -40,6 +41,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
       projectId,
       content,
       type,
+      fileUrl,
     });
 
     this._socketService.emitToProject(projectId, "chat:message", message);

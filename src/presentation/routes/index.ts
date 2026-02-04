@@ -11,6 +11,7 @@ import { createPlanRoutes } from "./planRoutes";
 import { createProjectRoutes } from "./projectRoutes";
 import { createNotificationRoutes } from "./notificationRoutes";
 import { createChatRoutes } from "./chatRoutes";
+import { createUploadRoutes } from "./uploadRoutes";
 
 export function createRoutes(container: Container): {
   auth: Router;
@@ -24,6 +25,7 @@ export function createRoutes(container: Container): {
   plans: Router;
   notifications: Router;
   chat: Router;
+  upload: Router;
 } {
   // 1. Auth Routes
   const authRouter = createAuthRoutes(container);
@@ -52,6 +54,7 @@ export function createRoutes(container: Container): {
 
   const notificationRouter = createNotificationRoutes(container);
   const chatRouter = createChatRoutes(container);
+  const uploadRouter = createUploadRoutes(container);
 
   return {
     auth: authRouter,
@@ -65,5 +68,6 @@ export function createRoutes(container: Container): {
     plans: planRouter,
     notifications: notificationRouter,
     chat: chatRouter,
+    upload: uploadRouter,
   };
 }

@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\.89c1bf036a588acfc3e709d3ef29f8904c44c951-audit.json",
+    "files": [
+        {
+            "date": 1770210129240,
+            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-04.log",
+            "hash": "bcf3c64a7c62010f969daa118f29a546c69d60348f86991d1c434758921f531b"
+        }
+    ],
+    "hashType": "sha256"
+}

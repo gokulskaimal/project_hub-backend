@@ -168,6 +168,7 @@ function setupRoutes(app: express.Application): void {
   app.use("/api", routes.user);
   app.use("/api/notifications", routes.notifications);
   app.use("/api/chat", routes.chat);
+  app.use("/api/upload", routes.upload);
 
   // Container diagnostic endpoint (development only)
   if (process.env.NODE_ENV === "development") {

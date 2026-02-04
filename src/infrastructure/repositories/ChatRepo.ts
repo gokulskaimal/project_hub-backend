@@ -8,13 +8,14 @@ interface PopulatedSender {
   firstName?: string;
   lastName?: string;
   name?: string;
+  avatar?: string;
 }
 
 @injectable()
 export class ChatRepo implements IChatRepo {
   async create(data: Partial<ChatMessage>): Promise<ChatMessage> {
     const msg = await ChatModel.create(data);
-    await msg.populate("senderId", "firstName lastName name");
+    await msg.populate("senderId", "firstName lastName name avatar");
 
     const entity = this.toEntity(msg);
     const sender = msg.senderId as unknown as PopulatedSender;
@@ -22,6 +23,7 @@ export class ChatRepo implements IChatRepo {
       entity.senderName = sender.firstName
         ? `${sender.firstName} ${sender.lastName}`
         : sender.name;
+      entity.senderAvatar = sender.avatar;
     }
     return entity;
   }
@@ -35,7 +37,7 @@ export class ChatRepo implements IChatRepo {
       .sort({ createdAt: -1 }) // Newest first
       .skip(offset)
       .limit(limit)
-      .populate("senderId", "firstName lastName name")
+      .populate("senderId", "firstName lastName name avatar")
       .exec();
 
     return docs
@@ -46,6 +48,7 @@ export class ChatRepo implements IChatRepo {
           entity.senderName = sender.firstName
             ? `${sender.firstName} ${sender.lastName}`
             : sender.name;
+          entity.senderAvatar = sender.avatar;
         }
         return entity;
       })
@@ -87,6 +90,7 @@ export class ChatRepo implements IChatRepo {
       entity.senderName = sender.firstName
         ? `${sender.firstName} ${sender.lastName}`
         : sender.name;
+      entity.senderAvatar = sender.avatar;
     }
     return entity;
   }

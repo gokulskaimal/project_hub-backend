@@ -10,6 +10,7 @@ export const TYPES = {
   IGoogleAuthService: Symbol.for("IGoogleAuthService"),
   IRazorpayService: Symbol.for("IRazorpayService"),
   ISocketService: Symbol.for("ISocketService"),
+  IFileService: Symbol.for("IFileService"),
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
@@ -90,6 +91,7 @@ export const TYPES = {
   OrganizationController: Symbol.for("OrganizationController"),
   NotificationController: Symbol.for("NotificationController"),
   ChatController: Symbol.for("ChatController"),
+  UploadController: Symbol.for("UploadController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),

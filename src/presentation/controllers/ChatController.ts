@@ -24,7 +24,7 @@ export class ChatController {
   sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { projectId } = req.params;
-      const { content, type } = req.body;
+      const { content, type, fileUrl } = req.body;
       const userId = (req as AuthenticatedRequest).user!.id;
 
       const message = await this._sendMessageUC.execute(
@@ -32,6 +32,7 @@ export class ChatController {
         projectId,
         content,
         type,
+        fileUrl,
       );
 
       res.status(StatusCodes.OK).json({

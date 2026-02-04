@@ -6,5 +6,6 @@ export interface ISendMessageUseCase {
     projectId: string,
     content: string,
     type?: "TEXT" | "FILE",
+    fileUrl?: string,
   ): Promise<ChatMessage>;
 }

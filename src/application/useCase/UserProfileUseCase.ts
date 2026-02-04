@@ -5,7 +5,11 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { UserDTO, toUserDTO, UpdateProfileRequestDTO } from "../../application/dto/UserDTO";
+import {
+  UserDTO,
+  toUserDTO,
+  UpdateProfileRequestDTO,
+} from "../../application/dto/UserDTO";
 import { User } from "../../domain/entities/User";
 import {
   EntityNotFoundError,
@@ -27,23 +31,23 @@ export class UserProfileUseCase implements IUserProfileUseCase {
 
     // Handle synthetic Super Admin ID (from env-based login)
     if (userId === "super_admin") {
-        const now = new Date().toISOString();
-        return {
-          id: "super_admin",
-          email: process.env.SUPER_ADMIN_EMAIL || "admin@projecthub.com",
-          name: "Super Admin",
-          firstName: "Super",
-          lastName: "Admin",
-          role: "SUPER_ADMIN",
-          status: "ACTIVE",
-          emailVerified: true,
-          emailVerifiedAt: now,
-          createdAt: now,
-          updatedAt: now,
-          profileComplete: true,
-          orgId: null,
-          avatar: null,
-        };
+      const now = new Date().toISOString();
+      return {
+        id: "super_admin",
+        email: process.env.SUPER_ADMIN_EMAIL || "admin@projecthub.com",
+        name: "Super Admin",
+        firstName: "Super",
+        lastName: "Admin",
+        role: "SUPER_ADMIN",
+        status: "ACTIVE",
+        emailVerified: true,
+        emailVerifiedAt: now,
+        createdAt: now,
+        updatedAt: now,
+        profileComplete: true,
+        orgId: null,
+        avatar: null,
+      };
     }
 
     try {
@@ -95,13 +99,19 @@ export class UserProfileUseCase implements IUserProfileUseCase {
       }
 
       const filteredUpdateData: Partial<User> = {};
-      
-      if (updateData.firstName) filteredUpdateData.firstName = updateData.firstName;
-      if (updateData.lastName) filteredUpdateData.lastName = updateData.lastName;
+
+      if (updateData.firstName)
+        filteredUpdateData.firstName = updateData.firstName;
+      if (updateData.lastName)
+        filteredUpdateData.lastName = updateData.lastName;
+      if (updateData.avatar !== undefined)
+        filteredUpdateData.avatar = updateData.avatar;
 
       if (filteredUpdateData.firstName || filteredUpdateData.lastName) {
-        const firstName = (filteredUpdateData.firstName as string) || existingUser.firstName;
-        const lastName = (filteredUpdateData.lastName as string) || existingUser.lastName;
+        const firstName =
+          (filteredUpdateData.firstName as string) || existingUser.firstName;
+        const lastName =
+          (filteredUpdateData.lastName as string) || existingUser.lastName;
         filteredUpdateData.name = `${firstName} ${lastName}`.trim();
       }
 
@@ -109,11 +119,11 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         userId,
         filteredUpdateData,
       );
-      
+
       if (!updatedUser) {
         throw new EntityNotFoundError("User not found after update");
       }
-      
+
       return toUserDTO({ ...updatedUser });
     } catch (error) {
       this._logger.error("Failed to update user profile", error as Error, {
@@ -266,4 +276,3 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     }
   }
 }
-

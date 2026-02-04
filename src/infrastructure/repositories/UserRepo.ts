@@ -12,11 +12,9 @@ import { ILogger } from "../interface/services/ILogger";
 @injectable()
 export class UserRepo
   extends BaseRepository<User, IUserDoc>
-  implements IUserRepo {
-  
-  constructor(
-    @inject(TYPES.ILogger) private readonly _logger: ILogger
-  ) {
+  implements IUserRepo
+{
+  constructor(@inject(TYPES.ILogger) private readonly _logger: ILogger) {
     super(UserModel);
   }
 
@@ -41,6 +39,9 @@ export class UserRepo
       lastLoginAt: plain.lastLoginAt,
       resetPasswordToken: plain.resetPasswordToken,
       resetPasswordExpires: plain.resetPasswordExpires,
+      avatar: plain.avatar,
+      provider: plain.provider,
+      googleId: plain.googleId,
     };
   }
 
@@ -75,13 +76,15 @@ export class UserRepo
       throw new Error(`Failed to get OTP: ${(error as Error).message}`);
     }
   }
-  
+
   async findOrganizationById?(orgId: string): Promise<Organization | null> {
     try {
       const org = await OrgModel.findById(orgId);
       return org ? (org.toObject() as Organization) : null;
     } catch (error) {
-      this._logger.error(`Failed to find organization by id`, error as Error, { orgId });
+      this._logger.error(`Failed to find organization by id`, error as Error, {
+        orgId,
+      });
       throw new Error(
         `Failed to find organization by id: ${(error as Error).message}`,
       );
@@ -227,7 +230,9 @@ export class UserRepo
       const users = await UserModel.find({ role });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      this._logger.error("Error finding users by role:", error as Error, { role });
+      this._logger.error("Error finding users by role:", error as Error, {
+        role,
+      });
       throw error;
     }
   }
@@ -237,7 +242,11 @@ export class UserRepo
       const users = await UserModel.find({ orgId, role });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      this._logger.error("Error finding users by org and role:", error as Error, { orgId, role });
+      this._logger.error(
+        "Error finding users by org and role:",
+        error as Error,
+        { orgId, role },
+      );
       throw error;
     }
   }
@@ -252,7 +261,10 @@ export class UserRepo
       if (!updated) throw new Error("User not found");
       return this.toDomainUser(updated);
     } catch (error) {
-      this._logger.error(`Failed to update user status`, error as Error, { userId: id, status });
+      this._logger.error(`Failed to update user status`, error as Error, {
+        userId: id,
+        status,
+      });
       throw error;
     }
   }
@@ -263,7 +275,10 @@ export class UserRepo
         orgId: null,
       });
     } catch (error) {
-      this._logger.error(`Failed to remove user from org`, error as Error, { userId, orgId: _orgId });
+      this._logger.error(`Failed to remove user from org`, error as Error, {
+        userId,
+        orgId: _orgId,
+      });
       throw error;
     }
   }
@@ -274,7 +289,9 @@ export class UserRepo
         lastLoginAt: loginTime,
       });
     } catch (error) {
-      this._logger.error("Error updating last login:", error as Error, { userId: id });
+      this._logger.error("Error updating last login:", error as Error, {
+        userId: id,
+      });
     }
   }
 
@@ -336,7 +353,9 @@ export class UserRepo
     try {
       return await UserModel.countDocuments({ orgId });
     } catch (error) {
-      this._logger.error("Error counting users by org:", error as Error, { orgId });
+      this._logger.error("Error counting users by org:", error as Error, {
+        orgId,
+      });
       throw error;
     }
   }
@@ -345,7 +364,9 @@ export class UserRepo
     try {
       return await UserModel.countDocuments({ role });
     } catch (error) {
-      this._logger.error("Error counting users by role:", error as Error, { role });
+      this._logger.error("Error counting users by role:", error as Error, {
+        role,
+      });
       throw error;
     }
   }
@@ -364,7 +385,9 @@ export class UserRepo
       const users = await UserModel.find({ status });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      this._logger.error("Error finding users by status:", error as Error, { status });
+      this._logger.error("Error finding users by status:", error as Error, {
+        status,
+      });
       throw error;
     }
   }
@@ -377,7 +400,10 @@ export class UserRepo
       });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
-      this._logger.error("Error finding users with expired OTP:", error as Error);
+      this._logger.error(
+        "Error finding users with expired OTP:",
+        error as Error,
+      );
       throw error;
     }
   }
@@ -404,7 +430,9 @@ export class UserRepo
       const existing = await UserModel.findOne(query);
       return !!existing;
     } catch (error) {
-      this._logger.error("Error checking if email exists:", error as Error, { email });
+      this._logger.error("Error checking if email exists:", error as Error, {
+        email,
+      });
       throw error;
     }
   }
