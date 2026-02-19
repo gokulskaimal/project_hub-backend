@@ -8,11 +8,15 @@ import { IDeleteTaskUseCase } from "../../../application/interface/useCases/IDel
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
-import { ValidationError } from "../../../domain/errors/CommonErrors";
+import {
+  ValidationError,
+  EntityNotFoundError,
+} from "../../../domain/errors/CommonErrors";
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { toTaskDTO } from "../../../application/dto/TaskDTO";
 
 import { IGetMemberTasksUseCase } from "../../../application/interface/useCases/IGetMemberTasksUseCase";
+import { IToggleTimerUseCase } from "../../../application/interface/useCases/IToggleTimerUseCase";
 
 @injectable()
 export class TaskController {
@@ -24,6 +28,8 @@ export class TaskController {
     @inject(TYPES.IDeleteTaskUseCase) private _deleteTaskUC: IDeleteTaskUseCase,
     @inject(TYPES.IGetMemberTasksUseCase)
     private _getMemberTasksUC: IGetMemberTasksUseCase,
+    @inject(TYPES.IToggleTimerUseCase)
+    private _toggleTimerUC: IToggleTimerUseCase,
   ) {}
 
   createTask = asyncHandler(async (req: Request, res: Response) => {
@@ -94,5 +100,26 @@ export class TaskController {
     this._logger.info(`Deleting task ${id}`);
     await this._deleteTaskUC.execute(id);
     res.status(StatusCodes.OK).json({ success: true, message: "Task deleted" });
+  });
+
+  toggleTimer = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { action } = req.body;
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user)
+      throw new ValidationError("Unauthorized: Missing user context");
+
+    if (action !== "start" && action !== "stop") {
+      throw new ValidationError("Invalid action. Must be 'start' or 'stop'");
+    }
+
+    this._logger.info(`Toggling timer for task ${id}: ${action}`);
+    const task = await this._toggleTimerUC.execute(id, authReq.user.id, action);
+
+    if (!task) {
+      throw new EntityNotFoundError("Task", id);
+    }
+
+    res.status(StatusCodes.OK).json({ success: true, data: toTaskDTO(task) });
   });
 }

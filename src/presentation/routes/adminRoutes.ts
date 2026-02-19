@@ -7,21 +7,28 @@ import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";
 import { UserRole } from "../../domain/enums/UserRole";
-import { API_ROUTES } from "./constants";
+import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 
 export function createAdminRoutes(container: Container): Router {
   const router = Router();
+  const userController = container.get<AdminUserController>(
+    TYPES.AdminUserController,
+  );
+  const orgController = container.get<AdminOrgController>(
+    TYPES.AdminOrgController,
+  );
+  const planController = container.get<AdminPlanController>(
+    TYPES.AdminPlanController,
+  );
 
-  // Get new split controllers
-  const userController = container.get<AdminUserController>(TYPES.AdminUserController);
-  const orgController = container.get<AdminOrgController>(TYPES.AdminOrgController);
-  const planController = container.get<AdminPlanController>(TYPES.AdminPlanController);
+  router.use(
+    API_ROUTES.ADMIN.BASE,
+    authMiddleware,
+    roleMiddleware(UserRole.SUPER_ADMIN),
+  );
 
-  // Protect all admin routes
-  router.use("/admin", authMiddleware, roleMiddleware(UserRole.SUPER_ADMIN));
-
-  // ===== Organizations =====
+  // Organizations
   router.get(API_ROUTES.ADMIN.ORGANIZATIONS, (req, res, next) =>
     orgController.listOrganizations(req as AuthenticatedRequest, res, next),
   );
@@ -38,49 +45,47 @@ export function createAdminRoutes(container: Container): Router {
     orgController.deleteOrganization(req as AuthenticatedRequest, res, next),
   );
 
-  // ===== Users =====
+  // Users
   router.get(API_ROUTES.ADMIN.USERS, (req, res, next) =>
     userController.listUsers(req as AuthenticatedRequest, res, next),
   );
   router.get(`${API_ROUTES.ADMIN.USERS}/:id`, (req, res, next) =>
-    userController.getUserById(req as AuthenticatedRequest, res, next), // Assuming endpoint exists or will exist
+    userController.getUserById(req as AuthenticatedRequest, res, next),
   );
   router.delete(`${API_ROUTES.ADMIN.USERS}/:id`, (req, res, next) =>
     userController.deleteUser(req as AuthenticatedRequest, res, next),
   );
   router.put(`${API_ROUTES.ADMIN.USERS}/:id`, (req, res, next) =>
-    userController.updateUser(req as AuthenticatedRequest, res, next), // Fixed: was missing
+    userController.updateUser(req as AuthenticatedRequest, res, next),
   );
   router.put(`${API_ROUTES.ADMIN.USERS}/:id/status`, (req, res, next) =>
     userController.updateUserStatus(req as AuthenticatedRequest, res, next),
   );
 
-  // ===== Specific actions (Org Related) =====
+  // Reports & Invites
   router.get(API_ROUTES.ADMIN.REPORTS, (req, res, next) =>
     orgController.getReports(req as AuthenticatedRequest, res, next),
   );
-  router.post("/invite-member", (req, res, next) =>
+  router.post(API_ROUTES.ADMIN.INVITE_MEMBER, (req, res, next) =>
     orgController.inviteMember(req as AuthenticatedRequest, res, next),
   );
-  router.post("/bulk-invite", (req, res, next) =>
+  router.post(API_ROUTES.ADMIN.BULK_INVITE, (req, res, next) =>
     orgController.bulkInviteMembers(req as AuthenticatedRequest, res, next),
   );
 
-  // ===== Plans =====
+  // Plans
   router.post(API_ROUTES.ADMIN.PLANS, (req, res, next) =>
     planController.createPlan(req as AuthenticatedRequest, res, next),
   );
-
   router.get(API_ROUTES.ADMIN.PLANS, (req, res, next) =>
     planController.getPlans(req as AuthenticatedRequest, res, next),
   );
-
   router.put(`${API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) =>
     planController.updatePlan(req as AuthenticatedRequest, res, next),
   );
-
   router.delete(`${API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) =>
     planController.deletePlan(req as AuthenticatedRequest, res, next),
   );
+
   return router;
 }

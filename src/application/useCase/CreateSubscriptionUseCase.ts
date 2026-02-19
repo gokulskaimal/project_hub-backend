@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import {
   IRazorpayService,
-  RazorpaySubscription,
+  RazorpayOrder,
 } from "../../infrastructure/interface/services/IRazorpayService";
 import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
@@ -20,9 +20,9 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
     private _subscriptionRepo: ISubscriptionRepo,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
   ) {}
-  async execute(userId: string, planId: string): Promise<RazorpaySubscription> {
+  async execute(userId: string, planId: string): Promise<RazorpayOrder> {
     const plan = await this._planRepo.findById(planId);
-    if (!plan || !plan.razorpayPlanId) {
+    if (!plan) {
       throw new EntityNotFoundError("Plan", planId);
     }
     if (userId !== "super_admin") {
@@ -32,67 +32,52 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
       }
     }
 
-    // Create Subscription in Razorpay
-    // Razorpay requires total_count. We can set a high number for recurring.
-    let subscription: RazorpaySubscription;
+    // Amount needs to be in defaults (INR usually requires paise, but service handles * 100)
+    // Actually looking at RazorpayService.createOrder, it does Math.round(amount * 100).
+    // So we pass plan.price directly.
 
+    let order: RazorpayOrder;
+
+    // Handle Free Plans or Mock logic
     if (plan.razorpayPlanId.startsWith("plan_free_")) {
-
-      const newSeconds = Math.floor(Date.now()/1000)
-      subscription = {
-        id: `sub_free_${Date.now()}`,
-        entity: "subscription",
-        plan_id: plan.razorpayPlanId,
-        status: "active",
-        current_start: newSeconds,
-        current_end: newSeconds + 30 * 24 * 60 * 60, // 30 days
-        ended_at: undefined,
-        quantity: 1,
-        notes: {},
-        charge_at: newSeconds,
-        start_at: newSeconds,
-        end_at: newSeconds + 30 * 24 * 60 * 60,
-        auth_attempts: 0,
-        total_count: 120,
-        paid_count: 0,
-        customer_notify: true,
-        created_at: newSeconds,
-        expire_by: undefined,
-        short_url: "",
-        has_scheduled_changes: false,
-        change_scheduled_at: undefined,
-        source: "api",
+      order = {
+        id: `order_free_${Date.now()}`,
+        amount: 0,
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+        status: "created",
+        created_at: Math.floor(Date.now() / 1000),
       };
     } else {
-      subscription = await this._razorpayService.createSubscription(
-        plan.razorpayPlanId,
-        120, // 10 years monthly
+      // Create Razorpay Order
+      order = await this._razorpayService.createOrder(
+        plan.price,
+        plan.currency || "INR",
+        `rcpt_${Date.now()}_${userId.slice(-4)}`,
       );
     }
 
-
-
-    if(userId !== "super_admin"){
-      const existing = await this._subscriptionRepo.findByUserId(userId)
+    if (userId !== "super_admin") {
+      const existing = await this._subscriptionRepo.findByUserId(userId);
 
       const subData = {
-        userId : userId,
-        planId : planId,
-        razorpaySubscriptionId : subscription.id,
-        razorpayCustomerId : "cust_placeholder",
-        status : subscription.status as Subscription['status'],
-        currentPeriodStart : new Date((subscription.current_start ?? Math.floor(Date.now()/1000)) * 1000),
-        currentPeriodEnd : new Date((subscription.current_end ?? Math.floor(Date.now()/1000)) * 1000),
-        cancelAtPeriodEnd : false,
-      }
-      if(existing){
-        await this._subscriptionRepo.update(existing.id, subData)
-      }else{
-        await this._subscriptionRepo.create(subData)
+        userId: userId,
+        planId: planId,
+        razorpaySubscriptionId: order.id, // storing order_id here
+        razorpayCustomerId: "cust_placeholder",
+        status: "created" as Subscription["status"], // Initial status
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days, updated on verify
+        cancelAtPeriodEnd: false,
+      };
+
+      if (existing) {
+        await this._subscriptionRepo.update(existing.id, subData);
+      } else {
+        await this._subscriptionRepo.create(subData);
       }
     }
 
-    return subscription;
+    return order;
   }
 }
-

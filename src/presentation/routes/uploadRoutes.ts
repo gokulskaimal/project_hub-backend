@@ -4,6 +4,7 @@ import { Container } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UploadController } from "../controllers/UploadController";
 import { authMiddleware } from "../middleware/AuthMiddleware";
+import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant";
 
 export function createUploadRoutes(container: Container): Router {
   const router = Router();
@@ -13,9 +14,10 @@ export function createUploadRoutes(container: Container): Router {
     TYPES.UploadController,
   );
 
+  router.use(API_ROUTES.UPLOAD.BASE, authMiddleware);
+
   router.post(
-    "/",
-    authMiddleware,
+    API_ROUTES.UPLOAD.FILE,
     upload.single("file"),
     uploadController.uploadFile,
   );

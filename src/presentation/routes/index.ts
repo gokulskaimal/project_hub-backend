@@ -42,18 +42,25 @@ export function createRoutes(container: Container): {
   // 5. Organization Routes
   const orgRouter = createOrganizationRoutes(container);
 
-  //   const projectRouter = express.Router();
-  //   projectRouter.get("/", (_req, res) => {
-  //     res.json({ message: "Coming soon" });
-  //   });
+  // 6. Project Routes
   const projectRouter = createProjectRoutes(container);
 
+  // 7. Webhook Routes
   const webhookRouter = createWebhookRoutes(container);
+
+  // 8. Payment Routes
   const paymentRouter = createPaymentRoutes(container);
+
+  // 9. Plan Routes
   const planRouter = createPlanRoutes(container);
 
+  // 10. Notification Routes
   const notificationRouter = createNotificationRoutes(container);
+
+  // 11. Chat Routes
   const chatRouter = createChatRoutes(container);
+
+  // 12. Upload Routes
   const uploadRouter = createUploadRoutes(container);
 
   return {

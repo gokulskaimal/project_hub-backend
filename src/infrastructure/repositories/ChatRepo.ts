@@ -31,16 +31,30 @@ export class ChatRepo implements IChatRepo {
   async findByProjectId(
     projectId: string,
     limit = 50,
-    offset = 0,
-  ): Promise<ChatMessage[]> {
-    const docs = await ChatModel.find({ projectId })
+    before?: string,
+  ): Promise<{ messages: ChatMessage[]; nextCursor: string | null }> {
+    const query: Record<string, unknown> = { projectId };
+
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
+
+    const docs = await ChatModel.find(query)
       .sort({ createdAt: -1 }) // Newest first
-      .skip(offset)
-      .limit(limit)
+      .limit(limit + 1) // Fetch one extra to check for next page
       .populate("senderId", "firstName lastName name avatar")
       .exec();
 
-    return docs
+    const hasMore = docs.length > limit;
+    const messages = hasMore ? docs.slice(0, limit) : docs;
+
+    // Get the cursor from the last item
+    const nextCursor =
+      hasMore && messages.length > 0
+        ? messages[messages.length - 1].createdAt.toISOString()
+        : null;
+
+    const entities = messages
       .map((doc) => {
         const entity = this.toEntity(doc);
         const sender = doc.senderId as unknown as PopulatedSender;
@@ -52,7 +66,9 @@ export class ChatRepo implements IChatRepo {
         }
         return entity;
       })
-      .reverse(); // Return oldest first for chat view
+      .reverse(); // Return oldest first for chat view logic (append to top)
+
+    return { messages: entities, nextCursor };
   }
 
   private toEntity(doc: IChatMessageDoc): ChatMessage {

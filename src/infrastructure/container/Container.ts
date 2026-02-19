@@ -24,6 +24,7 @@ import { IInviteRepo } from "../interface/repositories/IInviteRepo";
 import { ITaskRepo } from "../interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../interface/repositories/IProjectRepo";
 import { INotificationRepo } from "../interface/repositories/INotificationRepo";
+import { ISprintRepo } from "../interface/repositories/ISprintRepo";
 
 //Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
@@ -97,6 +98,7 @@ import { SubscriptionRepo } from "../repositories/SubscriptionRepo";
 import { TaskRepo } from "../repositories/TaskRepo";
 import { ProjectRepo } from "../repositories/ProjectRepo";
 import { NotificationRepo } from "../repositories/NotificationRepo";
+import { SprintRepo } from "../repositories/SprintRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -137,6 +139,7 @@ import { MarkAllNotificationsReadUseCase } from "../../application/useCase/MarkA
 import { IGetNotificationsUseCase } from "../../application/interface/useCases/IGetNotificationsUseCase";
 import { IMarkNotificationReadUseCase } from "../../application/interface/useCases/IMarkNotificationReadUseCase";
 import { IMarkAllNotificationsReadUseCase } from "../../application/interface/useCases/IMarkAllNotificationsReadUseCase";
+import { IToggleTimerUseCase } from "../../application/interface/useCases/IToggleTimerUseCase";
 
 import { CreateProjectUseCase } from "../../application/useCase/CreateProjectUseCase";
 import { GetProjectUseCase } from "../../application/useCase/GetProjectUseCase";
@@ -145,6 +148,7 @@ import { UpdateProjectUseCase } from "../../application/useCase/UpdateProjectUse
 import { DeleteProjectUseCase } from "../../application/useCase/DeleteProjectUseCase";
 import { GetMemberProjectsUseCase } from "../../application/useCase/GetMemberProjectsUseCase";
 import { GetMemberTasksUseCase } from "../../application/useCase/GetMemberTasksUseCase";
+import { ToggleTimerUseCase } from "../../application/useCase/ToggleTimerUseCase";
 
 // Presentation Controllers
 import { SessionController } from "../../presentation/controllers/auth/SessionController";
@@ -166,6 +170,7 @@ import { ProjectController } from "../../presentation/controllers/manager/Projec
 import { NotificationController } from "../../presentation/controllers/NotificationController";
 import { ChatController } from "../../presentation/controllers/ChatController";
 import { UploadController } from "../../presentation/controllers/UploadController";
+import { SprintController } from "../../presentation/controllers/SprintController";
 
 // Chat Interfaces
 import { IChatRepo } from "../interface/repositories/IChatRepo";
@@ -327,6 +332,11 @@ class DIContainer {
       .bind<IChatRepo>(TYPES.IChatRepo)
       .to(ChatRepo)
       .inSingletonScope();
+
+    this._container
+      .bind<ISprintRepo>(TYPES.ISprintRepo)
+      .to(SprintRepo)
+      .inSingletonScope();
   }
 
   private _bindUseCases(): void {
@@ -451,6 +461,11 @@ class DIContainer {
     this._container
       .bind<IDeleteTaskUseCase>(TYPES.IDeleteTaskUseCase)
       .to(DeleteTaskUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IToggleTimerUseCase>(TYPES.IToggleTimerUseCase)
+      .to(ToggleTimerUseCase)
       .inTransientScope();
     this._container
       .bind<ICreateProjectUseCase>(TYPES.ICreateProjectUseCase)
@@ -604,6 +619,11 @@ class DIContainer {
     this._container
       .bind<UploadController>(TYPES.UploadController)
       .to(UploadController)
+      .inSingletonScope();
+
+    this._container
+      .bind<SprintController>(TYPES.SprintController)
+      .to(SprintController)
       .inSingletonScope();
   }
 

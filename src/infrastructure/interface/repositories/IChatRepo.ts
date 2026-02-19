@@ -5,8 +5,8 @@ export interface IChatRepo {
   findByProjectId(
     projectId: string,
     limit?: number,
-    offset?: number,
-  ): Promise<ChatMessage[]>;
+    before?: string,
+  ): Promise<{ messages: ChatMessage[]; nextCursor: string | null }>;
   findById(id: string): Promise<ChatMessage | null>;
   updateMessage(id: string, content: string): Promise<ChatMessage | null>;
   deleteMessage(id: string): Promise<boolean>;

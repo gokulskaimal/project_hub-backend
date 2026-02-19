@@ -73,6 +73,64 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
     }
     // [END] Validation Logic
 
+    // [START] Automated Time Tracking Logic
+    // If status is changing and we have an updater
+    if (data.status && data.status !== task.status && updaterId) {
+      // Only automate if the person moving the task is the assignee
+      const isAssignee = task.assignedTo === updaterId;
+
+      // Ensure timeLogs array exists
+      if (!task.timeLogs) {
+        task.timeLogs = [];
+      }
+
+      // Case 1: Moving TO 'IN_PROGRESS' -> Start Timer
+      if (data.status === "IN_PROGRESS" && isAssignee) {
+        // Check if timer is already running for this user
+        const runningLog = task.timeLogs.find(
+          (log) => log.userId === updaterId && !log.endTime,
+        );
+
+        if (!runningLog) {
+          task.timeLogs.push({
+            userId: updaterId,
+            startTime: new Date(),
+          });
+          // Important: Update the data object to persist changes
+          data.timeLogs = task.timeLogs;
+        }
+      }
+
+      // Case 2: Moving FROM 'IN_PROGRESS' (to anything else) -> Stop Timer
+      if (
+        task.status === "IN_PROGRESS" &&
+        data.status !== "IN_PROGRESS" &&
+        isAssignee
+      ) {
+        const runningIndex = task.timeLogs.findIndex(
+          (log) => log.userId === updaterId && !log.endTime,
+        );
+
+        if (runningIndex !== -1) {
+          const log = task.timeLogs[runningIndex];
+          const now = new Date();
+          log.endTime = now;
+
+          // Calculate duration in milliseconds
+          log.duration = now.getTime() - new Date(log.startTime).getTime();
+
+          // Update total time spent
+          task.totalTimeSpent = (task.totalTimeSpent || 0) + log.duration;
+          task.timeLogs[runningIndex] = log;
+
+          // Important: Update the data object to persist changes
+          data.timeLogs = task.timeLogs;
+          data.totalTimeSpent = task.totalTimeSpent;
+        }
+      }
+    }
+    // [END] Automated Time Tracking Logic
+
     const updated = await this._taskRepo.update(id, data);
     if (!updated) throw new EntityNotFoundError("Task Not Found", id);
 
@@ -85,7 +143,6 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       );
     }
 
-    // Bidirectional Notifications
     // Bidirectional Notifications
     if (task.orgId && updaterId) {
       const managers = await this._userRepo.findByOrgAndRole(
@@ -112,21 +169,19 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
 
       // Case B: Updater is a Manager (or anyone else) -> Notify Assignee
-      // Note: If Manager updates, Assignee should know.
-      // If Assignee updates, Manager should know (covered above).
       if (updated.assignedTo && updaterId !== updated.assignedTo) {
         await this._createNotificationUC.execute(
           updated.assignedTo,
           "Task Updated by Manager",
           `Task '${updated.title}' updated by ${updaterName} (Status: ${data.status || updated.status})`,
           NotificationType.INFO,
-          `/manager/projects/${updated.projectId}`, // Or member link
+          `/manager/projects/${updated.projectId}`,
         );
 
         // Also emit socket for real-time update
         this._socketService.emitToUser(
           updated.assignedTo,
-          "task:assigned", // Or task:updated, but task:assigned triggers refresh
+          "task:assigned",
           updated,
         );
       }

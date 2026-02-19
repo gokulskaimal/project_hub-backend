@@ -8,6 +8,9 @@ export interface TaskDTO {
   description?: string;
   status: string;
   priority: string;
+  type: string;
+  storyPoints: number;
+  sprintId?: string;
   assignedTo?: string;
   dueDate?: string;
   createdAt: string;
@@ -15,7 +18,7 @@ export interface TaskDTO {
 }
 
 export function toTaskDTO(task: Task): TaskDTO {
-  const toIso = (d?: Date | string): string | undefined => 
+  const toIso = (d?: Date | string): string | undefined =>
     d ? new Date(d).toISOString() : undefined;
 
   return {
@@ -26,6 +29,9 @@ export function toTaskDTO(task: Task): TaskDTO {
     description: task.description,
     status: task.status,
     priority: task.priority,
+    type: task.type,
+    storyPoints: task.storyPoints || 0,
+    sprintId: task.sprintId,
     assignedTo: task.assignedTo,
     dueDate: toIso(task.dueDate),
     createdAt: toIso(task.createdAt) as string,

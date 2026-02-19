@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { StatusCodes } from "./infrastructure/config/statusCodes.enum";
+import { API_ROUTES } from "./infrastructure/config/apiRoutes.constant";
 
 // Import DI Container
 import { diContainer, container } from "./infrastructure/container/Container";
@@ -67,7 +68,7 @@ function setupMiddleware(app: express.Application): void {
   });
 
   // Apply rate limiting to API routes
-  app.use("/api/auth", authLimiter);
+  app.use(`/api${API_ROUTES.AUTH.BASE}`, authLimiter);
   app.use("/api", limiter);
 
   // CORS configuration
@@ -92,12 +93,16 @@ function setupMiddleware(app: express.Application): void {
   app.use((req, res, next) => {
     // Determine limit based on path
     // Webhooks often need larger limits (e.g. Stripe, Razorpay)
-    const limit = req.path.startsWith("/api/webhooks") ? "10mb" : "100kb";
+    const limit = req.path.startsWith(`/api${API_ROUTES.WEBHOOKS.BASE}`)
+      ? "10mb"
+      : "100kb";
     express.json({ limit })(req, res, next);
   });
 
   app.use((req, res, next) => {
-    const limit = req.path.startsWith("/api/webhooks") ? "10mb" : "100kb";
+    const limit = req.path.startsWith(`/api${API_ROUTES.WEBHOOKS.BASE}`)
+      ? "10mb"
+      : "100kb";
     express.urlencoded({ extended: true, limit })(req, res, next);
   });
 
@@ -151,24 +156,9 @@ function setupRoutes(app: express.Application): void {
   const routes = createRoutes(container);
 
   // Mount routes
-  // Public / Mixed Routes (Must come before catch-all protected routes)
-  app.use("/api", routes.auth);
-  app.use("/api/plans", routes.plans);
-  app.use("/api/webhooks", routes.webhooks);
-
-  // Specific Protected Routes
-  app.use("/api", routes.manager);
-  app.use("/api", routes.admin);
-  app.use("/api/organization", routes.organizations);
-  app.use("/api/projects", routes.projects);
-  app.use("/api/payments", routes.payments);
-
-  // Generic User Routes (Contains global auth middleware for /api/*)
-  // Must be after all other /api routes that might need to be public
-  app.use("/api", routes.user);
-  app.use("/api/notifications", routes.notifications);
-  app.use("/api/chat", routes.chat);
-  app.use("/api/upload", routes.upload);
+  Object.values(routes).forEach((router) => {
+    app.use("/api", router);
+  });
 
   // Container diagnostic endpoint (development only)
   if (process.env.NODE_ENV === "development") {
@@ -226,9 +216,24 @@ async function connectDatabase(): Promise<void> {
 /**
  * Start the server
  */
+
+// GLOBAL ERROR HANDLERS
+process.on("uncaughtException", (error) => {
+  console.error("UNCAUGHT EXCEPTION! Shutting down...", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION! Shutting down...", reason);
+  process.exit(1);
+});
+
 async function startServer(): Promise<void> {
   try {
-    // 1. Initialize DI container (connects Redis if used)
+    if (!process.env.MONGO_URI && !process.env.MONGODB_URI) {
+      throw new Error("FATAL: MONGO_URI is missing.");
+    }
+
     await diContainer.init();
 
     // 2. Get logger instance
@@ -254,7 +259,7 @@ async function startServer(): Promise<void> {
     // 5. Create HTTP Server explicitly to share with Socket.IO
     const httpServer = http.createServer(app);
 
-    // 6. Initialize Socket.IO with the HTTP Server BEFORE listening (or after, but same instance)
+    // 6. Initialize Socket.IO with the HTTP Server
     try {
       const socketServer = diContainer.get<SocketServer>(TYPES.SocketServer);
       const io = socketServer.initialize(httpServer, [
@@ -270,7 +275,7 @@ async function startServer(): Promise<void> {
       logger.error("Socket connection error", err as Error);
     }
 
-    // 7. Listen using the HTTP Server, not app.listen
+    // 7. Listen
     httpServer.listen(port, () => {
       logger.info(`Project Hub Server running on: http://localhost:${port}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
@@ -278,10 +283,28 @@ async function startServer(): Promise<void> {
 
     // Graceful shutdown
     const shutdown = async (signal: string) => {
-      logger.info(`${signal} received. Closing resources...`);
-      await mongoose.disconnect();
-      await diContainer.dispose();
-      process.exit(0);
+      logger.info(`${signal} received. Starting graceful shutdown...`);
+
+      httpServer.close(async () => {
+        logger.info("HTTP Server closed.");
+        try {
+          await mongoose.disconnect();
+          logger.info("MongoDB Disconnected.");
+          await diContainer.dispose();
+          logger.info("DI Container disposed.");
+        } catch (err) {
+          logger.error("Error during resource cleanup", err as Error);
+        }
+        process.exit(0);
+      });
+
+      // Force shutdown if graceful takes too long (e.g. 10s)
+      setTimeout(() => {
+        logger.error(
+          "Could not close connections in time, forcefully shutting down",
+        );
+        process.exit(1);
+      }, 10000);
     };
 
     process.on("SIGTERM", () => shutdown("SIGTERM"));

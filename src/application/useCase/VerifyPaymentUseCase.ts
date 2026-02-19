@@ -11,7 +11,8 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     @inject(TYPES.IRazorpayService) private _razorpayService: IRazorpayService,
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
-    @inject(TYPES.ISubscriptionRepo) private _subscriptionRepo : ISubscriptionRepo,
+    @inject(TYPES.ISubscriptionRepo)
+    private _subscriptionRepo: ISubscriptionRepo,
   ) {}
 
   async execute(
@@ -20,63 +21,54 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     signature: string,
     orgId: string,
   ): Promise<boolean> {
-    const isValid = this._razorpayService.verifySignature(
-      orderId,
-      paymentId,
-      signature,
-    );
-
-    if (!isValid) return false;
-
-    // Fetch subscription details from Razorpay to get the plan
-    // For now, we assume the planId is passed or we can infer it.
-    // Ideally, we should store the orderId -> planId mapping or fetch from Razorpay.
-    // Since we don't have a temporary order store, we will rely on the subscription ID if available.
-    // However, for this implementation, we will fetch the subscription from Razorpay to get the plan ID if possible,
-    // OR we can update the Org based on the subscription ID stored in Razorpay.
-
-    // SIMPLIFICATION:
-    // We will fetch the subscription from Razorpay using the order_id (which might be the subscription_id in some flows)
-    // OR we just mark it active.
-    // BUT we need the Plan ID to update limits.
-
-    // Let's assume the client sends the planId? No, verify payload is standard.
-    // We need to fetch the subscription from Razorpay to see which plan it corresponds to.
-    // But Razorpay subscription has 'plan_id' which is Razorpay's plan ID.
-    // We need to map Razorpay Plan ID -> Our DB Plan ID.
-
-    // Let's do this:
-    // 1. Verify signature.
-    // 2. If valid, we need to know WHICH plan was purchased.
-    //    The `razorpay_order_id` in subscription flow IS the `subscription_id`.
-
     try {
-      const subscription =
-        await this._razorpayService.fetchSubscription(orderId); // orderId is subId
+      // 1. Verify Signature
+      const isValid = this._razorpayService.verifySignature(
+        orderId,
+        paymentId,
+        signature,
+      );
 
-      if (subscription && subscription.plan_id) {
-        const plan = await this._planRepo.findByRazorpayId(
-          subscription.plan_id,
-        );
+      if (!isValid) return false;
+
+      // 2. Identify Plan & Update
+      // Since we now create Orders, 'orderId' is a Razorpay Order ID (starting with order_).
+      // We stored this orderId in the 'Subscription' table under 'razorpaySubscriptionId' field.
+
+      // Find the local subscription record using the Order ID
+      const localSub =
+        await this._subscriptionRepo.findByRazorpaySubscriptionId(orderId);
+
+      if (localSub) {
+        const plan = await this._planRepo.findById(localSub.planId);
+
         if (plan) {
+          // Update Organization
           await this._orgRepo.update(orgId, {
             subscriptionStatus: "ACTIVE",
-            razorpaySubscriptionId: orderId, // Subscription ID
+            razorpaySubscriptionId: orderId, // It's an Order ID now, but we store it here
             planId: plan.id,
-            subscriptionStartsAt: new Date(subscription.current_start! * 1000),
-            subscriptionEndsAt: new Date(subscription.current_end! * 1000),
+            subscriptionStartsAt: new Date(),
+            subscriptionEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days default for now
             // Update limits based on plan
             maxUsers: plan.limits.members,
-            maxManagers: plan.limits.projects, // Assuming projects maps to managers for now or just separate
-            // We should probably have maxManagers in Plan limits too.
+            maxManagers: plan.limits.projects,
           });
-          await this._subscriptionRepo.updateByRazorpayId(orderId,{status : 'active'})
+
+          // Update Subscription Status
+          await this._subscriptionRepo.update(localSub.id, {
+            status: "active",
+          });
         }
+      } else {
+        // Fallback for legacy subscriptions or direct Razorpay subscription flow (if any)
+        // This block preserves the old logic just in case, or we can just log error.
+        // For this refactor, let's assume we rely on local DB record.
+        console.warn("Local subscription record not found for order:", orderId);
+        // We could try fetching from Razorpay if it was a real Subscription, but we are moving away from it.
       }
     } catch (error) {
-      console.error("Failed to update organization subscription", error);
-      // Even if DB update fails, payment was valid. But this is bad state.
-      // We should probably return false or throw error.
+      console.error("Failed to verify payment and update subscription", error);
       return false;
     }
 

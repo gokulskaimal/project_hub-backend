@@ -48,12 +48,19 @@ export class ChatController {
   getMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { projectId } = req.params;
-      const messages = await this._getProjectMessagesUC.execute(projectId);
+      const { limit, before } = req.query;
+
+      const result = await this._getProjectMessagesUC.execute(
+        projectId,
+        limit ? Number(limit) : undefined,
+        before as string | undefined,
+      );
 
       res.status(StatusCodes.OK).json({
         success: true,
         message: "Messages fetched successfully",
-        data: messages,
+        data: result.messages,
+        nextCursor: result.nextCursor,
       });
     } catch (error) {
       next(error);
@@ -90,6 +97,7 @@ export class ChatController {
       res.status(StatusCodes.OK).json({
         success: true,
         message: "Message deleted successfully",
+        data: null,
       });
     } catch (error) {
       next(error);

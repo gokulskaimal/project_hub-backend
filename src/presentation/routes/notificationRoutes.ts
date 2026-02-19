@@ -3,6 +3,7 @@ import { Container } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { NotificationController } from "../controllers/NotificationController";
+import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant";
 
 export function createNotificationRoutes(container: Container): Router {
   const router = Router();
@@ -10,11 +11,20 @@ export function createNotificationRoutes(container: Container): Router {
     TYPES.NotificationController,
   );
 
-  router.use(authMiddleware);
+  router.use(API_ROUTES.NOTIFICATIONS.BASE, authMiddleware);
 
-  router.get("/", controller.getNotification.bind(controller));
-  router.put("/read-all", controller.markAllRead.bind(controller));
-  router.put("/:id/read", controller.markRead.bind(controller));
+  router.get(
+    API_ROUTES.NOTIFICATIONS.GET_ALL,
+    controller.getNotification.bind(controller),
+  );
+  router.put(
+    API_ROUTES.NOTIFICATIONS.READ_ALL,
+    controller.markAllRead.bind(controller),
+  );
+  router.put(
+    API_ROUTES.NOTIFICATIONS.READ_ONE(":id"),
+    controller.markRead.bind(controller),
+  );
 
   return router;
 }

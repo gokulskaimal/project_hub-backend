@@ -41,7 +41,19 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     this._logger.info(
       `Creating task '${data.title}' in project ${data.projectId}`,
     );
-    const newTask = await this._taskRepo.create(data);
+
+    // --- Daily Limit Check ---
+    // const dailyLimit = 2;
+    // const tasksToday = await this._taskRepo.countTasksByUserAndDate(creatorId, new Date());
+
+    // if (tasksToday >= dailyLimit) {
+    //   throw new ValidationError(`You have reached your daily limit of ${dailyLimit} tasks.`);
+    // }
+
+    // Add createdBy to the task data
+    const taskData = { ...data, createdBy: creatorId };
+
+    const newTask = await this._taskRepo.create(taskData);
 
     // Notify organization about the new task
     this._socketService.emitToOrganization(

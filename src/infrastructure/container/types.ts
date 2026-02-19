@@ -22,6 +22,7 @@ export const TYPES = {
   IProjectRepo: Symbol.for("IProjectRepo"),
   INotificationRepo: Symbol.for("INotificationRepo"),
   IChatRepo: Symbol.for("IChatRepo"),
+  ISprintRepo: Symbol.for("ISprintRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -56,6 +57,7 @@ export const TYPES = {
   IGetTaskUseCase: Symbol.for("IGetTaskUseCase"),
   IUpdateTaskUseCase: Symbol.for("IUpdateTaskUseCase"),
   IDeleteTaskUseCase: Symbol.for("IDeleteTaskUseCase"),
+  IToggleTimerUseCase: Symbol.for("IToggleTimerUseCase"),
   ICreateProjectUseCase: Symbol.for("ICreateProjectUseCase"),
   IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
   IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
@@ -92,6 +94,7 @@ export const TYPES = {
   NotificationController: Symbol.for("NotificationController"),
   ChatController: Symbol.for("ChatController"),
   UploadController: Symbol.for("UploadController"),
+  SprintController: Symbol.for("SprintController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),

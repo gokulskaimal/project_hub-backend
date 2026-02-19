@@ -1,20 +1,42 @@
-import mongoose , {Schema , Document} from 'mongoose'
-import { Task } from '../../domain/entities/Task'
+import mongoose, { Schema, Document } from "mongoose";
+import { Task, TimeLog } from "../../domain/entities/Task";
 
-export interface ITaskDoc extends Omit<Task, 'id'>, Document {}
+export interface ITaskDoc extends Omit<Task, "id">, Document {}
+
+const TimeLogSchema = new Schema<TimeLog>({
+  userId: { type: String, required: true },
+  startTime: { type: Date, required: true },
+  endTime: { type: Date },
+  duration: { type: Number },
+});
 
 const TaskSchema = new Schema<ITaskDoc>(
-    {
-        projectId : {type :String , required : true , index : true},
-        orgId : {type : String , required : true},
-        title : {type : String , requried : true},
-        description : {type : String},
-        status : {type : String , enum : ['TODO' , 'IN_PROGRESS' , 'REVIEW' , 'DONE'] , default : 'TODO'},
-        priority : {type : String , enum : ['LOW' , 'MEDIUM' , 'HIGH' , 'CRITICAL'] , default : 'MEDIUM'},
-        assignedTo :{type : String , index : true},
-        dueDate : {type : Date},
+  {
+    projectId: { type: String, required: true, index: true },
+    orgId: { type: String, required: true },
+    title: { type: String, requried: true },
+    description: { type: String },
+    status: {
+      type: String,
+      enum: ["TODO", "IN_PROGRESS", "REVIEW", "DONE", "BACKLOG"],
+      default: "TODO",
+      index: true,
     },
-    {timestamps : true}
-)
+    priority: {
+      type: String,
+      enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      default: "MEDIUM",
+    },
+    type: { type: String, enum: ["STORY", "BUG", "TASK"], default: "STORY" },
+    storyPoints: { type: Number, default: 0 },
+    sprintId: { type: String, default: null, index: true },
+    assignedTo: { type: String, index: true },
+    dueDate: { type: Date },
+    createdBy: { type: String },
+    timeLogs: [TimeLogSchema],
+    totalTimeSpent: { type: Number, default: 0 },
+  },
+  { timestamps: true },
+);
 
-export const TaskModel = mongoose.model<ITaskDoc>('Task' , TaskSchema)
+export const TaskModel = mongoose.model<ITaskDoc>("Task", TaskSchema);

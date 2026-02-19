@@ -22,10 +22,16 @@ export class TaskRepo
       description: obj.description,
       status: obj.status,
       priority: obj.priority,
+      type: obj.type,
+      storyPoints: obj.storyPoints,
+      sprintId: obj.sprintId, // Ensure this is mapped!
       assignedTo: obj.assignedTo,
       dueDate: obj.dueDate,
+      timeLogs: obj.timeLogs,
+      totalTimeSpent: obj.totalTimeSpent,
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
+      createdBy: obj.createdBy,
     } as Task;
   }
 
@@ -39,5 +45,22 @@ export class TaskRepo
       .find({ assignedTo: userId })
       .sort({ createdAt: -1 });
     return docs.map((d) => this.toDomain(d));
+  }
+
+  async countTasksByUserAndDate(userId: string, date: Date): Promise<number> {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+
+    const count = await this.model.countDocuments({
+      createdBy: userId,
+      createdAt: {
+        $gte: start,
+        $lte: end,
+      },
+    });
+    return count;
   }
 }

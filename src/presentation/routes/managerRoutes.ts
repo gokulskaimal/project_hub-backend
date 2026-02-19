@@ -6,14 +6,17 @@ import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";
 import { UserRole } from "../../domain/enums/UserRole";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
-import { API_ROUTES } from "./constants";
+import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant";
 
 export function createManagerRoutes(container: Container): Router {
   const router = Router();
   const controller = container.get<ManagerController>(TYPES.ManagerController);
 
-  // Protect all manager routes
-  router.use("/manager", authMiddleware, roleMiddleware(UserRole.ORG_MANAGER));
+  router.use(
+    API_ROUTES.MANAGER.BASE,
+    authMiddleware,
+    roleMiddleware(UserRole.ORG_MANAGER),
+  );
 
   router.get(API_ROUTES.MANAGER.MEMBERS, (req, res, next) =>
     controller.listMembers(req as AuthenticatedRequest, res, next),
