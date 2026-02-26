@@ -1,8 +1,0 @@
-{"error":{},"level":"error","message":"Razorpay createOrder failed","timestamp":"2026-02-05T05:20:37.251Z"}
-{"code":"INTERNAL_ERROR","error":{},"level":"error","message":"Server Error Something went wrong","path":"/api/payments/subscription","status":500,"timestamp":"2026-02-05T05:20:37.253Z"}
-{"error":{},"level":"error","message":"Razorpay createOrder failed","timestamp":"2026-02-05T05:20:56.957Z"}
-{"code":"INTERNAL_ERROR","error":{},"level":"error","message":"Server Error Something went wrong","path":"/api/payments/subscription","status":500,"timestamp":"2026-02-05T05:20:56.959Z"}
-{"error":{},"level":"error","message":"Razorpay createOrder failed","timestamp":"2026-02-05T05:24:04.129Z"}
-{"code":"INTERNAL_ERROR","error":{},"level":"error","message":"Server Error Something went wrong","path":"/api/payments/subscription","status":500,"timestamp":"2026-02-05T05:24:04.131Z"}
-{"error":{},"level":"error","message":"Razorpay createOrder failed","timestamp":"2026-02-05T05:25:00.265Z"}
-{"code":"INTERNAL_ERROR","error":{},"level":"error","message":"Server Error Something went wrong","path":"/api/payments/subscription","status":500,"timestamp":"2026-02-05T05:25:00.266Z"}

@@ -16,11 +16,7 @@ exports.Logger = void 0;
 const winston_1 = __importDefault(require("winston"));
 const path_1 = __importDefault(require("path"));
 const inversify_1 = require("inversify");
-/**
- * Winston Logger Implementation
- * Implements ILogger interface for dependency inversion
- * Can be easily swapped with other logging implementations
- */
+const winston_daily_rotate_file_1 = __importDefault(require("winston-daily-rotate-file"));
 let Logger = class Logger {
     constructor() {
         this._logger = this._createLogger();
@@ -74,17 +70,27 @@ let Logger = class Logger {
      */
     _createLogger() {
         const logDir = path_1.default.join(__dirname, "../../logs");
+        const maxAge = process.env.LOG_MAX_AGE || "14d";
+        const maxSize = process.env.LOG_MAX_SIZE || "20m";
         const logFormat = winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.json(), winston_1.default.format.errors({ stack: true }));
         const logger = winston_1.default.createLogger({
             level: process.env.LOG_LEVEL || "info",
             format: logFormat,
             transports: [
-                new winston_1.default.transports.File({
-                    filename: path_1.default.join(logDir, "error.log"),
+                new winston_daily_rotate_file_1.default({
+                    filename: path_1.default.join(logDir, "error-%DATE%.log"),
+                    datePattern: "YYYY-MM-DD",
+                    zippedArchive: true,
+                    maxSize: maxSize,
+                    maxFiles: maxAge,
                     level: "error",
                 }),
-                new winston_1.default.transports.File({
-                    filename: path_1.default.join(logDir, "combined.log"),
+                new winston_daily_rotate_file_1.default({
+                    filename: path_1.default.join(logDir, "combined-%DATE%.log"),
+                    datePattern: "YYYY-MM-DD",
+                    zippedArchive: true,
+                    maxSize: maxSize,
+                    maxFiles: maxAge,
                 }),
             ],
         });
@@ -102,6 +108,5 @@ exports.Logger = Logger = __decorate([
     (0, inversify_1.injectable)(),
     __metadata("design:paramtypes", [])
 ], Logger);
-// Export both the class and default instance for backward compatibility
 exports.default = new Logger();
 //# sourceMappingURL=Logger.js.map

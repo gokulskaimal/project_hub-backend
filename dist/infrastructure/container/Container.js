@@ -19,6 +19,7 @@ const InMemoryCacheService_1 = require("../services/InMemoryCacheService");
 const RazorpayService_1 = require("../services/RazorpayService");
 const SocketService_1 = require("../services/SocketService");
 const SocketServer_1 = require("../../presentation/socket/SocketServer");
+const CloudinaryService_1 = require("../services/CloudinaryService");
 // Infrastructure Implementations - Repositories
 const UserRepo_1 = require("../repositories/UserRepo");
 const OrgRepo_1 = require("../repositories/OrgRepo");
@@ -28,6 +29,7 @@ const SubscriptionRepo_1 = require("../repositories/SubscriptionRepo");
 const TaskRepo_1 = require("../repositories/TaskRepo");
 const ProjectRepo_1 = require("../repositories/ProjectRepo");
 const NotificationRepo_1 = require("../repositories/NotificationRepo");
+const SprintRepo_1 = require("../repositories/SprintRepo");
 // Application Use Cases
 const LoginUseCase_1 = require("../../application/useCase/LoginUseCase");
 const RegisterUseCase_1 = require("../../application/useCase/RegisterUseCase");
@@ -70,6 +72,7 @@ const UpdateProjectUseCase_1 = require("../../application/useCase/UpdateProjectU
 const DeleteProjectUseCase_1 = require("../../application/useCase/DeleteProjectUseCase");
 const GetMemberProjectsUseCase_1 = require("../../application/useCase/GetMemberProjectsUseCase");
 const GetMemberTasksUseCase_1 = require("../../application/useCase/GetMemberTasksUseCase");
+const ToggleTimerUseCase_1 = require("../../application/useCase/ToggleTimerUseCase");
 // Presentation Controllers
 const SessionController_1 = require("../../presentation/controllers/auth/SessionController");
 const RegistrationController_1 = require("../../presentation/controllers/auth/RegistrationController");
@@ -87,6 +90,8 @@ const TaskController_1 = require("../../presentation/controllers/manager/TaskCon
 const ProjectController_1 = require("../../presentation/controllers/manager/ProjectController");
 const NotificationController_1 = require("../../presentation/controllers/NotificationController");
 const ChatController_1 = require("../../presentation/controllers/ChatController");
+const UploadController_1 = require("../../presentation/controllers/UploadController");
+const SprintController_1 = require("../../presentation/controllers/manager/SprintController");
 // Chat Implementations
 const ChatRepo_1 = require("../repositories/ChatRepo");
 const SendMessageUseCase_1 = require("../../application/useCase/SendMessageUseCase");
@@ -157,6 +162,10 @@ class DIContainer {
             .bind(types_1.TYPES.SocketServer)
             .to(SocketServer_1.SocketServer)
             .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.IFileService)
+            .to(CloudinaryService_1.CloudinaryService)
+            .inSingletonScope();
         const useRedis = String(process.env.USE_REDIS || "").toLowerCase() === "true";
         if (useRedis) {
             this._container
@@ -207,6 +216,10 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.IChatRepo)
             .to(ChatRepo_1.ChatRepo)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.ISprintRepo)
+            .to(SprintRepo_1.SprintRepo)
             .inSingletonScope();
     }
     _bindUseCases() {
@@ -329,6 +342,10 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.IDeleteTaskUseCase)
             .to(DeleteTaskUseCase_1.DeleteTaskUseCase)
+            .inTransientScope();
+        this._container
+            .bind(types_1.TYPES.IToggleTimerUseCase)
+            .to(ToggleTimerUseCase_1.ToggleTimerUseCase)
             .inTransientScope();
         this._container
             .bind(types_1.TYPES.ICreateProjectUseCase)
@@ -461,6 +478,14 @@ class DIContainer {
         this._container
             .bind(types_1.TYPES.ChatController)
             .to(ChatController_1.ChatController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.UploadController)
+            .to(UploadController_1.UploadController)
+            .inSingletonScope();
+        this._container
+            .bind(types_1.TYPES.SprintController)
+            .to(SprintController_1.SprintController)
             .inSingletonScope();
     }
     /**

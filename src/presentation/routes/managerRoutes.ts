@@ -46,5 +46,8 @@ export function createManagerRoutes(container: Container): Router {
     controller.getOrganization(req as AuthenticatedRequest, res, next),
   );
 
+  // Note: TaskController is not directly instantiated here, but checking for project task routes
+  // The actual routes for tasks are under projectRoutes.ts
+
   return router;
 }

@@ -19,7 +19,7 @@ export class SprintRepo
       id: doc._id.toString(),
       projectId: doc.projectId,
       name: doc.name,
-      description: doc.description || "", // Default to empty string if missing
+      description: doc.description || "",
       startDate: doc.startDate,
       endDate: doc.endDate,
       status: doc.status as "PLANNED" | "ACTIVE" | "COMPLETED",
@@ -37,5 +37,19 @@ export class SprintRepo
   async findActiveSprint(projectId: string): Promise<Sprint | null> {
     const doc = await this.model.findOne({ projectId, status: "ACTIVE" });
     return doc ? this.toDomain(doc) : null;
+  }
+
+  async countSprint(projectId: string): Promise<number> {
+    const start = new Date();
+
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setHours(23, 0, 0, 0);
+    const count = await this.model.countDocuments(
+      { projectId },
+      { createdAt: { $gte: start, $lte: end } },
+    );
+    return count;
   }
 }

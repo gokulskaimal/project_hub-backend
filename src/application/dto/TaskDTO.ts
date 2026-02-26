@@ -1,4 +1,4 @@
-import { Task } from "../../domain/entities/Task";
+import { Task, TaskComment } from "../../domain/entities/Task";
 
 export interface TaskDTO {
   id: string;
@@ -15,6 +15,8 @@ export interface TaskDTO {
   dueDate?: string;
   createdAt: string;
   updatedAt?: string;
+  attachments?: string[];
+  comments?: TaskComment[];
 }
 
 export function toTaskDTO(task: Task): TaskDTO {
@@ -31,10 +33,12 @@ export function toTaskDTO(task: Task): TaskDTO {
     priority: task.priority,
     type: task.type,
     storyPoints: task.storyPoints || 0,
-    sprintId: task.sprintId,
+    sprintId: task.sprintId || undefined,
     assignedTo: task.assignedTo,
     dueDate: toIso(task.dueDate),
     createdAt: toIso(task.createdAt) as string,
     updatedAt: toIso(task.updatedAt),
+    attachments: task.attachments || [],
+    comments: task.comments || [],
   };
 }

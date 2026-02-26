@@ -6,21 +6,6 @@
     "auditLog": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\.e5bc54d3ccf512aefcf61c2add9ef3dc2bbe6a78-audit.json",
     "files": [
         {
-            "date": 1770266654211,
-            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\combined-2026-02-05.log",
-            "hash": "a1d5f4577d5f621786b2b7c847aab69ea435e34bda59dd8e53d1e1a56669c074"
-        },
-        {
-            "date": 1770706708247,
-            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\combined-2026-02-10.log",
-            "hash": "866ebf0598d6f4881cc9160e9b93d5b3fb0ad4427c6c523aed3c05e706110a85"
-        },
-        {
-            "date": 1770785114904,
-            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\combined-2026-02-11.log",
-            "hash": "f2980e05547d9a7f242d571d3dae26599b00c66f36728f82a264d017967dec56"
-        },
-        {
             "date": 1770874444246,
             "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\combined-2026-02-12.log",
             "hash": "c95ecb05ed5bf7eed1c2c46378a176f7d23e7d666ca715df28ac7f563986744d"
@@ -49,6 +34,11 @@
             "date": 1771469330464,
             "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\combined-2026-02-19.log",
             "hash": "71ab1a3850ac81ecdf7beaa86768eb61535478b32ff970ebfbe5b90d8575f939"
+        },
+        {
+            "date": 1772075729794,
+            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\combined-2026-02-26.log",
+            "hash": "66c6686a1de876c8497dd9d883be1ad0961e541e1aa971c5c1edf68ee1d721cb"
         }
     ],
     "hashType": "sha256"

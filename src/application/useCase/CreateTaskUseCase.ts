@@ -3,7 +3,6 @@ import { TYPES } from "../../infrastructure/container/types";
 import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
 import { ICreateTaskUseCase } from "../interface/useCases/ICreateTaskUseCase";
-// Add Import
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { Task } from "../../domain/entities/Task";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
@@ -24,7 +23,6 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    // Add Injection
     @inject(TYPES.ICreateNotificationUseCase)
     private _createNotificationUC: ICreateNotificationUseCase,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
@@ -37,21 +35,24 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       throw new EntityNotFoundError("Project Not Found", data.projectId);
     if (project.orgId !== data.orgId)
       throw new ValidationError("Project does not belong to this organization");
-
     this._logger.info(
       `Creating task '${data.title}' in project ${data.projectId}`,
     );
 
-    // --- Daily Limit Check ---
-    // const dailyLimit = 2;
-    // const tasksToday = await this._taskRepo.countTasksByUserAndDate(creatorId, new Date());
+    // [MODIFIED] Generate readable Task ID based on Project Name
+    const prefix =
+      project.key ||
+      project.name
+        .substring(0, 3)
+        .toUpperCase()
+        .replace(/[^A-Z]/g, "PRJ");
+    const sequence = (project.taskSequence || 0) + 1;
+    const taskKey = `${prefix}-${sequence}`;
 
-    // if (tasksToday >= dailyLimit) {
-    //   throw new ValidationError(`You have reached your daily limit of ${dailyLimit} tasks.`);
-    // }
+    // Update project with new sequence
+    await this._projectRepo.update(project.id, { taskSequence: sequence });
 
-    // Add createdBy to the task data
-    const taskData = { ...data, createdBy: creatorId };
+    const taskData = { ...data, createdBy: creatorId, taskKey };
 
     const newTask = await this._taskRepo.create(taskData);
 

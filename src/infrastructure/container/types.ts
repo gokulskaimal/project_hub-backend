@@ -38,6 +38,7 @@ export const TYPES = {
   ICompleteSignupUseCase: Symbol.for("ICompleteSignupUseCase"),
   IAcceptUseCase: Symbol.for("IAcceptUseCase"),
   IInviteMemberUseCase: Symbol.for("IInviteMemberUseCase"),
+  IGetOrgTasksUseCase: Symbol.for("IGetOrgTasksUseCase"),
   IResetPasswordUseCase: Symbol.for("IResetPasswordUseCase"),
   IUserProfileUseCase: Symbol.for("IUserProfileUseCase"),
   IOrganizationManagementUseCase: Symbol.for("IOrganizationManagementUseCase"),
@@ -55,9 +56,14 @@ export const TYPES = {
   IDeletePlanUseCase: Symbol.for("IDeletePlanUseCase"),
   ICreateTaskUseCase: Symbol.for("ICreateTaskUseCase"),
   IGetTaskUseCase: Symbol.for("IGetTaskUseCase"),
+  IGetTaskByIdUseCase: Symbol.for("IGetTaskByIdUseCase"),
   IUpdateTaskUseCase: Symbol.for("IUpdateTaskUseCase"),
   IDeleteTaskUseCase: Symbol.for("IDeleteTaskUseCase"),
   IToggleTimerUseCase: Symbol.for("IToggleTimerUseCase"),
+  ICreateSprintUseCase: Symbol.for("ICreateSprintUseCase"),
+  IUpdateSprintUseCase: Symbol.for("IUpdateSprintUseCase"),
+  IDeleteSprintUseCase: Symbol.for("IDeleteSprintUseCase"),
+  IGetProjectSprintsUseCase: Symbol.for("IGetProjectSprintsUseCase"),
   ICreateProjectUseCase: Symbol.for("ICreateProjectUseCase"),
   IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
   IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
@@ -75,7 +81,7 @@ export const TYPES = {
   IDeleteMessageUseCase: Symbol.for("IDeleteMessageUseCase"),
 
   // ===== CONTROLLERS =====
-  // AuthController: Symbol.for("AuthController"), // Removed in favor of split controllers
+  // AuthController: Symbol.for("AuthController"),
   SessionController: Symbol.for("SessionController"),
   RegistrationController: Symbol.for("RegistrationController"),
   InviteController: Symbol.for("InviteController"),

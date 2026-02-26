@@ -8,6 +8,11 @@ import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedReques
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { asyncHandler } from "../../../utils/asyncHandler";
+import {
+  UserUpdateProfileSchema,
+  ChangePasswordSchema,
+  DeleteAccountSchema,
+} from "../../../application/dto/ValidationSchemas";
 
 @injectable()
 export class UserController {
@@ -15,7 +20,7 @@ export class UserController {
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IUserProfileUseCase)
     private userProfileUseCase: IUserProfileUseCase,
-  ) { }
+  ) {}
 
   private sendSuccess(res: Response, data: unknown, message: string) {
     res.status(StatusCodes.OK).json({
@@ -31,58 +36,61 @@ export class UserController {
       const userId = req.user!.id;
       this._logger.info("Fetching user profile", { userId });
       const profile = await this.userProfileUseCase.getProfile(userId);
-      this.sendSuccess(
-        res,
-        profile,
-        COMMON_MESSAGES.PROFILE_RETRIEVED,
-      );
+      this.sendSuccess(res, profile, COMMON_MESSAGES.PROFILE_RETRIEVED);
     },
   );
 
   updateProfile = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
-      const updateData = req.body;
+
+      const validation = UserUpdateProfileSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: "Validation Error",
+          errors: validation.error.format(),
+        });
+        return;
+      }
+      const updateData = validation.data;
+
       this._logger.info("Updating user profile", {
         userId,
         updatedFields: Object.keys(updateData || {}),
       });
-      if (!updateData || Object.keys(updateData).length === 0) {
+
+      if (Object.keys(updateData).length === 0) {
         throw {
           status: StatusCodes.BAD_REQUEST,
           message: COMMON_MESSAGES.REQUIRED_FIELD,
         };
       }
+
       const updatedProfile = await this.userProfileUseCase.updateProfile(
         userId,
         updateData,
       );
-      this.sendSuccess(
-        res,
-        updatedProfile,
-        COMMON_MESSAGES.PROFILE_UPDATED,
-      );
+      this.sendSuccess(res, updatedProfile, COMMON_MESSAGES.PROFILE_UPDATED);
     },
   );
 
   changePassword = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
-      const { currentPassword, newPassword, confirmNewPassword } = req.body;
       this._logger.info("Change password attempt", { userId });
 
-      if (!currentPassword || !newPassword || !confirmNewPassword) {
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: COMMON_MESSAGES.REQUIRED_FIELD,
-        };
+      const validation = ChangePasswordSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: "Validation Error",
+          errors: validation.error.format(),
+        });
+        return;
       }
-      if (newPassword !== confirmNewPassword) {
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: COMMON_MESSAGES.INVALID_INPUT,
-        };
-      }
+
+      const { currentPassword, newPassword } = validation.data;
 
       await this.userProfileUseCase.changePassword(
         userId,
@@ -96,15 +104,19 @@ export class UserController {
   deleteAccount = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
-      const { password, confirmation } = req.body;
       this._logger.info("Delete account attempt", { userId });
 
-      if (!password || confirmation !== "DELETE") {
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: COMMON_MESSAGES.REQUIRED_FIELD,
-        };
+      const validation = DeleteAccountSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: "Validation Error",
+          errors: validation.error.format(),
+        });
+        return;
       }
+
+      const { password } = validation.data;
       await this.userProfileUseCase.deleteAccount(userId, password);
       this.sendSuccess(res, null, COMMON_MESSAGES.USER_DELETED);
     },

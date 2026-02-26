@@ -9,6 +9,7 @@ export declare const TYPES: {
     readonly IGoogleAuthService: symbol;
     readonly IRazorpayService: symbol;
     readonly ISocketService: symbol;
+    readonly IFileService: symbol;
     readonly IUserRepo: symbol;
     readonly IOrgRepo: symbol;
     readonly IInviteRepo: symbol;
@@ -18,6 +19,7 @@ export declare const TYPES: {
     readonly IProjectRepo: symbol;
     readonly INotificationRepo: symbol;
     readonly IChatRepo: symbol;
+    readonly ISprintRepo: symbol;
     readonly ILoginUseCase: symbol;
     readonly IRegisterUseCase: symbol;
     readonly IGoogleSignInUseCase: symbol;
@@ -50,6 +52,7 @@ export declare const TYPES: {
     readonly IGetTaskUseCase: symbol;
     readonly IUpdateTaskUseCase: symbol;
     readonly IDeleteTaskUseCase: symbol;
+    readonly IToggleTimerUseCase: symbol;
     readonly ICreateProjectUseCase: symbol;
     readonly IGetProjectUseCase: symbol;
     readonly IGetProjectByIdUseCase: symbol;
@@ -79,6 +82,8 @@ export declare const TYPES: {
     readonly OrganizationController: symbol;
     readonly NotificationController: symbol;
     readonly ChatController: symbol;
+    readonly UploadController: symbol;
+    readonly SprintController: symbol;
     readonly AuthMiddleware: symbol;
     readonly ValidationMiddleware: symbol;
     readonly ErrorMiddleware: symbol;

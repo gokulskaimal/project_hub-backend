@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
 
 interface AuthenticatedUser {
   id: string;
@@ -16,7 +17,10 @@ interface AuthenticatedUser {
 export class SocketServer {
   public io!: Server;
 
-  constructor(@inject(TYPES.ILogger) private _logger: ILogger) {}
+  constructor(
+    @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+  ) {}
 
   public initialize(httpServer: HttpServer, allowedOrigins: string | string[]) {
     this.io = new Server(httpServer, {
@@ -48,11 +52,35 @@ export class SocketServer {
     this.io.on("connection", (socket) => {
       this.handleConnection(socket);
 
-      socket.on("join-project", (projectId: string) => {
-        this._logger.info(
-          `User ${socket.data.user?.id} joined project room: project:${projectId}`,
-        );
-        socket.join(`project:${projectId}`);
+      socket.on("join-project", async (projectId: string) => {
+        try {
+          const user = socket.data.user;
+          if (!user) return;
+
+          const project = await this._projectRepo.findById(projectId);
+          if (!project) return;
+
+          // Authorization Check
+          const isManager =
+            user.role === "ORG MANAGER" && project.orgId === user.orgId;
+          const isMember =
+            user.role === "TEAM MEMBER" &&
+            project.teamMemberIds?.includes(user.id);
+          const isAdmin = user.role === "SUPER ADMIN";
+
+          if (isManager || isMember || isAdmin) {
+            this._logger.info(
+              `User ${user.id} joined project room: project:${projectId}`,
+            );
+            socket.join(`project:${projectId}`);
+          } else {
+            this._logger.warn(
+              `User ${user.id} unauthorized attempt to join room: project:${projectId}`,
+            );
+          }
+        } catch (error) {
+          this._logger.error(`Failed to join socket project room: ${error}`);
+        }
       });
 
       socket.on("leave-project", (projectId: string) => {

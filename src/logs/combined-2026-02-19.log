@@ -222,3 +222,828 @@
 {"level":"info","message":"User joined room: user:693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T03:08:00.146Z"}
 {"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T03:08:00.146Z"}
 {"level":"info","message":"SIGINT received. Starting graceful shutdown...","timestamp":"2026-02-19T03:11:06.851Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:17:46.098Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:17:46.133Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:17:46.236Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:17:46.237Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:17:46.239Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:17:46.239Z"}
+{"duration":"26ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.757Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"10ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.776Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d/tasks","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.785Z","url":"/api/projects/69806781ec2444f820c8964d/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"8ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.798Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.809Z","url":"/api/projects/69806781ec2444f820c8964d","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d/sprints","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.818Z","url":"/api/projects/69806781ec2444f820c8964d/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"code":"AUTH_INVALID_TOKEN","level":"warn","message":"Request Failed Invalid refresh token","path":"/api/auth/refresh-token","status":401,"timestamp":"2026-02-19T04:18:56.870Z"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.830Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Refresh token attempt","timestamp":"2026-02-19T04:18:56.836Z"}
+{"error":{"message":"Invalid refresh token","name":"InvalidTokenError","stack":"InvalidTokenError: Invalid refresh token\n    at TokenRefreshUseCase.execute (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\application\\useCase\\TokenRefreshUseCase.ts:30:27)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\controllers\\auth\\SessionController.ts:81:47\n    at SessionController.refreshToken (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\middleware\\ErrorMiddleware.ts:40:21)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\routes\\authRoutes.ts:85:17\n    at Layer.handleRequest (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\layer.js:152:17)\n    at next (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\route.js:157:13)\n    at Route.dispatch (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\route.js:117:3)\n    at handle (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\index.js:435:11)\n    at Layer.handleRequest (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\layer.js:152:17)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\index.js:295:15"},"level":"error","message":"Token refresh failed","timestamp":"2026-02-19T04:18:56.866Z"}
+{"duration":"37ms","ip":"::1","level":"info","message":"POST /api/auth/refresh-token","method":"POST","statusCode":401,"timestamp":"2026-02-19T04:18:56.872Z","url":"/api/auth/refresh-token","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"8ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.888Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"6ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d/tasks","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.898Z","url":"/api/projects/69806781ec2444f820c8964d/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.908Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.915Z","url":"/api/projects/69806781ec2444f820c8964d","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d/sprints","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.925Z","url":"/api/projects/69806781ec2444f820c8964d/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.940Z","url":"/api/projects/69806781ec2444f820c8964d","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/projects/69806781ec2444f820c8964d","method":"GET","statusCode":401,"timestamp":"2026-02-19T04:18:56.964Z","url":"/api/projects/69806781ec2444f820c8964d","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"hasInviteToken":false,"level":"info","message":"Google Sign-In attempt","timestamp":"2026-02-19T04:29:22.320Z"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2026-02-19T04:29:23.111Z","userId":"693e842a1fccaf1d606ae871"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2026-02-19T04:29:23.118Z","userId":"693e842a1fccaf1d606ae871"}
+{"duration":"804ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2026-02-19T04:29:23.123Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:29:23.275Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:29:23.277Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:23.277Z"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:24.957Z"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:25.007Z"}
+{"duration":"102ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:29:25.035Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"106ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:29:25.049Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:25.178Z"}
+{"duration":"71ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:29:25.215Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"97ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:29:25.263Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:25.297Z"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:25.308Z"}
+{"duration":"120ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:29:25.341Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"114ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:29:25.350Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:29:25.374Z"}
+{"duration":"122ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:29:25.401Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"104ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:29:25.416Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:35:35.927Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:35:35.959Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:35:36.056Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:35:36.056Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:35:36.058Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:35:36.059Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:35:38.042Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:35:38.043Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:35:38.043Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:35:41.668Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:35:41.708Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:35:41.798Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:35:41.799Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:35:41.801Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:35:41.801Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:35:42.020Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:35:42.021Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:35:42.021Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:37:50.301Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:37:50.335Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:37:50.439Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:37:50.440Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:37:50.442Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:37:50.443Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:37:51.049Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:37:51.050Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:37:51.051Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:38:26.785Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:38:26.837Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:38:26.988Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:38:26.990Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:38:26.994Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:38:26.995Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:38:27.039Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:38:27.040Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:38:27.041Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:38:30.291Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:38:30.349Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:38:30.453Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:38:30.454Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:38:30.456Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:38:30.456Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:38:32.485Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:38:32.526Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:38:32.645Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:38:32.646Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:38:32.648Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:38:32.649Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:38:32.829Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:38:32.830Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:38:32.831Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:38:34.520Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:38:34.554Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:38:34.653Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:38:34.654Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:38:34.656Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:38:34.657Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:38:34.806Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:38:34.807Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:38:34.808Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:38:36.408Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:38:36.439Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:38:36.534Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:38:36.535Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:38:36.537Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:38:36.537Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:38:37.043Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:38:37.043Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:38:37.044Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:09.187Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:09.222Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:09.315Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:09.316Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:09.318Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:09.318Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:09.525Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:09.526Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:09.527Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:12.646Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:12.687Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:12.803Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:12.804Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:12.808Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:12.808Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:13.044Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:13.045Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:13.046Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:16.968Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:17.005Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:17.101Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:17.102Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:17.104Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:17.105Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:17.283Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:17.283Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:17.283Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:21.648Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:21.681Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:21.775Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:21.776Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:21.778Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:21.779Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:22.030Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:22.031Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:22.032Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:25.343Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:25.381Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:25.498Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:25.498Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:25.501Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:25.501Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:26.034Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:26.034Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:26.035Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:33.217Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:33.251Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:33.357Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:33.358Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:33.360Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:33.360Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:34.031Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:34.032Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:34.032Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:41.830Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:41.865Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:41.968Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:41.969Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:41.971Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:41.972Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:42.024Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:42.026Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:42.028Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:45.089Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:45.120Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:45.216Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:45.217Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:45.219Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:45.219Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:45.315Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:45.315Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:45.316Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:46.880Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:46.942Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:47.040Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:47.042Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:47.044Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:47.045Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:47.276Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:47.277Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:47.277Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:48.833Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:48.866Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:49.003Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:49.003Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:49.006Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:49.006Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:49.283Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:49.283Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:49.284Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:50.904Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:50.935Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:51.030Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:51.030Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:51.032Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:51.033Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:52.466Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:52.497Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:52.590Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:52.590Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:52.593Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:52.593Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:52.613Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:52.613Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:52.614Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:56.621Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:56.659Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:56.759Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:56.759Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:56.761Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:56.762Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:57.028Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:57.029Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:57.029Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:39:59.510Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:39:59.550Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:39:59.652Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:39:59.653Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:39:59.655Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:39:59.655Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:39:59.806Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:39:59.807Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:39:59.808Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:02.948Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:02.979Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:03.073Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:03.074Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:03.076Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:03.077Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:03.294Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:03.295Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:03.296Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:12.550Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:12.583Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:12.678Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:12.679Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:12.680Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:12.681Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:13.022Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:13.022Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:13.022Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:16.916Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:16.948Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:17.049Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:17.050Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:17.052Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:17.053Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:17.281Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:17.282Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:17.283Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:19.537Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:19.573Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:19.668Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:19.669Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:19.671Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:19.671Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:20.926Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:20.961Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:21.054Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:21.055Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:21.057Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:21.057Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:21.116Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:21.117Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:21.117Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:25.351Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:25.383Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:25.480Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:25.481Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:25.484Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:25.484Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:25.549Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:25.550Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:25.550Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:27.508Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:27.539Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:27.630Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:27.631Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:27.633Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:27.634Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:27.811Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:27.812Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:27.813Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:30.538Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:30.577Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:30.669Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:30.670Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:30.672Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:30.672Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:30.801Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:30.801Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:30.802Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:37.866Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:37.901Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:38.004Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:38.005Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:38.007Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:38.008Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:39.468Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:39.501Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:39.601Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:39.602Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:39.605Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:39.605Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:39.811Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:39.811Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:39.812Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:42.176Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:42.228Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:42.392Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:42.393Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:42.395Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:42.395Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:43.051Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:43.053Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:43.054Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:45.015Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:45.050Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:45.146Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:45.147Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:45.149Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:45.149Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:45.300Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:45.301Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:45.301Z"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:40:48.237Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:40:48.280Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:40:48.388Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:40:48.389Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:40:48.392Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:40:48.392Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:40:49.035Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:40:49.036Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:40:49.036Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 disconnected","timestamp":"2026-02-19T04:45:12.390Z"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:45:20.301Z"}
+{"duration":"27ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:45:20.322Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:45:20.341Z"}
+{"duration":"24ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:45:20.362Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:45:24.051Z"}
+{"duration":"6ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:45:24.057Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:45:24.074Z"}
+{"duration":"8ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:45:24.082Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Razorpay initialized in LIVE/TEST mode","timestamp":"2026-02-19T04:48:24.573Z"}
+{"level":"info","message":"Connected to MongoDB successfully","timestamp":"2026-02-19T04:48:24.625Z"}
+{"level":"info","message":"Socket is initialized","timestamp":"2026-02-19T04:48:24.763Z"}
+{"level":"info","message":"Socket is Connected","timestamp":"2026-02-19T04:48:24.764Z"}
+{"level":"info","message":"Project Hub Server running on: http://localhost:5000","timestamp":"2026-02-19T04:48:24.766Z"}
+{"level":"info","message":"Environment: development","timestamp":"2026-02-19T04:48:24.766Z"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:48:37.356Z"}
+{"duration":"37ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:48:37.388Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:48:57.206Z"}
+{"duration":"39ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:48:57.243Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:48:57.299Z"}
+{"duration":"44ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:48:57.344Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:49:15.854Z"}
+{"duration":"10ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:49:15.864Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:49:19.331Z"}
+{"duration":"13ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:49:19.343Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:49:19.376Z"}
+{"duration":"15ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:49:19.390Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:51:35.851Z"}
+{"duration":"15ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:51:35.866Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T04:51:35.895Z"}
+{"duration":"18ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:51:35.913Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"hasInviteToken":false,"level":"info","message":"Google Sign-In attempt","timestamp":"2026-02-19T04:52:39.967Z"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2026-02-19T04:52:40.551Z","userId":"693e842a1fccaf1d606ae871"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2026-02-19T04:52:40.553Z","userId":"693e842a1fccaf1d606ae871"}
+{"duration":"595ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2026-02-19T04:52:40.561Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T04:52:40.706Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:52:40.713Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:40.717Z"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:43.815Z"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:43.833Z"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:43.898Z"}
+{"duration":"193ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:52:43.934Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"208ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:52:43.965Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"308ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:52:44.080Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"337ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:52:44.117Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:44.209Z"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:44.228Z"}
+{"duration":"134ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:52:44.258Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"143ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:52:44.293Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:44.327Z"}
+{"duration":"80ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:52:44.347Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"92ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:52:44.378Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:54.668Z"}
+{"duration":"25ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:52:54.679Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:52:54.730Z"}
+{"duration":"27ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:52:54.743Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:53:35.375Z"}
+{"duration":"21ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:53:35.383Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:53:35.433Z"}
+{"duration":"42ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:53:35.450Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:53:37.820Z"}
+{"duration":"26ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:53:37.834Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"[CreateProject] Received Data:","name":"sdfwe","priority":"MEDIUM","tags":[],"teamMemberIds":["693e91de1a5e10dc75a6e6f3","6954cc479a2c19cdd18aea24","6954cd0c9a2c19cdd18aea68"],"timestamp":"2026-02-19T04:55:31.629Z"}
+{"level":"info","message":"Creating project 'sdfwe' for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:55:31.632Z"}
+{"level":"info","message":"Checking subscription for userId: 693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:55:31.634Z"}
+{"level":"info","message":"Found subscription: 693e8537e79515999a2003b2 with status: active","timestamp":"2026-02-19T04:55:31.650Z"}
+{"level":"warn","message":"Project creation failed: Limit reached for Org 693e84291fccaf1d606ae86f (Limit: 1, Current: 1)","timestamp":"2026-02-19T04:55:31.838Z"}
+{"code":"QUOTA_EXCEEDED","level":"warn","message":"Request Failed Project Limit reached for this plan","path":"/api/projects","status":400,"timestamp":"2026-02-19T04:55:31.847Z"}
+{"duration":"240ms","ip":"::1","level":"info","message":"POST /api/projects","method":"POST","statusCode":400,"timestamp":"2026-02-19T04:55:31.852Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Deleting project 69806781ec2444f820c8964d","timestamp":"2026-02-19T04:55:41.355Z"}
+{"level":"info","message":"Deleting project 69806781ec2444f820c8964d and all related data","timestamp":"2026-02-19T04:55:41.360Z"}
+{"level":"info","message":"Deleting 5 tasks for project 69806781ec2444f820c8964d","timestamp":"2026-02-19T04:55:41.404Z"}
+{"level":"info","message":"Deleting 3 sprints for project 69806781ec2444f820c8964d","timestamp":"2026-02-19T04:55:41.457Z"}
+{"duration":"180ms","ip":"::1","level":"info","message":"DELETE /api/projects/69806781ec2444f820c8964d","method":"DELETE","statusCode":200,"timestamp":"2026-02-19T04:55:41.512Z","url":"/api/projects/69806781ec2444f820c8964d","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:55:43.289Z"}
+{"duration":"19ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:55:43.297Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"[CreateProject] Received Data:","name":"sdfwe","priority":"MEDIUM","tags":[],"teamMemberIds":["693e91de1a5e10dc75a6e6f3","6954cc479a2c19cdd18aea24","6954cd0c9a2c19cdd18aea68"],"timestamp":"2026-02-19T04:55:48.594Z"}
+{"level":"info","message":"Creating project 'sdfwe' for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:55:48.597Z"}
+{"level":"info","message":"Checking subscription for userId: 693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:55:48.598Z"}
+{"level":"info","message":"Found subscription: 693e8537e79515999a2003b2 with status: active","timestamp":"2026-02-19T04:55:48.611Z"}
+{"level":"info","message":"Creating project 'sdfwe' for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:55:48.635Z"}
+{"createdAt":"2026-02-19T04:55:48.658Z","description":"ewr","endDate":"2026-02-28T00:00:00.000Z","id":"699697d467cd098f2e344b56","level":"info","message":"[CreateProject] Created Project:","name":"sdfwe","orgId":"693e84291fccaf1d606ae86f","priority":"MEDIUM","startDate":"2026-02-19T00:00:00.000Z","status":"ACTIVE","tags":[],"teamMemberIds":["693e91de1a5e10dc75a6e6f3","6954cc479a2c19cdd18aea24","6954cd0c9a2c19cdd18aea68"],"timestamp":"2026-02-19T04:55:48.739Z","updatedAt":"2026-02-19T04:55:48.658Z"}
+{"duration":"178ms","ip":"::1","level":"info","message":"POST /api/projects","method":"POST","statusCode":201,"timestamp":"2026-02-19T04:55:48.742Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:55:48.846Z"}
+{"duration":"41ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:55:48.867Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:01.154Z"}
+{"duration":"29ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:56:01.164Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:01.235Z"}
+{"duration":"104ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:56:01.283Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"112ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:56:01.301Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"116ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.321Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:01.337Z"}
+{"duration":"102ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.351Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:01.407Z"}
+{"duration":"69ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.422Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"87ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.476Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:01.483Z"}
+{"duration":"90ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.502Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"113ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.538Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:01.626Z"}
+{"duration":"41ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:56:01.644Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Creating task 'create the figma design' in Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:43.704Z"}
+{"level":"info","message":"Creating task 'create the figma design' in project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:43.715Z"}
+{"duration":"102ms","ip":"::1","level":"info","message":"POST /api/projects/699697d467cd098f2e344b56/tasks","method":"POST","statusCode":201,"timestamp":"2026-02-19T04:56:43.782Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:56:43.988Z"}
+{"duration":"41ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:56:44.006Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 joined project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T04:57:00.892Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 left project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T04:57:00.893Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 joined project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T04:57:00.895Z"}
+{"duration":"266ms","ip":"::1","level":"info","message":"GET /api/chat/699697d467cd098f2e344b56","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:57:01.208Z","url":"/api/chat/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"47ms","ip":"::1","level":"info","message":"GET /api/chat/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:57:01.333Z","url":"/api/chat/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 left project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T04:57:14.802Z"}
+{"duration":"31ms","ip":"::1","level":"info","message":"POST /api/projects/sprints","method":"POST","statusCode":201,"timestamp":"2026-02-19T04:57:42.758Z","url":"/api/projects/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:57:42.919Z"}
+{"duration":"73ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:57:42.948Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"72ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:57:42.962Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"30ms","ip":"::1","level":"info","message":"PUT /api/projects/sprints/6996984667cd098f2e344b93","method":"PUT","statusCode":200,"timestamp":"2026-02-19T04:57:54.724Z","url":"/api/projects/sprints/6996984667cd098f2e344b93","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"61ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:57:54.869Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:57:54.878Z"}
+{"duration":"71ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:57:54.900Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Updating task 6996980b67cd098f2e344b83 by user 693e842a1fccaf1d606ae871","timestamp":"2026-02-19T04:57:57.756Z"}
+{"level":"info","message":"Executing UpdateTaskUseCase for task ID: 6996980b67cd098f2e344b83","timestamp":"2026-02-19T04:57:57.758Z"}
+{"duration":"106ms","ip":"::1","level":"info","message":"PUT /api/projects/tasks/6996980b67cd098f2e344b83","method":"PUT","statusCode":200,"timestamp":"2026-02-19T04:57:57.852Z","url":"/api/projects/tasks/6996980b67cd098f2e344b83","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:04.135Z"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:04.151Z"}
+{"duration":"163ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:04.205Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"185ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:58:04.239Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"185ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:04.258Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:04.420Z"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:04.444Z"}
+{"duration":"96ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:04.463Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"161ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:04.511Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"140ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:04.525Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:07.912Z"}
+{"duration":"38ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:07.927Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:08.037Z"}
+{"duration":"149ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.096Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:08.104Z"}
+{"duration":"158ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.131Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"151ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.139Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"124ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.145Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:58:08.195Z"}
+{"duration":"66ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.222Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"73ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.278Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"68ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:58:08.312Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:13.947Z"}
+{"duration":"77ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:13.998Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:14.046Z"}
+{"duration":"123ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:14.077Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"144ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:14.112Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:14.137Z"}
+{"duration":"99ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:14.187Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:14.225Z"}
+{"duration":"85ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:14.251Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"75ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:14.269Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"email":"cotano9989@alexida.com","level":"info","message":"Login attempt","timestamp":"2026-02-19T04:59:33.551Z"}
+{"email":"cotano9989@alexida.com","level":"info","message":"User login attempt","timestamp":"2026-02-19T04:59:33.553Z"}
+{"email":"cotano9989@alexida.com","level":"info","message":"User login successful","timestamp":"2026-02-19T04:59:33.703Z","userId":"693e91de1a5e10dc75a6e6f3"}
+{"level":"info","message":"User logged in successfully","timestamp":"2026-02-19T04:59:33.707Z","userId":"693e91de1a5e10dc75a6e6f3"}
+{"duration":"166ms","ip":"::1","level":"info","message":"POST /api/auth/login","method":"POST","statusCode":200,"timestamp":"2026-02-19T04:59:33.712Z","url":"/api/auth/login","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e91de1a5e10dc75a6e6f3 connected","timestamp":"2026-02-19T04:59:33.786Z"}
+{"level":"info","message":"User joined room: user:693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:33.788Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T04:59:33.790Z"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.000Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.011Z"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.193Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.207Z"}
+{"duration":"440ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:35.277Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"567ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:35.342Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"515ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:35.622Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.909Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.911Z"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.944Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:35.978Z"}
+{"duration":"331ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:36.120Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"398ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:36.275Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"634ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:36.335Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:51.418Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:51.421Z"}
+{"duration":"56ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:51.444Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:51.497Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T04:59:51.500Z"}
+{"duration":"44ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:51.516Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:55.846Z"}
+{"duration":"329ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:55.977Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:56.577Z"}
+{"duration":"266ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:56.706Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"395ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:56.875Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"198ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":200,"timestamp":"2026-02-19T04:59:57.140Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:57.171Z"}
+{"duration":"112ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:57.216Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:57.397Z"}
+{"duration":"329ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:57.572Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"393ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:57.693Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"350ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:57.793Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:57.964Z"}
+{"duration":"216ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:58.048Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T04:59:58.235Z"}
+{"duration":"120ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T04:59:58.309Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e91de1a5e10dc75a6e6f3 joined project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:00:10.986Z"}
+{"level":"info","message":"User 693e91de1a5e10dc75a6e6f3 left project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:00:10.988Z"}
+{"level":"info","message":"User 693e91de1a5e10dc75a6e6f3 joined project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:00:10.988Z"}
+{"duration":"18ms","ip":"::1","level":"info","message":"GET /api/chat/699697d467cd098f2e344b56","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:00:11.015Z","url":"/api/chat/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"26ms","ip":"::1","level":"info","message":"GET /api/chat/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:00:11.094Z","url":"/api/chat/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e91de1a5e10dc75a6e6f3 left project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:00:45.954Z"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:03:08.152Z"}
+{"duration":"85ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.188Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:03:08.192Z"}
+{"duration":"106ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.230Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"116ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:03:08.248Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"121ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.264Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:03:08.297Z"}
+{"duration":"52ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.323Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:03:08.349Z"}
+{"duration":"79ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.387Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"97ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.431Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"81ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:03:08.441Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 joined project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:08:09.119Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 left project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:08:09.120Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 joined project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:08:09.120Z"}
+{"duration":"11ms","ip":"::1","level":"info","message":"GET /api/chat/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:08:09.143Z","url":"/api/chat/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"50ms","ip":"::1","level":"info","message":"GET /api/chat/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:08:09.219Z","url":"/api/chat/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 left project room: project:699697d467cd098f2e344b56","timestamp":"2026-02-19T05:08:16.635Z"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:20.249Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:20.252Z"}
+{"duration":"46ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:20.272Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:20.317Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:20.322Z"}
+{"duration":"47ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:20.345Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:09:21.993Z"}
+{"duration":"99ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:22.064Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:09:22.325Z"}
+{"duration":"243ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:22.422Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"371ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:22.500Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:09:22.517Z"}
+{"duration":"353ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:22.581Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"288ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:22.639Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:09:22.752Z"}
+{"duration":"145ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:22.816Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"271ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:23.008Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"318ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:23.093Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:09:23.231Z"}
+{"duration":"165ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:23.298Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:09:23.555Z"}
+{"duration":"215ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:23.672Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:43.112Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:43.114Z"}
+{"duration":"35ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:43.125Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:43.178Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:09:43.180Z"}
+{"duration":"44ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:09:43.197Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.101Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.102Z"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.109Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.111Z"}
+{"duration":"56ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:04.122Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"48ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:04.127Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.172Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.174Z"}
+{"duration":"50ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:04.200Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.228Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:04.228Z"}
+{"duration":"55ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:04.241Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:06.727Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:06.730Z"}
+{"duration":"54ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:06.748Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:06.872Z"}
+{"level":"info","message":"Fetching tasks for user: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:06.875Z"}
+{"duration":"43ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:06.887Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:08.237Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:08.244Z"}
+{"duration":"56ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:08.264Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:08.329Z"}
+{"level":"info","message":"Fetching projects for team member: 693e91de1a5e10dc75a6e6f3","timestamp":"2026-02-19T05:10:08.330Z"}
+{"duration":"46ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:08.346Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:10:09.820Z"}
+{"duration":"80ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:09.863Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:10:10.143Z"}
+{"duration":"326ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.248Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"345ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.335Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:10:10.367Z"}
+{"duration":"330ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.399Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"330ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.434Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"150ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.591Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:10:10.605Z"}
+{"duration":"139ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.641Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"152ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.714Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:10:10.800Z"}
+{"duration":"98ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.830Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:10:10.914Z"}
+{"duration":"66ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:10:10.935Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T05:11:21.208Z"}
+{"duration":"28ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:11:21.235Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Getting organization details","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:11:21.270Z"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T05:11:21.282Z"}
+{"duration":"84ms","ip":"::1","level":"info","message":"GET /api/manager/organization","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:11:21.299Z","url":"/api/manager/organization","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"28ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:11:21.310Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Getting organization details","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:11:21.368Z"}
+{"duration":"36ms","ip":"::1","level":"info","message":"GET /api/manager/organization","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:11:21.379Z","url":"/api/manager/organization","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"389ms","ip":"::1","level":"info","message":"POST /api/payments/subscription","method":"POST","statusCode":200,"timestamp":"2026-02-19T05:11:25.266Z","url":"/api/payments/subscription","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"41ms","ip":"::1","level":"info","message":"POST /api/payments/verify","method":"POST","statusCode":200,"timestamp":"2026-02-19T05:11:50.021Z","url":"/api/payments/verify","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching Subscritption Plans","timestamp":"2026-02-19T05:11:50.150Z"}
+{"duration":"50ms","ip":"::1","level":"info","message":"GET /api/plans","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:11:50.197Z","url":"/api/plans","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Getting organization details","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:11:50.221Z"}
+{"duration":"83ms","ip":"::1","level":"info","message":"GET /api/manager/organization","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:11:50.245Z","url":"/api/manager/organization","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:15:33.153Z"}
+{"duration":"41ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:15:33.172Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:15:33.254Z"}
+{"duration":"48ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:15:33.270Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"email":"poxek91241@bitoini.com","expiresIn":7,"level":"info","message":"Inviting member","orgId":"693e84291fccaf1d606ae86f","role":"TEAM MEMBER","timestamp":"2026-02-19T05:16:00.645Z"}
+{"email":"poxek91241@bitoini.com","level":"info","message":"Processing member invitation","orgId":"693e84291fccaf1d606ae86f","role":"TEAM MEMBER","timestamp":"2026-02-19T05:16:00.650Z"}
+{"level":"info","message":"[Testing] Invite link written to c:/Users/gokul/.gemini/antigravity/brain/5dd41adf-753e-4b17-9d06-9543aaf15df8/temp_invite_link.txt","timestamp":"2026-02-19T05:16:00.762Z"}
+{"level":"info","message":"Email sent to poxek91241@bitoini.com","timestamp":"2026-02-19T05:16:04.024Z"}
+{"email":"poxek91241@bitoini.com","level":"info","message":"Invitation email sent","orgName":"Dude","timestamp":"2026-02-19T05:16:04.028Z"}
+{"email":"poxek91241@bitoini.com","expiresAt":"2026-02-26T05:16:00.693Z","invitationId":"69969c9067cd098f2e344cc7","level":"info","message":"Member invitation sent successfully","orgId":"693e84291fccaf1d606ae86f","orgName":"Dude","timestamp":"2026-02-19T05:16:04.029Z"}
+{"duration":"3393ms","ip":"::1","level":"info","message":"POST /api/auth/invite-member","method":"POST","statusCode":201,"timestamp":"2026-02-19T05:16:04.038Z","url":"/api/auth/invite-member","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:04.157Z"}
+{"duration":"42ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:16:04.177Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching user profile","timestamp":"2026-02-19T05:16:20.032Z","userId":"693e842a1fccaf1d606ae871"}
+{"level":"info","message":"Getting user profile","timestamp":"2026-02-19T05:16:20.033Z","userId":"693e842a1fccaf1d606ae871"}
+{"duration":"28ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:16:20.050Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T05:16:20.223Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T05:16:20.225Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:20.227Z"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 disconnected","timestamp":"2026-02-19T05:16:37.229Z"}
+{"firstName":"New ","lastName":"Member","level":"info","message":"Accepting invite","timestamp":"2026-02-19T05:16:37.248Z","token":"REDACTED"}
+{"firstName":"New ","lastName":"Member","level":"info","message":"Processing invitation acceptance","timestamp":"2026-02-19T05:16:37.251Z","token":"wCDAiztN..."}
+{"email":"poxek91241@bitoini.com","firstName":"New ","lastName":"Member","level":"info","message":"Invitation accepted successfully","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:37.455Z","userId":"69969cb567cd098f2e344cd3"}
+{"duration":"209ms","ip":"::1","level":"info","message":"POST /api/auth/accept-invite","method":"POST","statusCode":200,"timestamp":"2026-02-19T05:16:37.457Z","url":"/api/auth/accept-invite","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T05:16:37.590Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T05:16:37.592Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:37.592Z"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:38.859Z"}
+{"duration":"135ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:16:38.903Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"163ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:16:38.941Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:38.964Z"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:38.983Z"}
+{"duration":"199ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:16:39.019Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"227ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:16:39.053Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"122ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:16:39.198Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:39.207Z"}
+{"duration":"140ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:16:39.257Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:39.271Z"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:16:39.289Z"}
+{"duration":"148ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:16:39.307Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"150ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:16:39.324Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 disconnected","timestamp":"2026-02-19T05:16:42.639Z"}
+{"duration":"2ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:45.826Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"1ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:45.839Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"1ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:45.843Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"2ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:45.847Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:45.903Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"2ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:45.934Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Refresh token attempt","timestamp":"2026-02-19T05:16:45.957Z"}
+{"code":"AUTH_INVALID_TOKEN","level":"warn","message":"Request Failed Invalid refresh token","path":"/api/auth/refresh-token","status":401,"timestamp":"2026-02-19T05:16:46.000Z"}
+{"error":{"message":"Invalid refresh token","name":"InvalidTokenError","stack":"InvalidTokenError: Invalid refresh token\n    at TokenRefreshUseCase.execute (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\application\\useCase\\TokenRefreshUseCase.ts:30:27)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\controllers\\auth\\SessionController.ts:81:47\n    at SessionController.refreshToken (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\middleware\\ErrorMiddleware.ts:40:21)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\routes\\authRoutes.ts:85:17\n    at Layer.handleRequest (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\layer.js:152:17)\n    at next (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\route.js:157:13)\n    at Route.dispatch (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\route.js:117:3)\n    at handle (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\index.js:435:11)\n    at Layer.handleRequest (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\layer.js:152:17)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\index.js:295:15"},"level":"error","message":"Token refresh failed","timestamp":"2026-02-19T05:16:45.995Z"}
+{"duration":"63ms","ip":"::1","level":"info","message":"POST /api/auth/refresh-token","method":"POST","statusCode":401,"timestamp":"2026-02-19T05:16:46.019Z","url":"/api/auth/refresh-token","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"3ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:46.036Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":401,"timestamp":"2026-02-19T05:16:46.048Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 disconnected","timestamp":"2026-02-19T05:17:04.872Z"}
+{"email":"poxek91241@bitoini.com","level":"info","message":"Login attempt","timestamp":"2026-02-19T05:17:16.948Z"}
+{"email":"poxek91241@bitoini.com","level":"info","message":"User login attempt","timestamp":"2026-02-19T05:17:16.949Z"}
+{"email":"poxek91241@bitoini.com","level":"info","message":"User login successful","timestamp":"2026-02-19T05:17:17.091Z","userId":"69969cb567cd098f2e344cd3"}
+{"level":"info","message":"User logged in successfully","timestamp":"2026-02-19T05:17:17.092Z","userId":"69969cb567cd098f2e344cd3"}
+{"duration":"147ms","ip":"::1","level":"info","message":"POST /api/auth/login","method":"POST","statusCode":200,"timestamp":"2026-02-19T05:17:17.093Z","url":"/api/auth/login","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 69969cb567cd098f2e344cd3 connected","timestamp":"2026-02-19T05:17:17.202Z"}
+{"level":"info","message":"User joined room: user:69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.203Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:17.205Z"}
+{"duration":"20ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:17.709Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.788Z"}
+{"level":"info","message":"Fetching projects for team member: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.791Z"}
+{"level":"info","message":"Fetching tasks for member 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.803Z"}
+{"level":"info","message":"Fetching tasks for user: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.804Z"}
+{"duration":"134ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:17.851Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"126ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:17.857Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"118ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:17.892Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.966Z"}
+{"level":"info","message":"Fetching projects for team member: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.967Z"}
+{"level":"info","message":"Fetching tasks for member 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.975Z"}
+{"level":"info","message":"Fetching tasks for user: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:17:17.976Z"}
+{"duration":"63ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:17.992Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"63ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:18.005Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e91de1a5e10dc75a6e6f3 disconnected","timestamp":"2026-02-19T05:17:28.211Z"}
+{"hasInviteToken":false,"level":"info","message":"Google Sign-In attempt","timestamp":"2026-02-19T05:17:35.184Z"}
+{"email":"mrdudesir94@gmail.com","isInviteSignup":false,"level":"info","message":"Google sign-in successful","role":"ORG MANAGER","timestamp":"2026-02-19T05:17:35.240Z","userId":"693e842a1fccaf1d606ae871"}
+{"level":"info","message":"Google Sign-In successful","timestamp":"2026-02-19T05:17:35.250Z","userId":"693e842a1fccaf1d606ae871"}
+{"duration":"72ms","ip":"::1","level":"info","message":"POST /api/auth/google-signin","method":"POST","statusCode":200,"timestamp":"2026-02-19T05:17:35.257Z","url":"/api/auth/google-signin","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 connected","timestamp":"2026-02-19T05:17:35.433Z"}
+{"level":"info","message":"User joined room: user:693e842a1fccaf1d606ae871","timestamp":"2026-02-19T05:17:35.435Z"}
+{"level":"info","message":"User joined room: org:693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:35.437Z"}
+{"duration":"172ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:36.428Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:36.493Z"}
+{"duration":"207ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:36.579Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:36.663Z"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:36.731Z"}
+{"duration":"342ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:36.801Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"341ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:36.877Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"453ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:37.053Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:37.177Z"}
+{"duration":"399ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:37.291Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Listing invitations","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:37.434Z"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:37.502Z"}
+{"duration":"313ms","ip":"::1","level":"info","message":"GET /api/manager/invitations","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:37.634Z","url":"/api/manager/invitations","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"360ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:37.719Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:40.447Z"}
+{"duration":"57ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:40.464Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:40.561Z"}
+{"duration":"88ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:17:40.595Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","managerId":"693e842a1fccaf1d606ae871","message":"Listing members","orgId":"693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:43.069Z"}
+{"duration":"14ms","ip":"::1","level":"info","message":"GET /api/manager/members","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:43.075Z","url":"/api/manager/members","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Updating project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:17:55.068Z"}
+{"level":"info","message":"Updating project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:17:55.084Z"}
+{"duration":"91ms","ip":"::1","level":"info","message":"PUT /api/projects/699697d467cd098f2e344b56","method":"PUT","statusCode":200,"timestamp":"2026-02-19T05:17:55.138Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for Org 693e84291fccaf1d606ae86f","timestamp":"2026-02-19T05:17:55.265Z"}
+{"duration":"101ms","ip":"::1","level":"info","message":"GET /api/projects","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:17:55.329Z","url":"/api/projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:18:01.000Z"}
+{"level":"info","message":"Fetching projects for team member: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:18:01.003Z"}
+{"duration":"56ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:18:01.029Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching projects for user 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:18:01.088Z"}
+{"level":"info","message":"Fetching projects for team member: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:18:01.092Z"}
+{"duration":"53ms","ip":"::1","level":"info","message":"GET /api/projects/my-projects","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:01.116Z","url":"/api/projects/my-projects","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:12.784Z"}
+{"duration":"67ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:12.820Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:12.946Z"}
+{"duration":"121ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:18:12.991Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"119ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:18:13.013Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:13.049Z"}
+{"duration":"141ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.064Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"152ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.106Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"115ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.186Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:13.217Z"}
+{"duration":"151ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.279Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"132ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.287Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:13.349Z"}
+{"duration":"49ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.368Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:13.467Z"}
+{"duration":"53ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:13.489Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:24.609Z"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:24.632Z"}
+{"duration":"118ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:18:24.652Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"211ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:24.755Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"267ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":200,"timestamp":"2026-02-19T05:18:24.817Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"335ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:24.922Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:25.009Z"}
+{"level":"info","message":"Fetching tasks for Project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:25.032Z"}
+{"duration":"168ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:25.097Z","url":"/api/projects/699697d467cd098f2e344b56/tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"248ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:25.127Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"297ms","ip":"::1","level":"info","message":"GET /api/organization/users","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:25.271Z","url":"/api/organization/users","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"duration":"247ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56/sprints","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:25.309Z","url":"/api/projects/699697d467cd098f2e344b56/sprints","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:25.411Z"}
+{"duration":"148ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:25.479Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching project 699697d467cd098f2e344b56","timestamp":"2026-02-19T05:18:25.700Z"}
+{"duration":"180ms","ip":"::1","level":"info","message":"GET /api/projects/699697d467cd098f2e344b56","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:18:25.770Z","url":"/api/projects/699697d467cd098f2e344b56","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.132Z"}
+{"level":"info","message":"Fetching tasks for user: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.134Z"}
+{"duration":"38ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:19:34.153Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.207Z"}
+{"level":"info","message":"Fetching tasks for user: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.209Z"}
+{"duration":"44ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:19:34.227Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.631Z"}
+{"level":"info","message":"Fetching tasks for user: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.631Z"}
+{"duration":"17ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:19:34.633Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Fetching tasks for member 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.696Z"}
+{"level":"info","message":"Fetching tasks for user: 69969cb567cd098f2e344cd3","timestamp":"2026-02-19T05:19:34.698Z"}
+{"duration":"46ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":304,"timestamp":"2026-02-19T05:19:34.709Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"User 693e842a1fccaf1d606ae871 disconnected","timestamp":"2026-02-19T05:36:33.448Z"}
+{"level":"info","message":"User 69969cb567cd098f2e344cd3 disconnected","timestamp":"2026-02-19T06:00:17.895Z"}
+{"duration":"12ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":401,"timestamp":"2026-02-19T09:05:38.636Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"3ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":401,"timestamp":"2026-02-19T09:05:38.644Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":401,"timestamp":"2026-02-19T09:05:38.649Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"3ms","ip":"::1","level":"info","message":"GET /api/user/profile","method":"GET","statusCode":401,"timestamp":"2026-02-19T09:05:38.654Z","url":"/api/user/profile","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"3ms","ip":"::1","level":"info","message":"GET /api/notifications","method":"GET","statusCode":401,"timestamp":"2026-02-19T09:05:38.665Z","url":"/api/notifications","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"level":"info","message":"Refresh token attempt","timestamp":"2026-02-19T09:05:38.670Z"}
+{"code":"AUTH_INVALID_TOKEN","level":"warn","message":"Request Failed Invalid refresh token","path":"/api/auth/refresh-token","status":401,"timestamp":"2026-02-19T09:05:38.683Z"}
+{"error":{"message":"Invalid refresh token","name":"InvalidTokenError","stack":"InvalidTokenError: Invalid refresh token\n    at TokenRefreshUseCase.execute (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\application\\useCase\\TokenRefreshUseCase.ts:30:27)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\controllers\\auth\\SessionController.ts:81:47\n    at SessionController.refreshToken (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\middleware\\ErrorMiddleware.ts:40:21)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\presentation\\routes\\authRoutes.ts:85:17\n    at Layer.handleRequest (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\layer.js:152:17)\n    at next (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\route.js:157:13)\n    at Route.dispatch (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\route.js:117:3)\n    at handle (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\index.js:435:11)\n    at Layer.handleRequest (C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\lib\\layer.js:152:17)\n    at C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\node_modules\\router\\index.js:295:15"},"level":"error","message":"Token refresh failed","timestamp":"2026-02-19T09:05:38.682Z"}
+{"duration":"15ms","ip":"::1","level":"info","message":"POST /api/auth/refresh-token","method":"POST","statusCode":401,"timestamp":"2026-02-19T09:05:38.685Z","url":"/api/auth/refresh-token","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}
+{"duration":"3ms","ip":"::1","level":"info","message":"GET /api/projects/tasks/my-tasks","method":"GET","statusCode":401,"timestamp":"2026-02-19T09:05:38.691Z","url":"/api/projects/tasks/my-tasks","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"}

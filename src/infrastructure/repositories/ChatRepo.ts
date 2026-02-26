@@ -136,4 +136,9 @@ export class ChatRepo implements IChatRepo {
     const result = await ChatModel.findByIdAndDelete(id);
     return !!result;
   }
+
+  async deleteByProject(projectId: string): Promise<boolean> {
+    const result = await ChatModel.deleteMany({ projectId });
+    return result.acknowledged;
+  }
 }

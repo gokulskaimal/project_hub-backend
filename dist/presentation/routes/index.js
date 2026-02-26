@@ -12,6 +12,7 @@ const planRoutes_1 = require("./planRoutes");
 const projectRoutes_1 = require("./projectRoutes");
 const notificationRoutes_1 = require("./notificationRoutes");
 const chatRoutes_1 = require("./chatRoutes");
+const uploadRoutes_1 = require("./uploadRoutes");
 function createRoutes(container) {
     // 1. Auth Routes
     const authRouter = (0, authRoutes_1.createAuthRoutes)(container);
@@ -23,16 +24,20 @@ function createRoutes(container) {
     const userRouter = (0, userRoutes_1.createUserRoutes)(container);
     // 5. Organization Routes
     const orgRouter = (0, organizationRoutes_1.createOrganizationRoutes)(container);
-    //   const projectRouter = express.Router();
-    //   projectRouter.get("/", (_req, res) => {
-    //     res.json({ message: "Coming soon" });
-    //   });
+    // 6. Project Routes
     const projectRouter = (0, projectRoutes_1.createProjectRoutes)(container);
+    // 7. Webhook Routes
     const webhookRouter = (0, webhookRoutes_1.createWebhookRoutes)(container);
+    // 8. Payment Routes
     const paymentRouter = (0, paymentRoutes_1.createPaymentRoutes)(container);
+    // 9. Plan Routes
     const planRouter = (0, planRoutes_1.createPlanRoutes)(container);
+    // 10. Notification Routes
     const notificationRouter = (0, notificationRoutes_1.createNotificationRoutes)(container);
+    // 11. Chat Routes
     const chatRouter = (0, chatRoutes_1.createChatRoutes)(container);
+    // 12. Upload Routes
+    const uploadRouter = (0, uploadRoutes_1.createUploadRoutes)(container);
     return {
         auth: authRouter,
         admin: adminRouter,
@@ -45,6 +50,7 @@ function createRoutes(container) {
         plans: planRouter,
         notifications: notificationRouter,
         chat: chatRouter,
+        upload: uploadRouter,
     };
 }
 //# sourceMappingURL=index.js.map

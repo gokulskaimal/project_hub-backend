@@ -11,6 +11,10 @@ import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { ValidationError } from "../../../domain/errors/CommonErrors";
 import { toProjectDTO } from "../../../application/dto/ProjectDTO";
+import {
+  ProjectCreateSchema,
+  ProjectUpdateSchema,
+} from "../../../application/dto/ValidationSchemas";
 
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 
@@ -37,39 +41,27 @@ export class ProjectController {
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user || !authReq.user.orgId)
       throw new ValidationError("Unauthorized: Missing user context");
-    const {
-      name,
-      description,
-      startDate,
-      endDate,
-      priority,
-      tags,
-      teamMemberIds,
-    } = req.body;
-    this._logger.info(`[CreateProject] Received Data:`, {
-      name,
-      priority,
-      tags,
-      teamMemberIds,
-    });
 
-    if (!name) throw new ValidationError("Name is required");
+    const validation = ProjectCreateSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+
+    const data = validation.data;
+    this._logger.info(`[CreateProject] Received Data:`, data);
 
     this._logger.info(
-      `Creating project '${name}' for Org ${authReq.user.orgId}`,
+      `Creating project '${data.name}' for Org ${authReq.user.orgId}`,
     );
     const project = await this._createProjectUC.execute(
       authReq.user.id,
       authReq.user.orgId,
-      {
-        name,
-        description,
-        startDate,
-        endDate,
-        priority,
-        tags,
-        teamMemberIds,
-      },
+      data,
     );
     this._logger.info(
       `[CreateProject] Created Project:`,
@@ -123,8 +115,19 @@ export class ProjectController {
 
   updateProject = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
+
+    const validation = ProjectUpdateSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+
     this._logger.info(`Updating project ${id}`);
-    const project = await this._updateProjectUC.execute(id, req.body);
+    const project = await this._updateProjectUC.execute(id, validation.data);
     res
       .status(StatusCodes.OK)
       .json({ success: true, data: toProjectDTO(project) });

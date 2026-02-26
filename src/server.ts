@@ -42,8 +42,8 @@ function setupMiddleware(app: express.Application): void {
 
   // Rate limiting
   const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit each IP to 1000 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
     message: {
       error: "Too many requests from this IP, please try again later.",
       retryAfter: "15 minutes",
@@ -52,10 +52,9 @@ function setupMiddleware(app: express.Application): void {
     legacyHeaders: false,
   });
 
-  // Stricter rate limiter for Auth routes (Login, Register, etc.)
   const authLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 15, // Limit each IP to 15 login attempts per minute
+    windowMs: 60 * 1000,
+    max: 15,
     message: {
       success: false,
       error: {
@@ -67,32 +66,25 @@ function setupMiddleware(app: express.Application): void {
     legacyHeaders: false,
   });
 
-  // Apply rate limiting to API routes
   app.use(`/api${API_ROUTES.AUTH.BASE}`, authLimiter);
   app.use("/api", limiter);
 
-  // CORS configuration
   app.use(
     cors({
       origin: process.env.FRONTEND_URL || "http://localhost:3000",
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-      maxAge: 86400, // 24 hours
+      maxAge: 86400,
     }),
   );
 
-  // CORS-OP-Policy header for Google OAuth postMessage
   app.use((req, res, next) => {
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
     next();
   });
 
-  // Body parsing middleware
-
   app.use((req, res, next) => {
-    // Determine limit based on path
-    // Webhooks often need larger limits (e.g. Stripe, Razorpay)
     const limit = req.path.startsWith(`/api${API_ROUTES.WEBHOOKS.BASE}`)
       ? "10mb"
       : "100kb";
@@ -108,7 +100,6 @@ function setupMiddleware(app: express.Application): void {
 
   app.use(cookieParser());
 
-  // Request logging middleware
   app.use((req, res, next) => {
     const start = Date.now();
     res.on("finish", () => {
@@ -128,11 +119,7 @@ function setupMiddleware(app: express.Application): void {
   });
 }
 
-/**
- * Setup API routes using the RouteFactory
- */
 function setupRoutes(app: express.Application): void {
-  // Health check endpoint
   app.get("/health", (req, res) => {
     res.status(StatusCodes.OK).json({
       status: "OK",
@@ -143,7 +130,7 @@ function setupRoutes(app: express.Application): void {
     });
   });
 
-  // Root endpoint
+  // Root
   app.get("/", (req, res) => {
     res.status(StatusCodes.OK).json({
       message: "Project Hub API Running",
@@ -152,7 +139,7 @@ function setupRoutes(app: express.Application): void {
     });
   });
 
-  // Generate all routes using the DI container
+  // all routes
   const routes = createRoutes(container);
 
   // Mount routes
@@ -160,7 +147,6 @@ function setupRoutes(app: express.Application): void {
     app.use("/api", router);
   });
 
-  // Container diagnostic endpoint (development only)
   if (process.env.NODE_ENV === "development") {
     app.get("/debug/container", (req, res) => {
       const types = Object.keys(TYPES);
@@ -217,7 +203,6 @@ async function connectDatabase(): Promise<void> {
  * Start the server
  */
 
-// GLOBAL ERROR HANDLERS
 process.on("uncaughtException", (error) => {
   console.error("UNCAUGHT EXCEPTION! Shutting down...", error);
   process.exit(1);
@@ -236,19 +221,16 @@ async function startServer(): Promise<void> {
 
     await diContainer.init();
 
-    // 2. Get logger instance
     logger = diContainer.get<ILogger>(TYPES.ILogger);
 
     const app = express();
 
-    // 3. Setup App
     setupMiddleware(app);
     setupRoutes(app);
     setupErrorHandling(app);
 
-    // 4. Connect DB & Bootstrap
     await connectDatabase();
-    // Run bootstrap tasks via DI-bound BootstrapService
+
     if (diContainer.isBound(TYPES.IBootstrapService)) {
       const bootstrap = diContainer.get<IBootstrapService>(
         TYPES.IBootstrapService,
@@ -256,10 +238,8 @@ async function startServer(): Promise<void> {
       await bootstrap.run();
     }
 
-    // 5. Create HTTP Server explicitly to share with Socket.IO
     const httpServer = http.createServer(app);
 
-    // 6. Initialize Socket.IO with the HTTP Server
     try {
       const socketServer = diContainer.get<SocketServer>(TYPES.SocketServer);
       const io = socketServer.initialize(httpServer, [
@@ -281,7 +261,6 @@ async function startServer(): Promise<void> {
       logger.info(`Environment: ${process.env.NODE_ENV}`);
     });
 
-    // Graceful shutdown
     const shutdown = async (signal: string) => {
       logger.info(`${signal} received. Starting graceful shutdown...`);
 
@@ -298,7 +277,6 @@ async function startServer(): Promise<void> {
         process.exit(0);
       });
 
-      // Force shutdown if graceful takes too long (e.g. 10s)
       setTimeout(() => {
         logger.error(
           "Could not close connections in time, forcefully shutting down",
@@ -315,5 +293,4 @@ async function startServer(): Promise<void> {
   }
 }
 
-// Execute
 startServer();

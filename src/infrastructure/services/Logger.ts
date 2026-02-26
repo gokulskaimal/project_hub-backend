@@ -4,11 +4,6 @@ import { injectable } from "inversify";
 import { ILogger } from "../interface/services/ILogger";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-/**
- * Winston Logger Implementation
- * Implements ILogger interface for dependency inversion
- * Can be easily swapped with other logging implementations
- */
 @injectable()
 export class Logger implements ILogger {
   private readonly _logger: winston.Logger;
@@ -122,5 +117,4 @@ export class Logger implements ILogger {
   }
 }
 
-// Export both the class and default instance for backward compatibility
 export default new Logger();

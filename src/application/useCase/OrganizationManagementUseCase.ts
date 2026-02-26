@@ -4,19 +4,25 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { OrganizationStatus, Organization } from "../../domain/entities/Organization";
+import {
+  OrganizationStatus,
+  Organization,
+} from "../../domain/entities/Organization";
 import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizationManagementUseCase";
 import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
+import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { IDeleteProjectUseCase } from "../interface/useCases/IDeleteProjectUseCase";
 
 @injectable()
-export class OrganizationManagementUseCase
-  implements IOrganizationManagementUseCase
-{
+export class OrganizationManagementUseCase implements IOrganizationManagementUseCase {
   constructor(
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
     @inject(TYPES.IInviteRepo) private readonly _inviteRepo: IInviteRepo,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IProjectRepo) private readonly _projectRepo: IProjectRepo,
+    @inject(TYPES.IDeleteProjectUseCase)
+    private readonly _deleteProjectUseCase: IDeleteProjectUseCase,
   ) {}
 
   /**
@@ -51,6 +57,20 @@ export class OrganizationManagementUseCase
         orgId,
         count: deletedInvites,
       });
+
+      // Find all projects in the org deletes tasks, sprints, chats
+      const projectsInOrg = await this._projectRepo.findByOrg(orgId);
+      if (projectsInOrg && projectsInOrg.length > 0) {
+        let deletedProjects = 0;
+        for (const project of projectsInOrg) {
+          await this._deleteProjectUseCase.execute(project.id);
+          deletedProjects++;
+        }
+        this._logger.info(
+          `Deleted ${deletedProjects} projects from organization`,
+          { orgId },
+        );
+      }
 
       // Delete the organization
       await this._orgRepo.hardDelete(orgId);
@@ -152,12 +172,14 @@ export class OrganizationManagementUseCase
     return this._orgRepo.create(data);
   }
 
-  async updateOrganization(orgId: string, data: Partial<Organization>): Promise<Organization> {
+  async updateOrganization(
+    orgId: string,
+    data: Partial<Organization>,
+  ): Promise<Organization> {
     const updatedOrg = await this._orgRepo.update(orgId, data);
     if (!updatedOrg) {
-        throw new OrganizationNotFoundError();
+      throw new OrganizationNotFoundError();
     }
     return updatedOrg;
   }
 }
-

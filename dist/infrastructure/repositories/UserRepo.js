@@ -48,6 +48,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             lastLoginAt: plain.lastLoginAt,
             resetPasswordToken: plain.resetPasswordToken,
             resetPasswordExpires: plain.resetPasswordExpires,
+            avatar: plain.avatar,
+            provider: plain.provider,
+            googleId: plain.googleId,
         };
     }
     async storeOtp(email, otp, expiry) {
@@ -81,7 +84,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return org ? org.toObject() : null;
         }
         catch (error) {
-            this._logger.error(`Failed to find organization by id`, error, { orgId });
+            this._logger.error(`Failed to find organization by id`, error, {
+                orgId,
+            });
             throw new Error(`Failed to find organization by id: ${error.message}`);
         }
     }
@@ -195,7 +200,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            this._logger.error("Error finding users by role:", error, { role });
+            this._logger.error("Error finding users by role:", error, {
+                role,
+            });
             throw error;
         }
     }
@@ -217,7 +224,10 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return this.toDomainUser(updated);
         }
         catch (error) {
-            this._logger.error(`Failed to update user status`, error, { userId: id, status });
+            this._logger.error(`Failed to update user status`, error, {
+                userId: id,
+                status,
+            });
             throw error;
         }
     }
@@ -228,7 +238,10 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             });
         }
         catch (error) {
-            this._logger.error(`Failed to remove user from org`, error, { userId, orgId: _orgId });
+            this._logger.error(`Failed to remove user from org`, error, {
+                userId,
+                orgId: _orgId,
+            });
             throw error;
         }
     }
@@ -239,7 +252,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             });
         }
         catch (error) {
-            this._logger.error("Error updating last login:", error, { userId: id });
+            this._logger.error("Error updating last login:", error, {
+                userId: id,
+            });
         }
     }
     async findPaginated(limit, offset, searchTerm, filters) {
@@ -286,7 +301,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return await UserModel_1.default.countDocuments({ orgId });
         }
         catch (error) {
-            this._logger.error("Error counting users by org:", error, { orgId });
+            this._logger.error("Error counting users by org:", error, {
+                orgId,
+            });
             throw error;
         }
     }
@@ -295,7 +312,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return await UserModel_1.default.countDocuments({ role });
         }
         catch (error) {
-            this._logger.error("Error counting users by role:", error, { role });
+            this._logger.error("Error counting users by role:", error, {
+                role,
+            });
             throw error;
         }
     }
@@ -314,7 +333,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return users.map((u) => this.toDomainUser(u));
         }
         catch (error) {
-            this._logger.error("Error finding users by status:", error, { status });
+            this._logger.error("Error finding users by status:", error, {
+                status,
+            });
             throw error;
         }
     }
@@ -351,7 +372,9 @@ let UserRepo = class UserRepo extends BaseRepo_1.BaseRepository {
             return !!existing;
         }
         catch (error) {
-            this._logger.error("Error checking if email exists:", error, { email });
+            this._logger.error("Error checking if email exists:", error, {
+                email,
+            });
             throw error;
         }
     }

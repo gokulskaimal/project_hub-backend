@@ -61,12 +61,19 @@ import { IUpdateProjectUseCase } from "../../application/interface/useCases/IUpd
 import { IDeleteProjectUseCase } from "../../application/interface/useCases/IDeleteProjectUseCase";
 import { IGetMemberProjectsUseCase } from "../../application/interface/useCases/IGetMemberProjectsUseCase";
 import { IGetMemberTasksUseCase } from "../../application/interface/useCases/IGetMemberTasksUseCase";
+import { IGetOrgTasksUseCase } from "../../application/interface/useCases/IGetOrgTasksUseCase";
 import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGetProjectByIdUseCase";
 
 import { ICreateTaskUseCase } from "../../application/interface/useCases/ICreateTaskUseCase";
 import { IGetTaskUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
+import { IGetTaskByIdUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
+import { GetTaskByIdUseCase } from "../../application/useCase/GetTaskByIdUseCase";
 import { IUpdateTaskUseCase } from "../../application/interface/useCases/IUpdateTaskUseCase";
 import { IDeleteTaskUseCase } from "../../application/interface/useCases/IDeleteTaskUseCase";
+import { IGetProjectSprintsUseCase } from "../../application/interface/useCases/IGetProjectSprintsUseCase";
+import { ICreateSprintUseCase } from "../../application/interface/useCases/ICreateSprintUseCase";
+import { IUpdateSprintUseCase } from "../../application/interface/useCases/IUpdateSprintUseCase";
+import { IDeleteSprintUseCase } from "../../application/interface/useCases/IDeleteSprintUseCase";
 
 import { ICreateNotificationUseCase } from "../../application/interface/useCases/ICreateNotificationUseCase";
 
@@ -135,6 +142,10 @@ import { DeleteTaskUseCase } from "../../application/useCase/DeleteTaskUseCase";
 import { CreateNotificationUseCase } from "../../application/useCase/CreateNotificationUseCase";
 import { GetNotificationsUseCase } from "../../application/useCase/GetNotificationsUseCase";
 import { MarkNotificationReadUseCase } from "../../application/useCase/MarkNotificationReadUseCase";
+import { CreateSprintUseCase } from "../../application/useCase/CreateSprintUseCase";
+import { UpdateSprintUseCase } from "../../application/useCase/UpdateSprintUseCase";
+import { DeleteSprintUseCase } from "../../application/useCase/DeleteSprintUseCase";
+import { GetProjectSprintsUseCase } from "../../application/useCase/GetProjectSprintsUseCase";
 import { MarkAllNotificationsReadUseCase } from "../../application/useCase/MarkAllNotificationsReadUseCase";
 import { IGetNotificationsUseCase } from "../../application/interface/useCases/IGetNotificationsUseCase";
 import { IMarkNotificationReadUseCase } from "../../application/interface/useCases/IMarkNotificationReadUseCase";
@@ -148,6 +159,7 @@ import { UpdateProjectUseCase } from "../../application/useCase/UpdateProjectUse
 import { DeleteProjectUseCase } from "../../application/useCase/DeleteProjectUseCase";
 import { GetMemberProjectsUseCase } from "../../application/useCase/GetMemberProjectsUseCase";
 import { GetMemberTasksUseCase } from "../../application/useCase/GetMemberTasksUseCase";
+import { GetOrgTasksUseCase } from "../../application/useCase/GetOrgTasksUseCase";
 import { ToggleTimerUseCase } from "../../application/useCase/ToggleTimerUseCase";
 
 // Presentation Controllers
@@ -170,7 +182,7 @@ import { ProjectController } from "../../presentation/controllers/manager/Projec
 import { NotificationController } from "../../presentation/controllers/NotificationController";
 import { ChatController } from "../../presentation/controllers/ChatController";
 import { UploadController } from "../../presentation/controllers/UploadController";
-import { SprintController } from "../../presentation/controllers/SprintController";
+import { SprintController } from "../../presentation/controllers/manager/SprintController";
 
 // Chat Interfaces
 import { IChatRepo } from "../interface/repositories/IChatRepo";
@@ -453,7 +465,11 @@ class DIContainer {
     this._container
       .bind<IGetTaskUseCase>(TYPES.IGetTaskUseCase)
       .to(GetTaskUseCase)
-      .inTransientScope();
+      .inSingletonScope();
+    this._container
+      .bind<IGetTaskByIdUseCase>(TYPES.IGetTaskByIdUseCase)
+      .to(GetTaskByIdUseCase)
+      .inSingletonScope();
     this._container
       .bind<IUpdateTaskUseCase>(TYPES.IUpdateTaskUseCase)
       .to(UpdateTaskUseCase)
@@ -499,6 +515,11 @@ class DIContainer {
       .inTransientScope();
 
     this._container
+      .bind<IGetOrgTasksUseCase>(TYPES.IGetOrgTasksUseCase)
+      .to(GetOrgTasksUseCase)
+      .inTransientScope();
+
+    this._container
       .bind<ICreateNotificationUseCase>(TYPES.ICreateNotificationUseCase)
       .to(CreateNotificationUseCase)
       .inTransientScope();
@@ -538,6 +559,26 @@ class DIContainer {
     this._container
       .bind<IDeleteMessageUseCase>(TYPES.IDeleteMessageUseCase)
       .to(DeleteMessageUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<ICreateSprintUseCase>(TYPES.ICreateSprintUseCase)
+      .to(CreateSprintUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IUpdateSprintUseCase>(TYPES.IUpdateSprintUseCase)
+      .to(UpdateSprintUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IDeleteSprintUseCase>(TYPES.IDeleteSprintUseCase)
+      .to(DeleteSprintUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetProjectSprintsUseCase>(TYPES.IGetProjectSprintsUseCase)
+      .to(GetProjectSprintsUseCase)
       .inTransientScope();
   }
 

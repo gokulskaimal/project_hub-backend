@@ -2,16 +2,19 @@ import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
 import { ISprintRepo } from "../../../infrastructure/interface/repositories/ISprintRepo";
-import { ITaskRepo } from "../../../infrastructure/interface/repositories/ITaskRepo"; // <--- NEW IMPORT
+import { ITaskRepo } from "../../../infrastructure/interface/repositories/ITaskRepo";
+import { ICreateSprintUseCase } from "../../../application/interface/useCases/ICreateSprintUseCase";
+import { IUpdateSprintUseCase } from "../../../application/interface/useCases/IUpdateSprintUseCase";
+import { IDeleteSprintUseCase } from "../../../application/interface/useCases/IDeleteSprintUseCase";
+import { IGetProjectSprintsUseCase } from "../../../application/interface/useCases/IGetProjectSprintsUseCase";
+import { Sprint } from "../../../domain/entities/Sprint";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
-import {
-  ValidationError,
-  EntityNotFoundError,
-} from "../../../domain/errors/CommonErrors";
+
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import { UserRole } from "../../../domain/enums/UserRole";
+import { SprintCreateSchema } from "../../../application/dto/ValidationSchemas";
 
 @injectable()
 export class SprintController {
@@ -19,6 +22,14 @@ export class SprintController {
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
+    @inject(TYPES.ICreateSprintUseCase)
+    private _createSprintUC: ICreateSprintUseCase,
+    @inject(TYPES.IUpdateSprintUseCase)
+    private _updateSprintUC: IUpdateSprintUseCase,
+    @inject(TYPES.IDeleteSprintUseCase)
+    private _deleteSprintUC: IDeleteSprintUseCase,
+    @inject(TYPES.IGetProjectSprintsUseCase)
+    private _getProjectSprintsUC: IGetProjectSprintsUseCase,
   ) {}
 
   createSprint = asyncHandler(async (req: Request, res: Response) => {
@@ -33,17 +44,25 @@ export class SprintController {
       return;
     }
 
-    const { projectId, name, startDate, endDate, goal, description } = req.body;
-    if (!projectId || !name || !startDate || !endDate)
-      throw new ValidationError("Missing required fields");
+    const validation = SprintCreateSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
 
-    const sprint = await this._sprintRepo.create({
-      projectId,
-      name,
-      description: description || "",
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      goal,
+    const validatedData = validation.data;
+
+    const sprint = await this._createSprintUC.execute({
+      projectId: validatedData.projectId,
+      name: validatedData.name,
+      description: validatedData.description || "",
+      startDate: new Date(validatedData.startDate),
+      endDate: new Date(validatedData.endDate),
+      goal: validatedData.goal,
       status: "PLANNED",
     });
 
@@ -52,7 +71,7 @@ export class SprintController {
 
   getProjectSprints = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
-    const sprints = await this._sprintRepo.findByProject(projectId);
+    const sprints = await this._getProjectSprintsUC.execute(projectId);
     res.status(StatusCodes.OK).json({ success: true, data: sprints });
   });
 
@@ -69,27 +88,15 @@ export class SprintController {
     }
 
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, goal, startDate, endDate } = req.body;
 
-    // 1. Update the Sprint
-    const updatedSprint = await this._sprintRepo.update(id, req.body);
-    if (!updatedSprint) throw new EntityNotFoundError("Sprint", id);
+    const updateData: Partial<Sprint> = {};
+    if (status) updateData.status = status;
+    if (goal) updateData.goal = goal;
+    if (startDate) updateData.startDate = new Date(startDate);
+    if (endDate) updateData.endDate = new Date(endDate);
 
-    // 2. If Sprint is COMPLETED, move unfinished tasks to Backlog
-    if (status === "COMPLETED") {
-      // Find all tasks in this sprint
-      const tasks = await this._taskRepo.findAll({ sprintId: id });
-
-      // Filter for unfinished tasks (Not DONE)
-      const unfinishedTasks = tasks.filter((t) => t.status !== "DONE");
-
-      // Move them to Backlog (sprintId: null)
-      await Promise.all(
-        unfinishedTasks.map((t) =>
-          this._taskRepo.update(t.id, { sprintId: null }),
-        ),
-      );
-    }
+    const updatedSprint = await this._updateSprintUC.execute(id, updateData);
 
     res.status(StatusCodes.OK).json({ success: true, data: updatedSprint });
   });
@@ -107,17 +114,8 @@ export class SprintController {
     }
 
     const { id } = req.params;
-    const sprint = await this._sprintRepo.findById(id);
-    if (!sprint) {
-      throw new EntityNotFoundError("Sprint", id);
-    }
 
-    const tasks = await this._taskRepo.findAll({ sprintId: id });
-    await Promise.all(
-      tasks.map((t) => this._taskRepo.update(t.id, { sprintId: null })),
-    );
-
-    await this._sprintRepo.delete(id);
+    await this._deleteSprintUC.execute(id);
 
     res
       .status(StatusCodes.OK)

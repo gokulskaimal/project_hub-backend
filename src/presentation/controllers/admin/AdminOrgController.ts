@@ -7,13 +7,25 @@ import { IUserQueryUseCase } from "../../../application/interface/useCases/IUser
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
 import { IAdminStatsUseCase } from "../../../application/interface/useCases/IAdminStatsUseCase";
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
-import { OrganizationStatus } from "../../../domain/entities/Organization";
+import {
+  Organization,
+  OrganizationStatus,
+} from "../../../domain/entities/Organization";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
-import { EntityNotFoundError, ValidationError } from "../../../domain/errors/CommonErrors";
+import {
+  EntityNotFoundError,
+  ValidationError,
+} from "../../../domain/errors/CommonErrors";
 import { toOrgDTO } from "../../../application/dto/OrgDTO";
 import { toUserDTO } from "../../../application/dto/UserDTO";
+import {
+  OrgCreateSchema,
+  OrgUpdateSchema,
+  InviteMemberSchema,
+  BulkInviteSchema,
+} from "../../../application/dto/ValidationSchemas";
 
 @injectable()
 export class AdminOrgController {
@@ -29,7 +41,7 @@ export class AdminOrgController {
     @inject(TYPES.IAdminStatsUseCase)
     private _adminStatsUseCase: IAdminStatsUseCase,
     @inject(TYPES.ILogger) private logger: ILogger,
-  ) { }
+  ) {}
 
   private sendSuccess<T>(
     res: Response,
@@ -62,11 +74,17 @@ export class AdminOrgController {
   });
 
   createOrganization = asyncHandler(async (req: Request, res: Response) => {
-    const { name, description, settings } = req.body;
+    const validation = OrgCreateSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+    const { name, description, settings } = validation.data;
     this.logger.info("Creating organization", { name });
-    if (!name)
-    if (!name)
-      throw new ValidationError("Organization name is required");
 
     const newOrg = await this._orgManagementUseCase.createOrganization({
       name,
@@ -75,29 +93,40 @@ export class AdminOrgController {
       status: OrganizationStatus.ACTIVE,
       createdAt: new Date(),
     });
-    this.sendSuccess(res, toOrgDTO(newOrg), COMMON_MESSAGES.CREATED, StatusCodes.CREATED);
+    this.sendSuccess(
+      res,
+      toOrgDTO(newOrg),
+      COMMON_MESSAGES.CREATED,
+      StatusCodes.CREATED,
+    );
   });
 
   getOrganizationById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Fetching organization by ID", { orgId: id });
     const organization = await this._orgQueryUseCase.getOrganizationById(id);
-    if (!organization)
-      throw new EntityNotFoundError("Organization", id);
+    if (!organization) throw new EntityNotFoundError("Organization", id);
     this.sendSuccess(res, toOrgDTO(organization));
   });
 
   updateOrganization = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const updateData = req.body;
+    if (!id) throw new ValidationError("Organization ID is required");
+
+    const validation = OrgUpdateSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+    const updateData = validation.data;
     this.logger.info("Updating organization", {
       orgId: id,
       updatedFields: Object.keys(updateData || {}),
     });
-    if (!id)
-      throw new ValidationError("Organization ID is required");
-    if (!updateData)
-      throw new ValidationError("Update data is required");
 
     // If status is being updated, use the status-specific method for side effects
     if (updateData.status) {
@@ -107,11 +136,15 @@ export class AdminOrgController {
           updateData.status,
         );
 
-      const { status: _status, ...otherFields } = updateData;
+      const otherFields = { ...updateData };
+      delete otherFields.status;
 
       // If there are other fields, update them as well
       if (Object.keys(otherFields).length > 0) {
-        const finalOrg = await this._orgManagementUseCase.updateOrganization(id, otherFields);
+        const finalOrg = await this._orgManagementUseCase.updateOrganization(
+          id,
+          otherFields as Partial<Organization>,
+        );
         this.sendSuccess(res, toOrgDTO(finalOrg), COMMON_MESSAGES.UPDATED);
         return;
       }
@@ -121,15 +154,17 @@ export class AdminOrgController {
     }
 
     // Generic update
-    const updatedOrg = await this._orgManagementUseCase.updateOrganization(id, updateData);
+    const updatedOrg = await this._orgManagementUseCase.updateOrganization(
+      id,
+      updateData as Partial<Organization>,
+    );
     this.sendSuccess(res, toOrgDTO(updatedOrg), COMMON_MESSAGES.UPDATED);
   });
 
   deleteOrganization = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Deleting organization", { orgId: id });
-    if (!id)
-      throw new ValidationError("Organization ID is required");
+    if (!id) throw new ValidationError("Organization ID is required");
 
     await this._orgManagementUseCase.deleteOrganizationCascade(id);
     this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);
@@ -143,11 +178,17 @@ export class AdminOrgController {
   });
 
   inviteMember = asyncHandler(async (req: Request, res: Response) => {
-    const { email, orgId, role } = req.body;
+    const validation = InviteMemberSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+    const { email, orgId, role } = validation.data;
     this.logger.info("Admin inviting member", { email, orgId, role });
-    if (!email || !orgId)
-    if (!email || !orgId)
-      throw new ValidationError(COMMON_MESSAGES.INVALID_INPUT);
 
     const result = await this._inviteMemberUseCase.execute(email, orgId, role);
     this.sendSuccess(
@@ -159,15 +200,22 @@ export class AdminOrgController {
   });
 
   bulkInviteMembers = asyncHandler(async (req: Request, res: Response) => {
-    const { emails, orgId, role } = req.body;
+    const validation = BulkInviteSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+
+    const { emails, orgId, role } = validation.data;
     this.logger.info("Admin bulk inviting members", {
       count: emails?.length,
       orgId,
       role,
     });
-    if (!emails?.length || !orgId)
-    if (!emails?.length || !orgId)
-      throw new ValidationError(COMMON_MESSAGES.INVALID_INPUT);
 
     const result = await this._inviteMemberUseCase.bulkInvite(
       emails,

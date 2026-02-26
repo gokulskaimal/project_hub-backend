@@ -10,4 +10,5 @@ export interface IChatRepo {
   findById(id: string): Promise<ChatMessage | null>;
   updateMessage(id: string, content: string): Promise<ChatMessage | null>;
   deleteMessage(id: string): Promise<boolean>;
+  deleteByProject(projectId: string): Promise<boolean>;
 }

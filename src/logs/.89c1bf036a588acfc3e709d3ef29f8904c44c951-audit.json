@@ -6,21 +6,6 @@
     "auditLog": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\.89c1bf036a588acfc3e709d3ef29f8904c44c951-audit.json",
     "files": [
         {
-            "date": 1770266654209,
-            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-05.log",
-            "hash": "b1ce2931e76b70a6cd569c6b16c65484d1688b74ef8bd218a00c26f8d0b21686"
-        },
-        {
-            "date": 1770706708236,
-            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-10.log",
-            "hash": "86ab98304e781093037a0556e87f200ecfc154f96adfe178f71470cb48b58b71"
-        },
-        {
-            "date": 1770785114902,
-            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-11.log",
-            "hash": "8945b30c4b6f3364608d2ebe2499e6a9b3ad8f7c9e8ec734e0e64238b6f8cb8c"
-        },
-        {
             "date": 1770874444244,
             "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-12.log",
             "hash": "b679ca0ea36cbc7b33aae5d2d2d84596b3fbba803f284063ac81afbf62097d5f"
@@ -49,6 +34,11 @@
             "date": 1771469330459,
             "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-19.log",
             "hash": "b0adde9bd949bd9b0a4313c331cb7c3ed86573f4e7b24fc638fb850b37fb387d"
+        },
+        {
+            "date": 1772075729792,
+            "name": "C:\\Users\\gokul\\Documents\\New folder\\Project_Hub\\Project Hub\\server\\src\\logs\\error-2026-02-26.log",
+            "hash": "fbe8057672caa8bc4f0c81ee72b57ed6e0b8a5624838f27dd4877e66470f6052"
         }
     ],
     "hashType": "sha256"

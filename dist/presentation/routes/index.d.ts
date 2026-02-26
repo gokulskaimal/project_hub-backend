@@ -12,5 +12,6 @@ export declare function createRoutes(container: Container): {
     plans: Router;
     notifications: Router;
     chat: Router;
+    upload: Router;
 };
 //# sourceMappingURL=index.d.ts.map

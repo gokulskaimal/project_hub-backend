@@ -25,6 +25,9 @@ const ChatSchema = new Schema(
   { timestamps: true },
 );
 
+// TTL Index for 30 days retention policy (2592000 seconds)
+ChatSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
+
 export const ChatModel = mongoose.model<IChatMessageDoc>(
   "ChatMessage",
   ChatSchema,

@@ -57,6 +57,16 @@ export function createProjectRoutes(container: Container): Router {
     taskCtrl.toggleTimer(req, res, next),
   );
 
+  router.post(
+    `${API_ROUTES.PROJECTS.BASE}/tasks/:id/comments`,
+    (req, res, next) => taskCtrl.addComment(req, res, next),
+  );
+
+  router.post(
+    `${API_ROUTES.PROJECTS.BASE}/tasks/:id/attachments`,
+    (req, res, next) => taskCtrl.addAttachment(req, res, next),
+  );
+
   // Sprints
   router.post(API_ROUTES.PROJECTS.SPRINT_CREATE, (req, res, next) =>
     sprintCtrl.createSprint(req, res, next),

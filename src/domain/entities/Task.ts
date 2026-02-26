@@ -5,10 +5,18 @@ export interface TimeLog {
   duration?: number;
 }
 
+export interface TaskComment {
+  id?: string;
+  userId: string;
+  text: string;
+  createdAt: Date;
+}
+
 export interface Task {
   id: string;
   projectId: string;
   orgId: string;
+  taskKey?: string;
   title: string;
   description?: string;
   status: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" | "BACKLOG";
@@ -23,4 +31,6 @@ export interface Task {
   createdBy?: string;
   timeLogs?: TimeLog[];
   totalTimeSpent?: number;
+  attachments?: string[];
+  comments?: TaskComment[];
 }

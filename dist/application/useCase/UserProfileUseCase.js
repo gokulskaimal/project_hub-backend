@@ -93,6 +93,8 @@ let UserProfileUseCase = class UserProfileUseCase {
                 filteredUpdateData.firstName = updateData.firstName;
             if (updateData.lastName)
                 filteredUpdateData.lastName = updateData.lastName;
+            if (updateData.avatar !== undefined)
+                filteredUpdateData.avatar = updateData.avatar;
             if (filteredUpdateData.firstName || filteredUpdateData.lastName) {
                 const firstName = filteredUpdateData.firstName || existingUser.firstName;
                 const lastName = filteredUpdateData.lastName || existingUser.lastName;

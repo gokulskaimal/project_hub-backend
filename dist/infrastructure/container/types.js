@@ -16,6 +16,7 @@ exports.TYPES = {
     IGoogleAuthService: Symbol.for("IGoogleAuthService"),
     IRazorpayService: Symbol.for("IRazorpayService"),
     ISocketService: Symbol.for("ISocketService"),
+    IFileService: Symbol.for("IFileService"),
     // ===== REPOSITORIES =====
     IUserRepo: Symbol.for("IUserRepo"),
     IOrgRepo: Symbol.for("IOrgRepo"),
@@ -26,6 +27,7 @@ exports.TYPES = {
     IProjectRepo: Symbol.for("IProjectRepo"),
     INotificationRepo: Symbol.for("INotificationRepo"),
     IChatRepo: Symbol.for("IChatRepo"),
+    ISprintRepo: Symbol.for("ISprintRepo"),
     // ===== USE CASES =====
     ILoginUseCase: Symbol.for("ILoginUseCase"),
     IRegisterUseCase: Symbol.for("IRegisterUseCase"),
@@ -59,6 +61,7 @@ exports.TYPES = {
     IGetTaskUseCase: Symbol.for("IGetTaskUseCase"),
     IUpdateTaskUseCase: Symbol.for("IUpdateTaskUseCase"),
     IDeleteTaskUseCase: Symbol.for("IDeleteTaskUseCase"),
+    IToggleTimerUseCase: Symbol.for("IToggleTimerUseCase"),
     ICreateProjectUseCase: Symbol.for("ICreateProjectUseCase"),
     IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
     IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
@@ -90,6 +93,8 @@ exports.TYPES = {
     OrganizationController: Symbol.for("OrganizationController"),
     NotificationController: Symbol.for("NotificationController"),
     ChatController: Symbol.for("ChatController"),
+    UploadController: Symbol.for("UploadController"),
+    SprintController: Symbol.for("SprintController"),
     // ===== MIDDLEWARES =====
     AuthMiddleware: Symbol.for("AuthMiddleware"),
     ValidationMiddleware: Symbol.for("ValidationMiddleware"),

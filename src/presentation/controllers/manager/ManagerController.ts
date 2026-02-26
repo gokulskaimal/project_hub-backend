@@ -11,6 +11,11 @@ import { toUserDTO } from "../../../application/dto/UserDTO";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
+import {
+  InviteMemberSchema,
+  BulkInviteSchema,
+} from "../../../application/dto/ValidationSchemas";
+import { z } from "zod";
 
 @injectable()
 export class ManagerController {
@@ -21,7 +26,7 @@ export class ManagerController {
     @inject(TYPES.IInviteMemberUseCase)
     private _inviteMemberUC: IInviteMemberUseCase,
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
-  ) { }
+  ) {}
 
   private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
     res.status(StatusCodes.OK).json({
@@ -34,12 +39,20 @@ export class ManagerController {
 
   inviteMember = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
-      const { email } = req.body;
       const orgId = req.user!.orgId!;
-      this._logger.info("Manager inviting member", { orgId, email });
+      const validation = InviteMemberSchema.safeParse({ ...req.body, orgId });
 
-      if (!email)
-        throw { status: StatusCodes.BAD_REQUEST, message: "Email is required" };
+      if (!validation.success) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: "Validation Error",
+          errors: validation.error.format(),
+        });
+        return;
+      }
+
+      const { email } = validation.data;
+      this._logger.info("Manager inviting member", { orgId, email });
 
       const result = await this._inviteMemberUC.execute(email, orgId);
       this.sendSuccess(res, result, COMMON_MESSAGES.INVITATION_SENT);
@@ -48,18 +61,23 @@ export class ManagerController {
 
   bulkInvite = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
-      const { emails } = req.body;
       const orgId = req.user!.orgId!;
+      const validation = BulkInviteSchema.safeParse({ ...req.body, orgId });
+
+      if (!validation.success) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: "Validation Error",
+          errors: validation.error.format(),
+        });
+        return;
+      }
+
+      const { emails } = validation.data;
       this._logger.info("Manager bulk inviting members", {
         orgId,
         count: emails?.length,
       });
-
-      if (!emails?.length)
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: "Emails array is required",
-        };
 
       const results = [];
       const errors = [];
@@ -144,7 +162,23 @@ export class ManagerController {
   updateMemberStatus = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const { id } = req.params;
-      const { status } = req.body;
+
+      const validation = z
+        .object({
+          status: z.enum(["ACTIVE", "BLOCKED", "INACTIVE", "SUSPENDED"]),
+        })
+        .safeParse(req.body);
+
+      if (!validation.success) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: "Validation Error",
+          errors: validation.error.format(),
+        });
+        return;
+      }
+
+      const { status } = validation.data;
       const orgId = req.user!.orgId!;
       const managerId = req.user!.id;
       this._logger.info("Updating member status", {

@@ -13,11 +13,12 @@ export class TaskRepo
   }
 
   protected toDomain(doc: ITaskDoc): Task {
-    const obj = doc.toObject();
+    const obj = doc.toObject() as ITaskDoc;
     return {
       id: obj._id.toString(),
       projectId: obj.projectId,
       orgId: obj.orgId,
+      taskKey: obj.taskKey,
       title: obj.title,
       description: obj.description,
       status: obj.status,
@@ -29,6 +30,16 @@ export class TaskRepo
       dueDate: obj.dueDate,
       timeLogs: obj.timeLogs,
       totalTimeSpent: obj.totalTimeSpent,
+      attachments: obj.attachments,
+      comments: obj.comments?.map((comment) => {
+        const commentId = (comment as { _id?: { toString(): string } })._id;
+        return {
+          id: commentId?.toString(),
+          userId: comment.userId,
+          text: comment.text,
+          createdAt: comment.createdAt,
+        };
+      }),
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
       createdBy: obj.createdBy,
@@ -43,7 +54,16 @@ export class TaskRepo
   async findByAssignee(userId: string): Promise<Task[]> {
     const docs = await this.model
       .find({ assignedTo: userId })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .populate("project", "name");
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async findByOrganization(orgId: string): Promise<Task[]> {
+    const docs = await this.model
+      .find({ orgId })
+      .sort({ createdAt: -1 })
+      .populate("project", "name");
     return docs.map((d) => this.toDomain(d));
   }
 

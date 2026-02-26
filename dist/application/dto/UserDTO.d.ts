@@ -62,6 +62,7 @@ export interface RegisterRequestDTO {
 export interface UpdateProfileRequestDTO {
     firstName?: string;
     lastName?: string;
+    avatar?: string;
 }
 /**
  * Change Password Request DTO

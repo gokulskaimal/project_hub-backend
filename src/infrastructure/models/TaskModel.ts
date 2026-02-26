@@ -10,11 +10,18 @@ const TimeLogSchema = new Schema<TimeLog>({
   duration: { type: Number },
 });
 
+const TaskCommentSchema = new Schema({
+  userId: { type: String, required: true },
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const TaskSchema = new Schema<ITaskDoc>(
   {
     projectId: { type: String, required: true, index: true },
     orgId: { type: String, required: true },
-    title: { type: String, requried: true },
+    taskKey: { type: String, index: true },
+    title: { type: String, required: true },
     description: { type: String },
     status: {
       type: String,
@@ -35,8 +42,20 @@ const TaskSchema = new Schema<ITaskDoc>(
     createdBy: { type: String },
     timeLogs: [TimeLogSchema],
     totalTimeSpent: { type: Number, default: 0 },
+    attachments: [{ type: String }],
+    comments: [TaskCommentSchema],
   },
   { timestamps: true },
 );
+
+TaskSchema.virtual("project", {
+  ref: "Project",
+  localField: "projectId",
+  foreignField: "_id",
+  justOne: true,
+});
+
+TaskSchema.set("toObject", { virtuals: true });
+TaskSchema.set("toJSON", { virtuals: true });
 
 export const TaskModel = mongoose.model<ITaskDoc>("Task", TaskSchema);

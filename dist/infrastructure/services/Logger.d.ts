@@ -1,9 +1,4 @@
 import { ILogger } from "../interface/services/ILogger";
-/**
- * Winston Logger Implementation
- * Implements ILogger interface for dependency inversion
- * Can be easily swapped with other logging implementations
- */
 export declare class Logger implements ILogger {
     private readonly _logger;
     constructor();
