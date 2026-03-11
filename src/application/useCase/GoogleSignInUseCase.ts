@@ -3,7 +3,7 @@ import { TYPES } from "../../infrastructure/container/types";
 import { IGoogleSignInUseCase } from "../interface/useCases/IGoogleSignInUseCase";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IGoogleAuthService } from "../../infrastructure/interface/services/IGoogleAuthService ";
+import { IGoogleAuthService } from "../../infrastructure/interface/services/IGoogleAuthService";
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
@@ -200,4 +200,3 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
     };
   }
 }
-

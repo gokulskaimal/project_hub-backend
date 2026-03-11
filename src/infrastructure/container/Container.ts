@@ -10,7 +10,7 @@ import { IJwtService } from "../interface/services/IJwtService";
 import { IEmailService } from "../interface/services/IEmailService";
 import { IOtpService } from "../interface/services/IOtpService";
 import { ICacheService } from "../interface/services/ICacheService";
-import { IGoogleAuthService } from "../interface/services/IGoogleAuthService ";
+import { IGoogleAuthService } from "../interface/services/IGoogleAuthService";
 import { IRazorpayService } from "../interface/services/IRazorpayService";
 import { IPlanRepo } from "../interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
@@ -66,6 +66,7 @@ import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGe
 
 import { ICreateTaskUseCase } from "../../application/interface/useCases/ICreateTaskUseCase";
 import { IGetTaskUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
+import { IGetTaskHistoryUseCase } from "../../application/interface/useCases/IGetTaskHistoryUseCase";
 import { IGetTaskByIdUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
 import { GetTaskByIdUseCase } from "../../application/useCase/GetTaskByIdUseCase";
 import { IUpdateTaskUseCase } from "../../application/interface/useCases/IUpdateTaskUseCase";
@@ -106,6 +107,8 @@ import { TaskRepo } from "../repositories/TaskRepo";
 import { ProjectRepo } from "../repositories/ProjectRepo";
 import { NotificationRepo } from "../repositories/NotificationRepo";
 import { SprintRepo } from "../repositories/SprintRepo";
+import { ITaskHistoryRepo } from "../interface/repositories/ITaskHistoryRepo";
+import { TaskHistoryRepo } from "../repositories/TaskHistoryRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -137,6 +140,7 @@ import { AdminStatsUseCase } from "../../application/useCase/AdminStatsUseCase";
 
 import { CreateTaskUseCase } from "../../application/useCase/CreateTaskUseCase";
 import { GetTaskUseCase } from "../../application/useCase/GetTaskUseCase";
+import { GetTaskHistoryUseCase } from "../../application/useCase/GetTaskHistoryUseCase";
 import { UpdateTaskUseCase } from "../../application/useCase/UpdateTaskUseCase";
 import { DeleteTaskUseCase } from "../../application/useCase/DeleteTaskUseCase";
 import { CreateNotificationUseCase } from "../../application/useCase/CreateNotificationUseCase";
@@ -348,6 +352,10 @@ class DIContainer {
     this._container
       .bind<ISprintRepo>(TYPES.ISprintRepo)
       .to(SprintRepo)
+      .inSingletonScope();
+    this._container
+      .bind<ITaskHistoryRepo>(TYPES.ITaskHistoryRepo)
+      .to(TaskHistoryRepo)
       .inSingletonScope();
   }
 
@@ -579,6 +587,11 @@ class DIContainer {
     this._container
       .bind<IGetProjectSprintsUseCase>(TYPES.IGetProjectSprintsUseCase)
       .to(GetProjectSprintsUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetTaskHistoryUseCase>(TYPES.IGetTaskHistoryUseCase)
+      .to(GetTaskHistoryUseCase)
       .inTransientScope();
   }
 

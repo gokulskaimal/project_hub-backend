@@ -56,6 +56,9 @@ export function createProjectRoutes(container: Container): Router {
   router.post(API_ROUTES.PROJECTS.TASK_TIMER(":id"), (req, res, next) =>
     taskCtrl.toggleTimer(req, res, next),
   );
+  router.get(API_ROUTES.PROJECTS.TASK_HISTORY(":id"), (req, res, next) =>
+    taskCtrl.getTaskHistory(req, res, next),
+  );
 
   router.post(
     `${API_ROUTES.PROJECTS.BASE}/tasks/:id/comments`,

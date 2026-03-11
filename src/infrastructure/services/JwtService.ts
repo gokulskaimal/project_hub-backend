@@ -153,7 +153,7 @@ export class JwtService implements IJwtService {
     try {
       const payload = this.jwtProvider.verify(
         token,
-        this._resetTokenSecret,
+        this._refreshTokenSecret,
         options,
       ) as JwtPayload | null;
       if (!payload) return null;

@@ -8,7 +8,8 @@ import { Model } from "mongoose";
 @injectable()
 export class PlanRepo
   extends BaseRepository<Plan, IPlanDoc>
-  implements IPlanRepo {
+  implements IPlanRepo
+{
   constructor() {
     super(PlanModel as unknown as Model<IPlanDoc>);
   }
@@ -38,14 +39,7 @@ export class PlanRepo
 
   async findAll(filter?: Partial<Plan>): Promise<Plan[]> {
     try {
-      // If no filter is provided, default to { isActive: true }
-      // If filter IS provided (even empty {}), use it.
-      // Ideally, the caller should be explicit.
-      // But for safety, let's just pass the filter blindly if provided.
-      // However, the issue is that arguments defaults only apply if undefined.
-
       const query = filter === undefined ? { isActive: true } : filter;
-      // console.log("PlanRepo.findAll query:", query);
       const docs = await this.model.find(query);
       return docs.map((d) => this.toDomain(d));
     } catch (error) {
@@ -65,7 +59,7 @@ export class PlanRepo
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.model.findByIdAndDelete(id);
+    const result = await this.model.findByIdAndUpdate(id, { isActive: false });
     return !!result;
   }
 

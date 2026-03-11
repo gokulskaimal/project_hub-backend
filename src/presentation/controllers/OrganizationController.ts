@@ -5,6 +5,7 @@ import { IOrganizationManagementUseCase } from "../../application/interface/useC
 import { IOrganizationQueryUseCase } from "../../application/interface/useCases/IOrganizationQueryUseCase";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { IUserQueryUseCase } from "../../application/interface/useCases/IUserQueryUseCase";
+import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 
 @injectable()
 export class OrganizationController {
@@ -24,13 +25,17 @@ export class OrganizationController {
     try {
       const orgId = req.user?.orgId;
       if (!orgId) {
-        res.status(400).json({ error: "No Organization ID found in token" });
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: "No Organization ID found in token" });
         return;
       }
 
       const org = await this._orgQuery.getOrganizationById(orgId);
       if (!org) {
-        res.status(404).json({ error: "Organization not found" });
+        res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ error: "Organization not found" });
         return;
       }
 
@@ -50,7 +55,9 @@ export class OrganizationController {
       const { name } = req.body;
 
       if (!orgId) {
-        res.status(400).json({ error: "No Organization ID found" });
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: "No Organization ID found" });
         return;
       }
 
@@ -71,7 +78,9 @@ export class OrganizationController {
     try {
       const orgId = req.user?.orgId;
       if (!orgId) {
-        res.status(400).json({ error: "No Organization ID found" });
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: "No Organization ID found" });
         return;
       }
 

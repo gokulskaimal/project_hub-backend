@@ -10,7 +10,6 @@ import { OrganizationStatus } from "../../domain/entities/Organization";
 import { toUserDTO } from "../dto/UserDTO";
 import { AuthResult } from "../interface/useCases/types";
 import { UserRole } from "../../domain/enums/UserRole";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import {
   InvalidCredentialsError,
   EmailNotVerifiedError,
@@ -147,4 +146,3 @@ export class LoginUseCase implements ILoginUseCase {
     }
   }
 }
-

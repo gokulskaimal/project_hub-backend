@@ -16,6 +16,18 @@ const TaskCommentSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+const TaskDependencySchema = new Schema(
+  {
+    taskId: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ["BLOCKS", "IS_BLOCKED_BY", "RELATES_TO"],
+      required: true,
+    },
+  },
+  { _id: false },
+);
+
 const TaskSchema = new Schema<ITaskDoc>(
   {
     projectId: { type: String, required: true, index: true },
@@ -35,10 +47,14 @@ const TaskSchema = new Schema<ITaskDoc>(
       default: "MEDIUM",
     },
     type: { type: String, enum: ["STORY", "BUG", "TASK"], default: "STORY" },
+    parentTaskId: { type: String },
+    dependencies: [TaskDependencySchema],
     storyPoints: { type: Number, default: 0 },
     sprintId: { type: String, default: null, index: true },
+    sprintAssignedAt: { type: Date },
     assignedTo: { type: String, index: true },
     dueDate: { type: Date },
+    completedAt: { type: Date },
     createdBy: { type: String },
     timeLogs: [TimeLogSchema],
     totalTimeSpent: { type: Number, default: 0 },

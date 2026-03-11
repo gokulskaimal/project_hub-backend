@@ -47,6 +47,7 @@ export const API_ROUTES = {
     TASK_UPDATE: (id: string) => `/projects/tasks/${id}`,
     TASK_DELETE: (id: string) => `/projects/tasks/${id}`,
     TASK_TIMER: (id: string) => `/projects/tasks/${id}/timer`,
+    TASK_HISTORY: (id: string) => `/projects/tasks/${id}/history`,
     SPRINT_CREATE: "/projects/sprints",
     SPRINTS: (projectId: string) => `/projects/${projectId}/sprints`,
     SPRINT_UPDATE: (id: string) => `/projects/sprints/${id}`,

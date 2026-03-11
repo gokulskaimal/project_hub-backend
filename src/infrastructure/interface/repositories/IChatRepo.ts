@@ -2,6 +2,7 @@ import { ChatMessage } from "../../../domain/entities/ChatMessage";
 
 export interface IChatRepo {
   create(data: Partial<ChatMessage>): Promise<ChatMessage>;
+  countByProjectId(projectId: string): Promise<number>;
   findByProjectId(
     projectId: string,
     limit?: number,

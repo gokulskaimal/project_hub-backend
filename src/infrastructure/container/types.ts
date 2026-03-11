@@ -23,6 +23,7 @@ export const TYPES = {
   INotificationRepo: Symbol.for("INotificationRepo"),
   IChatRepo: Symbol.for("IChatRepo"),
   ISprintRepo: Symbol.for("ISprintRepo"),
+  ITaskHistoryRepo: Symbol.for("ITaskHistoryRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -56,6 +57,7 @@ export const TYPES = {
   IDeletePlanUseCase: Symbol.for("IDeletePlanUseCase"),
   ICreateTaskUseCase: Symbol.for("ICreateTaskUseCase"),
   IGetTaskUseCase: Symbol.for("IGetTaskUseCase"),
+  IGetTaskHistoryUseCase: Symbol.for("IGetTaskHistoryUseCase"),
   IGetTaskByIdUseCase: Symbol.for("IGetTaskByIdUseCase"),
   IUpdateTaskUseCase: Symbol.for("IUpdateTaskUseCase"),
   IDeleteTaskUseCase: Symbol.for("IDeleteTaskUseCase"),

@@ -29,6 +29,7 @@ export const TaskCreateSchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), "Invalid due date")
     .optional(),
   assignedTo: z.string().optional(),
+  parentTaskId: z.string().optional(),
 });
 
 export const TaskUpdateSchema = TaskCreateSchema.partial().extend({
@@ -36,6 +37,7 @@ export const TaskUpdateSchema = TaskCreateSchema.partial().extend({
   sprintId: z.string().nullable().optional(),
   attachments: z.array(z.string().url()).optional(),
   comments: z.array(z.any()).optional(),
+  parentTaskId: z.string().optional(),
 });
 
 export const SprintCreateSchema = z

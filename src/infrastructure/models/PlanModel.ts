@@ -21,6 +21,7 @@ const planSchema = new Schema(
       projects: { type: Number, required: true, default: 1 },
       members: { type: Number, required: true, default: 5 },
       storage: { type: Number, required: true, default: 1 },
+      messages: { type: Number, required: true, default: 100 },
     },
   },
   { timestamps: true },

@@ -13,12 +13,31 @@ export class Logger implements ILogger {
   }
 
   /**
+   * Helper to format all log payloads consistently
+   */
+  private _formatPayload(meta?: Record<string, unknown>, error?: Error) {
+    const { context, traceId, ...metadata } = meta || {};
+    return {
+      context: context || "System",
+      traceId: traceId || "n/a",
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      error: error
+        ? {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+          }
+        : undefined,
+    };
+  }
+
+  /**
    * Log info message
    * @param message - Log message
    * @param meta - Additional metadata (optional)
    */
   public info(message: string, meta?: Record<string, unknown>): void {
-    this._logger.info(message, meta);
+    this._logger.info(message, this._formatPayload(meta));
   }
 
   /**
@@ -32,18 +51,7 @@ export class Logger implements ILogger {
     error?: Error,
     meta?: Record<string, unknown>,
   ): void {
-    const logData: Record<string, unknown> = {
-      ...(meta || {}),
-      error: error
-        ? {
-            message: error.message,
-            stack: error.stack,
-            name: error.name,
-          }
-        : undefined,
-    };
-
-    this._logger.error(message, logData);
+    this._logger.error(message, this._formatPayload(meta, error));
   }
 
   /**
@@ -52,7 +60,7 @@ export class Logger implements ILogger {
    * @param meta - Additional metadata (optional)
    */
   public warn(message: string, meta?: Record<string, unknown>): void {
-    this._logger.warn(message, meta);
+    this._logger.warn(message, this._formatPayload(meta));
   }
 
   /**
@@ -61,7 +69,7 @@ export class Logger implements ILogger {
    * @param meta - Additional metadata (optional)
    */
   public debug(message: string, meta?: Record<string, unknown>): void {
-    this._logger.debug(message, meta);
+    this._logger.debug(message, this._formatPayload(meta));
   }
 
   /**

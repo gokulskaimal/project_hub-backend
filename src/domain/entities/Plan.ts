@@ -13,6 +13,7 @@ export interface Plan {
     projects: number;
     members: number;
     storage?: number;
+    messages?: number;
   };
   createdAt: Date;
   updatedAt: Date;

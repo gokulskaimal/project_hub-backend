@@ -15,6 +15,10 @@ import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import { UserRole } from "../../../domain/enums/UserRole";
 import { SprintCreateSchema } from "../../../application/dto/ValidationSchemas";
+import {
+  toSprintDTO,
+  toSprintDTOArray,
+} from "../../../application/dto/SprintDTO";
 
 @injectable()
 export class SprintController {
@@ -66,13 +70,17 @@ export class SprintController {
       status: "PLANNED",
     });
 
-    res.status(StatusCodes.CREATED).json({ success: true, data: sprint });
+    res
+      .status(StatusCodes.CREATED)
+      .json({ success: true, data: toSprintDTO(sprint) });
   });
 
   getProjectSprints = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
     const sprints = await this._getProjectSprintsUC.execute(projectId);
-    res.status(StatusCodes.OK).json({ success: true, data: sprints });
+    res
+      .status(StatusCodes.OK)
+      .json({ success: true, data: toSprintDTOArray(sprints) });
   });
 
   updateSprint = asyncHandler(async (req: Request, res: Response) => {
@@ -98,7 +106,9 @@ export class SprintController {
 
     const updatedSprint = await this._updateSprintUC.execute(id, updateData);
 
-    res.status(StatusCodes.OK).json({ success: true, data: updatedSprint });
+    res
+      .status(StatusCodes.OK)
+      .json({ success: true, data: toSprintDTO(updatedSprint) });
   });
 
   deleteSprint = asyncHandler(async (req: Request, res: Response) => {

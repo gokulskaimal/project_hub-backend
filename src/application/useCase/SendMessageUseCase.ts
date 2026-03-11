@@ -5,9 +5,13 @@ import { ISendMessageUseCase } from "../interface/useCases/ISendMessageUseCase";
 import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
 import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
 import { ChatMessage } from "../../domain/entities/ChatMessage";
-import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-
-// Imports updated above
+import {
+  EntityNotFoundError,
+  QuotaExceededError,
+} from "../../domain/errors/CommonErrors";
+import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
+import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
@@ -22,6 +26,10 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
     @inject(TYPES.ICreateNotificationUseCase)
     private _createNotificationUseCase: ICreateNotificationUseCase,
+    @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
+    @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
+    @inject(TYPES.ISubscriptionRepo)
+    private _subscriptionRepo: ISubscriptionRepo,
   ) {}
 
   async execute(
@@ -34,6 +42,56 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     const project = await this._projectRepo.findById(projectId);
     if (!project) {
       throw new EntityNotFoundError("Project not found");
+    }
+
+    // --- Message & Feature Limits Check ---
+    if (project.orgId) {
+      let messageLimit = 100; // Default Free limit
+      const organization = await this._orgRepo.findById(project.orgId);
+
+      if (organization && organization.createdBy) {
+        const subscription = await this._subscriptionRepo.findByUserId(
+          organization.createdBy,
+        );
+        let plan;
+
+        if (!subscription || subscription.status !== "active") {
+          // Fallback to Free Plan limits
+          const freePlans = await this._planRepo.findAll({ isActive: true });
+          plan = freePlans.find((p) => p.price === 0);
+        } else {
+          plan = await this._planRepo.findById(subscription.planId);
+        }
+
+        if (plan) {
+          // 1. Enforce File Attachment Feature
+          if (
+            type === "FILE" &&
+            plan.features &&
+            !plan.features.includes("file_upload")
+          ) {
+            throw new QuotaExceededError(
+              "Your current plan does not support file attachments in chat. Please upgrade.",
+            );
+          }
+
+          // Extract message limits
+          if (plan.limits && plan.limits.messages !== undefined) {
+            messageLimit = plan.limits.messages;
+          }
+        }
+
+        // 2. Enforce Max Message Count per project
+        if (messageLimit !== -1) {
+          const currentMessages =
+            await this._chatRepo.countByProjectId(projectId);
+          if (currentMessages >= messageLimit) {
+            throw new QuotaExceededError(
+              `Message limit of ${messageLimit} reached for this project. Please upgrade your plan.`,
+            );
+          }
+        }
+      }
     }
 
     const message = await this._chatRepo.create({

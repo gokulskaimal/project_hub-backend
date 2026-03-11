@@ -6,6 +6,7 @@ import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
 import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskHistoryRepo } from "../../infrastructure/interface/repositories/ITaskHistoryRepo";
 import { IChatRepo } from "../../infrastructure/interface/repositories/IChatRepo";
 
 @injectable()
@@ -15,6 +16,7 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
+    @inject(TYPES.ITaskHistoryRepo) private _taskHistoryRepo: ITaskHistoryRepo,
     @inject(TYPES.IChatRepo) private _chatRepo: IChatRepo,
   ) {}
 
@@ -27,7 +29,13 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     const tasks = await this._taskRepo.findByProject(id);
     if (tasks.length > 0) {
       this._logger.info(`Deleting ${tasks.length} tasks for project ${id}`);
-      await Promise.all(tasks.map((t) => this._taskRepo.delete(t.id)));
+      await Promise.all(
+        tasks.map(async (t) => {
+          await this._taskRepo.deleteSubtasks(t.id);
+          await this._taskHistoryRepo.deleteByTaskId(t.id);
+          await this._taskRepo.delete(t.id);
+        }),
+      );
     }
 
     const sprints = await this._sprintRepo.findByProject(id);

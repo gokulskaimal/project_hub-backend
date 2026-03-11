@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IAdminStatsUseCase, IOrgStats, IUserStats } from "../interface/useCases/IAdminStatsUseCase";
+import { IAdminStatsUseCase } from "../interface/useCases/IAdminStatsUseCase";
 
 @injectable()
 export class AdminStatsUseCase implements IAdminStatsUseCase {

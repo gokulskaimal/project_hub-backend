@@ -26,6 +26,8 @@ import { IGetOrgTasksUseCase } from "../../../application/interface/useCases/IGe
 import { IToggleTimerUseCase } from "../../../application/interface/useCases/IToggleTimerUseCase";
 import { UserRole } from "../../../domain/enums/UserRole";
 
+import { IGetTaskHistoryUseCase } from "../../../application/interface/useCases/IGetTaskHistoryUseCase";
+
 @injectable()
 export class TaskController {
   constructor(
@@ -42,7 +44,16 @@ export class TaskController {
     private _getOrgTasksUC: IGetOrgTasksUseCase,
     @inject(TYPES.IToggleTimerUseCase)
     private _toggleTimerUC: IToggleTimerUseCase,
+    @inject(TYPES.IGetTaskHistoryUseCase)
+    private _getTaskHistoryUC: IGetTaskHistoryUseCase,
   ) {}
+
+  getTaskHistory = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    this._logger.info(`Fetching history for Task ${id}`);
+    const history = await this._getTaskHistoryUC.execute(id);
+    res.status(StatusCodes.OK).json({ success: true, data: history });
+  });
 
   createTask = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
@@ -74,6 +85,7 @@ export class TaskController {
       description: validatedData.description,
       storyPoints: validatedData.storyPoints,
       assignedTo: validatedData.assignedTo,
+      parentTaskId: validatedData.parentTaskId,
       ...(validatedData.dueDate
         ? { dueDate: new Date(validatedData.dueDate) }
         : {}),
@@ -139,9 +151,10 @@ export class TaskController {
       return;
     }
 
-    const { dueDate, ...rest } = validation.data;
+    const { dueDate, parentTaskId, ...rest } = validation.data;
     const taskInput: Partial<Task> = {
       ...rest,
+      ...(parentTaskId ? { parentTaskId } : {}),
       ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
     };
 

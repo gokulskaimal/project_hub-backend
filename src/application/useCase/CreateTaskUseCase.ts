@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
 import { ICreateTaskUseCase } from "../interface/useCases/ICreateTaskUseCase";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { Task } from "../../domain/entities/Task";
@@ -21,6 +22,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+    @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.ICreateNotificationUseCase)
@@ -35,11 +37,44 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       throw new EntityNotFoundError("Project Not Found", data.projectId);
     if (project.orgId !== data.orgId)
       throw new ValidationError("Project does not belong to this organization");
+
+    if (data.dueDate) {
+      const taskDueDate = new Date(data.dueDate);
+
+      if (data.sprintId) {
+        const sprint = await this._sprintRepo.findById(data.sprintId);
+        if (sprint && sprint.startDate && sprint.endDate) {
+          const sprintStart = new Date(sprint.startDate);
+          const sprintEnd = new Date(sprint.endDate);
+          if (taskDueDate < sprintStart || taskDueDate > sprintEnd) {
+            throw new ValidationError(
+              "Task due date must be within the assigned Sprint's start and end dates.",
+            );
+          }
+        }
+      } else {
+        const projectEnd = new Date(project.endDate);
+        const projectStart = project.startDate
+          ? new Date(project.startDate)
+          : null;
+
+        if (projectStart && taskDueDate < projectStart) {
+          throw new ValidationError(
+            "Task due date cannot be before Project start date.",
+          );
+        }
+        if (taskDueDate > projectEnd) {
+          throw new ValidationError(
+            "Task due date cannot be after Project end date.",
+          );
+        }
+      }
+    }
+
     this._logger.info(
       `Creating task '${data.title}' in project ${data.projectId}`,
     );
 
-    // [MODIFIED] Generate readable Task ID based on Project Name
     const prefix =
       project.key ||
       project.name
@@ -49,33 +84,31 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     const sequence = (project.taskSequence || 0) + 1;
     const taskKey = `${prefix}-${sequence}`;
 
-    // Update project with new sequence
     await this._projectRepo.update(project.id, { taskSequence: sequence });
 
-    const taskData = { ...data, createdBy: creatorId, taskKey };
+    const taskData = {
+      ...data,
+      createdBy: creatorId,
+      taskKey,
+      sprintAssignedAt: data.sprintId ? new Date() : undefined,
+    };
 
     const newTask = await this._taskRepo.create(taskData);
 
-    // Notify organization about the new task
     this._socketService.emitToOrganization(
       data.orgId!,
       "task:created",
       newTask,
     );
 
-    // Notify assignee if specific user is assigned
     if (newTask.assignedTo) {
-      // 1. Emit real-time event for UI updates (Kanban board)
       this._socketService.emitToUser(
         newTask.assignedTo,
         "task:assigned",
         newTask,
       );
 
-      // 2. Create persistent notification (Bell & Toast)
       let message = `You have been assigned to task: ${newTask.title}`;
-
-      // Attempt to fetch creator name
       const creator = await this._userRepo.findById(creatorId);
       if (creator) {
         message = `Task assigned to you by ${this.formatUserName(creator)}`;

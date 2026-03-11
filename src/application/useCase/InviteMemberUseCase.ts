@@ -13,10 +13,8 @@ import { QuotaExceededError } from "../../domain/errors/CommonErrors";
 import {
   ConflictError,
   ValidationError,
-  EntityNotFoundError,
 } from "../../domain/errors/CommonErrors";
 import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
-import crypto from "crypto";
 
 @injectable()
 export class InviteMemberUseCase implements IInviteMemberUseCase {
@@ -26,7 +24,8 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
-    @inject(TYPES.ISubscriptionRepo) private readonly _subRepo: ISubscriptionRepo,
+    @inject(TYPES.ISubscriptionRepo)
+    private readonly _subRepo: ISubscriptionRepo,
     @inject(TYPES.IPlanRepo) private readonly _planRepo: IPlanRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
   ) {}
@@ -55,16 +54,38 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
       // Check Plan Limits
       if (organization.createdBy) {
-          const subscription = await this._subRepo.findByUserId(organization.createdBy); // Owner pays
-          if (subscription) {
-            const plan = await this._planRepo.findById(subscription.planId);
-            if (plan && plan.limits && plan.limits.members !== -1) {
-                 const currentMembers = await this._userRepo.countByOrg(orgId);
-                 if (currentMembers >= plan.limits.members) {
-                     throw new QuotaExceededError(`Member limit of ${plan.limits.members} reached for this plan.`);
-                 }
-            }
+        let limit = 5;
+        const subscription = await this._subRepo.findByUserId(
+          organization.createdBy,
+        );
+
+        if (!subscription || subscription.status !== "active") {
+          this._logger.warn(
+            `No active subscription found for org ${orgId}. Using Free Plan limits.`,
+          );
+          const freePlans = await this._planRepo.findAll({ isActive: true });
+          const freePlan = freePlans.find((p) => p.price === 0);
+
+          if (freePlan && freePlan.limits) {
+            limit = freePlan.limits.members ?? 5;
           }
+        } else {
+          const plan = await this._planRepo.findById(subscription.planId);
+          if (plan && plan.limits && plan.limits.members !== -1) {
+            limit = plan.limits.members;
+          } else {
+            limit = -1;
+          }
+        }
+
+        if (limit !== -1) {
+          const currentMembers = await this._userRepo.countByOrg(orgId);
+          if (currentMembers >= limit) {
+            throw new QuotaExceededError(
+              `Member capacity limit of ${limit} reached. Please upgrade your plan.`,
+            );
+          }
+        }
       }
 
       const existingUser = await this._userRepo.findByEmail(email);
@@ -88,15 +109,15 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
       }
 
       const token = this._generateInvitationToken();
-      const hashedToken = await this._hashService.hashToken(token)
-      
+      const hashedToken = await this._hashService.hashToken(token);
+
       const expiry = new Date(Date.now() + expiresIn * 24 * 60 * 60 * 1000);
 
       // Use const assertion for status
       const inviteData = {
         email,
         orgId,
-        token : hashedToken,
+        token: hashedToken,
         status: "PENDING" as const,
         expiry,
         role: role || "TEAM_MEMBER",
@@ -245,4 +266,3 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     }
   }
 }
-

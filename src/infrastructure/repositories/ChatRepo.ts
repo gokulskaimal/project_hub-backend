@@ -28,6 +28,10 @@ export class ChatRepo implements IChatRepo {
     return entity;
   }
 
+  async countByProjectId(projectId: string): Promise<number> {
+    return await ChatModel.countDocuments({ projectId });
+  }
+
   async findByProjectId(
     projectId: string,
     limit = 50,

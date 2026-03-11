@@ -12,6 +12,11 @@ export interface TaskComment {
   createdAt: Date;
 }
 
+export interface TaskDependency {
+  taskId: string;
+  type: "BLOCKS" | "IS_BLOCKED_BY" | "RELATES_TO";
+}
+
 export interface Task {
   id: string;
   projectId: string;
@@ -22,12 +27,16 @@ export interface Task {
   status: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" | "BACKLOG";
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   type: "STORY" | "BUG" | "TASK";
+  parentTaskId?: string;
+  dependencies?: TaskDependency[];
   storyPoints?: number;
   sprintId?: string | null;
+  sprintAssignedAt?: Date;
   dueDate?: Date;
   assignedTo?: string;
   createdAt: Date;
   updatedAt: Date;
+  completedAt?: Date;
   createdBy?: string;
   timeLogs?: TimeLog[];
   totalTimeSpent?: number;

@@ -1,1 +1,0 @@
-{"version":3,"file":"AuthenticatedUser.d.ts","sourceRoot":"","sources":["../../../../src/presentation/middleware/types/AuthenticatedUser.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,gCAAgC,CAAC;AAE1D,MAAM,WAAW,iBAAiB;IAChC,EAAE,EAAE,MAAM,CAAC;IACX,IAAI,EAAE,QAAQ,CAAC;IACf,KAAK,EAAE,MAAM,CAAC;CACf"}

@@ -1,6 +1,7 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskHistoryRepo } from "../../infrastructure/interface/repositories/ITaskHistoryRepo";
 import { IDeleteTaskUseCase } from "../interface/useCases/IDeleteTaskUseCase";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
@@ -11,6 +12,7 @@ import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotific
 export class DeleteTaskUseCase implements IDeleteTaskUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
+    @inject(TYPES.ITaskHistoryRepo) private _taskHistoryRepo: ITaskHistoryRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.ICreateNotificationUseCase)
@@ -19,13 +21,17 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
 
   async execute(id: string): Promise<boolean> {
     this._logger.info(`Deleting task ${id}`);
-    // 1. Fetch task to get details for notification
+    // 1. Fetch task to get details
     const task = await this._taskRepo.findById(id);
     if (!task) throw new EntityNotFoundError("Task Not Found", id);
 
     // 2. Delete task
     const success = await this._taskRepo.delete(id);
     if (!success) throw new EntityNotFoundError("Task Not Found", id);
+
+    await this._taskRepo.deleteSubtasks(id);
+
+    await this._taskHistoryRepo.deleteByTaskId(id);
 
     // 3. Notify Org (for Kanban refresh)
     if (task.orgId) {

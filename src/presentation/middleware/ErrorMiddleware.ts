@@ -7,7 +7,6 @@ import {
   EntityNotFoundError,
   ValidationError,
   ConflictError,
-  InvalidOperationError,
 } from "../../domain/errors/CommonErrors";
 import {
   InvalidCredentialsError,
@@ -43,7 +42,6 @@ export function errorHandler(
   err: Error | HttpError | AppError,
   req: Request,
   res: Response,
-  _next: NextFunction,
 ): void {
   // 1. Default fallback
   let status = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -51,17 +49,24 @@ export function errorHandler(
   let code = "INTERNAL_ERROR";
 
   // 2. Map Domain Errors to HTTP Statuses
-  if (err instanceof AppError || (err as any).code?.startsWith("AUTH_") || (err as any).code?.startsWith("COMMON_")) {
-    code = (err as any).code || "INTERNAL_ERROR";
+  if (
+    err instanceof AppError ||
+    (typeof (err as { code?: string }).code === "string" &&
+      (err as { code?: string }).code?.startsWith("AUTH_")) ||
+    (typeof (err as { code?: string }).code === "string" &&
+      (err as { code?: string }).code?.startsWith("COMMON_"))
+  ) {
+    code = (err as unknown as AppError).code || "INTERNAL_ERROR";
     message = err.message;
 
-    // Use name or code to check type if instanceof failed
-    const errorType = err.constructor.name;
-    const errCode = (err as any).code;
+    const errCode = (err as unknown as AppError).code;
 
     if (err instanceof EntityNotFoundError || errCode === "COMMON_NOT_FOUND") {
       status = StatusCodes.NOT_FOUND;
-    } else if (err instanceof ValidationError || errCode === "COMMON_VALIDATION_ERROR") {
+    } else if (
+      err instanceof ValidationError ||
+      errCode === "COMMON_VALIDATION_ERROR"
+    ) {
       status = StatusCodes.BAD_REQUEST;
     } else if (err instanceof ConflictError || errCode === "COMMON_CONFLICT") {
       status = StatusCodes.CONFLICT;
@@ -69,8 +74,8 @@ export function errorHandler(
       err instanceof InvalidCredentialsError ||
       err instanceof InvalidTokenError ||
       err instanceof TokenExpiredError ||
-       errCode === "AUTH_INVALID_CREDENTIALS" ||
-       errCode === "AUTH_TOKEN_EXPIRED"
+      errCode === "AUTH_INVALID_CREDENTIALS" ||
+      errCode === "AUTH_TOKEN_EXPIRED"
     ) {
       status = StatusCodes.UNAUTHORIZED;
     } else if (
@@ -78,7 +83,7 @@ export function errorHandler(
       err instanceof EmailNotVerifiedError ||
       err instanceof OrganizationSuspendedError ||
       err instanceof OrganizationNotFoundError ||
-      errCode === "AUTH_ACCOUNT_SUSPENDED" || 
+      errCode === "AUTH_ACCOUNT_SUSPENDED" ||
       errCode === "AUTH_ORG_NOT_FOUND"
     ) {
       status = StatusCodes.FORBIDDEN;
@@ -98,6 +103,9 @@ export function errorHandler(
   }
 
   // 5. Log Error
+  const traceId = req.headers["x-trace-id"] || `req-${Date.now()}`;
+  const userId = (req as { user?: { id?: string } }).user?.id;
+
   if (status >= 500) {
     logger.error("Server Error", err, {
       path: req.path,
@@ -105,6 +113,9 @@ export function errorHandler(
       message,
       code,
       stack: err.stack,
+      context: "ErrorMiddleware",
+      traceId,
+      userId,
     });
   } else {
     logger.warn("Request Failed", {
@@ -112,6 +123,9 @@ export function errorHandler(
       status,
       message,
       code,
+      context: "ErrorMiddleware",
+      traceId,
+      userId,
     });
   }
 
@@ -124,4 +138,3 @@ export function errorHandler(
     },
   });
 }
-

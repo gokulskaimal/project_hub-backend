@@ -26,6 +26,7 @@ export class TaskRepo
       type: obj.type,
       storyPoints: obj.storyPoints,
       sprintId: obj.sprintId, // Ensure this is mapped!
+      sprintAssignedAt: obj.sprintAssignedAt,
       assignedTo: obj.assignedTo,
       dueDate: obj.dueDate,
       timeLogs: obj.timeLogs,
@@ -42,6 +43,7 @@ export class TaskRepo
       }),
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
+      completedAt: obj.completedAt,
       createdBy: obj.createdBy,
     } as Task;
   }
@@ -67,20 +69,8 @@ export class TaskRepo
     return docs.map((d) => this.toDomain(d));
   }
 
-  async countTasksByUserAndDate(userId: string, date: Date): Promise<number> {
-    const start = new Date(date);
-    start.setHours(0, 0, 0, 0);
-
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
-
-    const count = await this.model.countDocuments({
-      createdBy: userId,
-      createdAt: {
-        $gte: start,
-        $lte: end,
-      },
-    });
-    return count;
+  async deleteSubtasks(parentId: string): Promise<boolean> {
+    await this.model.deleteMany({ parentTaskId: parentId });
+    return true;
   }
 }
