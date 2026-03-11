@@ -103,7 +103,7 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
   async updateOrganizationStatus(
     orgId: string,
     newStatus: OrganizationStatus,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<Organization> {
     try {
       this._logger.info("Updating organization status with cascading effects", {
         orgId,
@@ -157,7 +157,7 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
         affectedUsers: usersInOrg?.length || 0,
       });
 
-      return updatedOrg as unknown as Record<string, unknown>;
+      return updatedOrg;
     } catch (error) {
       this._logger.error(
         "Failed to update organization status",
