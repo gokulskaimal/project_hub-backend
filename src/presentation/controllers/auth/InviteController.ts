@@ -7,6 +7,7 @@ import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../../utils/asyncHandler";
+import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 
 @injectable()
 export class InviteController {
@@ -32,9 +33,16 @@ export class InviteController {
   }
 
   inviteMember = asyncHandler(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
     const { email, orgId, role, expiresIn } = req.body;
     this._logger.info("Inviting member", { email, orgId, role, expiresIn });
-    const result = await this._inviteMemberUC.execute(email, orgId, role, expiresIn);
+    const result = await this._inviteMemberUC.execute(
+      email,
+      orgId,
+      authReq.user!.id,
+      role,
+      expiresIn,
+    );
     this.sendSuccess(
       res,
       result,

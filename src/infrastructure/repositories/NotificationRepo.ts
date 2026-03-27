@@ -13,15 +13,18 @@ export class NotificationRepo implements INotificationRepo {
     return this.toEntity(doc);
   }
 
-  async findByUser(userId: string): Promise<Notification[]> {
-    const docs = await NotificationModel.find({ userId })
+  async findByUser(userId: string, orgId?: string): Promise<Notification[]> {
+    const query: Record<string, unknown> = { userId };
+    if (orgId) query.orgId = orgId;
+
+    const docs = await NotificationModel.find(query)
       .sort({ createdAt: -1 })
       .limit(100);
     return docs.map((doc) => this.toEntity(doc));
   }
 
-  async markAsRead(id: string): Promise<void> {
-    await NotificationModel.updateOne({ _id: id }, { isRead: true });
+  async markAsRead(id: string, userId: string): Promise<void> {
+    await NotificationModel.updateOne({ _id: id, userId }, { isRead: true });
   }
 
   async markAllAsRead(userId: string): Promise<void> {
@@ -41,6 +44,7 @@ export class NotificationRepo implements INotificationRepo {
       doc.link || "",
       doc.isRead,
       doc.createdAt,
+      doc.orgId,
     );
   }
 }

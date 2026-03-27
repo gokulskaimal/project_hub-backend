@@ -1,19 +1,28 @@
 import { injectable, inject } from "inversify";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGetMemberTasksUseCase } from "../interface/useCases/IGetMemberTasksUseCase";
+import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class GetMemberTasksUseCase implements IGetMemberTasksUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
-    @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
-  async execute(userId: string): Promise<Task[]> {
-    this._logger.info(`Fetching tasks for user: ${userId}`);
-    return this._taskRepo.findByAssignee(userId);
+  async execute(userId: string, requesterId: string): Promise<Task[]> {
+    const user = await this._userRepo.findById(userId);
+    if (!user) return [];
+
+    if (!user.orgId) return [];
+
+    // Validate requester belongs to the same org
+    await this._securityService.validateOrgAccess(requesterId, user.orgId);
+
+    return await this._taskRepo.findByAssignee(userId);
   }
 }

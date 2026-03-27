@@ -8,6 +8,7 @@ import { IDeleteMessageUseCase } from "../../application/interface/useCases/IDel
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { asyncHandler } from "../middleware/ErrorMiddleware";
+import { toChatMessageDTO } from "../../application/dto/ChatMessageDTO";
 
 @injectable()
 export class ChatController {
@@ -22,6 +23,20 @@ export class ChatController {
     private _deleteMessageUC: IDeleteMessageUseCase,
   ) {}
 
+  private sendSuccess<T>(
+    res: Response,
+    data: T,
+    message: string = "Success",
+    status: number = StatusCodes.OK,
+  ): void {
+    res.status(status).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   sendMessage = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
     const { content, type, fileUrl } = req.body;
@@ -35,29 +50,33 @@ export class ChatController {
       fileUrl,
     );
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Message sent successfully",
-      data: message,
-    });
+    this.sendSuccess(
+      res,
+      toChatMessageDTO(message),
+      "Message sent successfully",
+    );
   });
 
   getMessages = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
     const { limit, before } = req.query;
+    const userId = (req as AuthenticatedRequest).user!.id;
 
     const result = await this._getProjectMessagesUC.execute(
       projectId,
+      userId,
       limit ? Number(limit) : undefined,
       before as string | undefined,
     );
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Messages fetched successfully",
-      data: result.messages,
-      nextCursor: result.nextCursor,
-    });
+    this.sendSuccess(
+      res,
+      {
+        messages: result.messages.map(toChatMessageDTO),
+        nextCursor: result.nextCursor,
+      },
+      "Messages fetched successfully",
+    );
   });
 
   editMessage = asyncHandler(async (req: Request, res: Response) => {
@@ -70,11 +89,11 @@ export class ChatController {
       content,
     );
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Message updated successfully",
-      data: message,
-    });
+    this.sendSuccess(
+      res,
+      toChatMessageDTO(message),
+      "Message updated successfully",
+    );
   });
 
   deleteMessage = asyncHandler(async (req: Request, res: Response) => {
@@ -82,10 +101,6 @@ export class ChatController {
     const userId = (req as AuthenticatedRequest).user!.id;
     await this._deleteMessageUC.execute(messageId, userId);
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: "Message deleted successfully",
-      data: null,
-    });
+    this.sendSuccess(res, null, "Message deleted successfully");
   });
 }

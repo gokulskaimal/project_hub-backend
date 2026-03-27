@@ -6,8 +6,19 @@ import { IInviteRepo } from "../../infrastructure/interface/repositories/IInvite
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { IAcceptUseCase } from "../interface/useCases/IAcceptUseCase";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IHashService } from "../../infrastructure/interface/services/IHashService"; // Correct import
+import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { toUserDTO, UserDTO } from "../../application/dto/UserDTO";
+import { toInviteDTO, InviteDTO } from "../../application/dto/InviteDTO";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
+import { NotificationType } from "../../domain/enums/NotificationType";
+import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import {
+  ConflictError,
+  EntityNotFoundError,
+  ValidationError,
+} from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class AcceptUseCase implements IAcceptUseCase {
@@ -17,6 +28,12 @@ export class AcceptUseCase implements IAcceptUseCase {
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
     @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.ICreateNotificationUseCase)
+    private readonly _createNotificationUseCase: ICreateNotificationUseCase,
+    @inject(TYPES.ISocketService)
+    private readonly _socketService: ISocketService,
   ) {}
 
   /**
@@ -34,7 +51,7 @@ export class AcceptUseCase implements IAcceptUseCase {
     lastName: string,
     additionalData?: Record<string, unknown>,
   ): Promise<{
-    user: Record<string, unknown>;
+    user: UserDTO;
     organization: { id: string; name: string; status: OrganizationStatus };
     tokens: {
       accessToken: string;
@@ -51,10 +68,12 @@ export class AcceptUseCase implements IAcceptUseCase {
     try {
       // Business Rule: Validate input
       if (!token || !password || !firstName || !lastName) {
-        throw new Error(
+        throw new ValidationError(
           "Token, password, first name, and last name are required",
         );
       }
+      this._authValidationService.validatePassword(password);
+      this._authValidationService.validateName(firstName, lastName);
 
       // Business Rule: Find and validate invitation
       const hashedToken = this._hashService.hashToken(token);
@@ -63,7 +82,7 @@ export class AcceptUseCase implements IAcceptUseCase {
         this._logger.warn("Invitation not found", {
           token: token.substring(0, 8) + "...",
         });
-        throw new Error("Invalid invitation token");
+        throw new ValidationError("Invalid invitation token");
       }
 
       // Business Rule: Check invitation status and expiry
@@ -72,7 +91,7 @@ export class AcceptUseCase implements IAcceptUseCase {
           token: token.substring(0, 8) + "...",
           expiry: invite.expiry,
         });
-        throw new Error("Invitation has expired");
+        throw new ValidationError("Invitation has expired");
       }
 
       if (invite.status !== "PENDING") {
@@ -82,19 +101,19 @@ export class AcceptUseCase implements IAcceptUseCase {
         });
 
         if (invite.status === "CANCELLED") {
-          throw new Error(
+          throw new ValidationError(
             "This invitation has been cancelled by your organization administrator",
           );
         } else if (invite.status === "ACCEPTED") {
-          throw new Error(
+          throw new ValidationError(
             "This invitation has already been used to create an account",
           );
         } else if (invite.status === "EXPIRED") {
-          throw new Error(
+          throw new ValidationError(
             "This invitation has expired. Please request a new invitation",
           );
         } else {
-          throw new Error(
+          throw new ValidationError(
             `Invitation is not available (status: ${invite.status})`,
           );
         }
@@ -106,7 +125,7 @@ export class AcceptUseCase implements IAcceptUseCase {
         this._logger.warn("User already exists for invitation", {
           email: invite.email,
         });
-        throw new Error("User already exists with this email");
+        throw new ConflictError("User already exists with this email");
       }
 
       // Business Rule: Get organization details
@@ -114,11 +133,10 @@ export class AcceptUseCase implements IAcceptUseCase {
         invite.orgId,
       );
       if (!organization) {
-        throw new Error("Organization not found");
+        throw new EntityNotFoundError("Organization Not Found", invite.orgId);
       }
 
-      // Business Rule: Validate password
-      this._validatePassword(password);
+      // Business Rule: Validate password (now handled above)
 
       // Business Rule: Hash password
       const hashedPassword = await this._hashService.hash(password);
@@ -132,7 +150,7 @@ export class AcceptUseCase implements IAcceptUseCase {
         orgId: invite.orgId,
         role: (invite.assignedRole as UserRole) || UserRole.TEAM_MEMBER,
         password: hashedPassword,
-        emailVerified: true, // Pre-verified through invitation
+        emailVerified: true,
         status: "ACTIVE",
         createdAt: new Date(),
         ...(additionalData as Record<string, unknown>),
@@ -162,18 +180,13 @@ export class AcceptUseCase implements IAcceptUseCase {
         lastName,
       });
 
-      // Return safe user data (exclude sensitive fields)
-      const safeUserData = {
-        ...(newUser as unknown as Record<string, unknown>),
-      } as Record<string, unknown>;
-      Reflect.deleteProperty(safeUserData, "password");
-      Reflect.deleteProperty(safeUserData, "resetPasswordToken");
-      Reflect.deleteProperty(safeUserData, "resetPasswordExpires");
-      Reflect.deleteProperty(safeUserData, "otp");
-      Reflect.deleteProperty(safeUserData, "otpExpiry");
+      // [NEW] Notify Org Managers about new member
+      this._notifyManagers(newUser.orgId!, newUser.name!).catch((err) =>
+        this._logger.error("Failed to notify managers about new joiner", err),
+      );
 
       return {
-        user: safeUserData,
+        user: toUserDTO(newUser),
         organization: {
           id: organization.id,
           name: organization.name,
@@ -201,7 +214,7 @@ export class AcceptUseCase implements IAcceptUseCase {
    */
   public async validateInvitationToken(token: string): Promise<{
     valid: boolean;
-    invitation?: Record<string, unknown>;
+    invitation?: InviteDTO;
     expired?: boolean;
     cancelled?: boolean;
     accepted?: boolean;
@@ -224,13 +237,7 @@ export class AcceptUseCase implements IAcceptUseCase {
 
       return {
         valid: !expired && !processed,
-        invitation: {
-          email: invite.email,
-          orgId: invite.orgId,
-          createdAt: invite.createdAt,
-          expiry: invite.expiry,
-          status: invite.status,
-        } as Record<string, unknown>,
+        invitation: toInviteDTO(invite),
         expired,
         cancelled,
         accepted,
@@ -241,27 +248,40 @@ export class AcceptUseCase implements IAcceptUseCase {
     }
   }
 
-  /**
-   * Validate password strength
-   * @param password - Password to validate
-   */
-  private _validatePassword(password: string): void {
-    if (!password || typeof password !== "string") {
-      throw new Error("Password is required");
-    }
-
-    if (password.length < 8) {
-      throw new Error("Password must be at least 8 characters long");
-    }
-
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      throw new Error(
-        "Password must contain at least one lowercase letter, one uppercase letter, and one number",
+  private async _notifyManagers(orgId: string, memberName: string) {
+    try {
+      const managers = await this._userRepo.findByOrgAndRole(
+        orgId,
+        UserRole.ORG_MANAGER,
       );
-    }
 
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new Error("Password must contain at least one special character");
+      for (const manager of managers) {
+        // 1. Persistent Notification
+        await this._createNotificationUseCase.execute(
+          manager.id,
+          "New Member Joined",
+          `${memberName} has joined your organization.`,
+          NotificationType.SUCCESS,
+          "/manager/members",
+        );
+      }
+
+      // 2. Real-time Role Broadcast (Org Manager)
+      this._socketService.emitToRoleInOrg(
+        orgId,
+        UserRole.ORG_MANAGER,
+        "member:joined",
+        { memberName, joinedAt: new Date() },
+      );
+
+      // 3. [NEW] Real-time Role Broadcast (Super Admin)
+      this._socketService.emitToRole(
+        UserRole.SUPER_ADMIN,
+        "platform:member_joined",
+        { organizationId: orgId, memberName },
+      );
+    } catch (error) {
+      this._logger.error("Member join notification error:", error as Error);
     }
   }
 }

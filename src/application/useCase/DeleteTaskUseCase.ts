@@ -7,6 +7,7 @@ import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class DeleteTaskUseCase implements IDeleteTaskUseCase {
@@ -17,13 +18,19 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.ICreateNotificationUseCase)
     private _createNotificationUC: ICreateNotificationUseCase,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
-  async execute(id: string): Promise<boolean> {
+  async execute(id: string, requesterId: string): Promise<boolean> {
     this._logger.info(`Deleting task ${id}`);
     // 1. Fetch task to get details
     const task = await this._taskRepo.findById(id);
     if (!task) throw new EntityNotFoundError("Task Not Found", id);
+
+    // RBAC Check
+    if (task.orgId) {
+      await this._securityService.validateOrgAccess(requesterId, task.orgId);
+    }
 
     // 2. Delete task
     const success = await this._taskRepo.delete(id);
@@ -33,9 +40,15 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
 
     await this._taskHistoryRepo.deleteByTaskId(id);
 
-    // 3. Notify Org (for Kanban refresh)
+    // 3. Notify Project & Managers (for Kanban refresh)
     if (task.orgId) {
-      this._socketService.emitToOrganization(task.orgId, "task:deleted", id);
+      this._socketService.emitToProject(task.projectId, "task:deleted", id);
+      this._socketService.emitToRoleInOrg(
+        task.orgId,
+        "ORG MANAGER",
+        "task:deleted",
+        id,
+      );
     }
 
     // 4. Notify Assignee
@@ -45,6 +58,7 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
         "Task Deleted",
         `Task '${task.title}' has been deleted.`,
         "WARNING",
+        task.orgId || "",
       );
     }
 

@@ -5,6 +5,7 @@ export interface IInviteMemberUseCase {
   execute(
     email: string,
     orgId: string,
+    requesterId: string,
     role?: string,
     expiresIn?: number,
   ): Promise<{
@@ -20,6 +21,7 @@ export interface IInviteMemberUseCase {
   bulkInvite(
     emails: string[],
     orgId: string,
+    requesterId: string,
     role?: string,
     expiresIn?: number,
   ): Promise<{

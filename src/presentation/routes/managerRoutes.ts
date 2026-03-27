@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Container } from "inversify";
 import { ManagerController } from "../controllers/manager/ManagerController";
+import { IManagerInvoiceController } from "../../application/interface/controllers/IManagerInvoiceController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";
@@ -11,6 +12,9 @@ import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant";
 export function createManagerRoutes(container: Container): Router {
   const router = Router();
   const controller = container.get<ManagerController>(TYPES.ManagerController);
+  const invoiceController = container.get<IManagerInvoiceController>(
+    TYPES.ManagerInvoiceController,
+  );
 
   router.use(
     API_ROUTES.MANAGER.BASE,
@@ -46,8 +50,9 @@ export function createManagerRoutes(container: Container): Router {
     controller.getOrganization(req as AuthenticatedRequest, res, next),
   );
 
-  // Note: TaskController is not directly instantiated here, but checking for project task routes
-  // The actual routes for tasks are under projectRoutes.ts
+  router.get(API_ROUTES.MANAGER.INVOICES, (req, res, next) =>
+    invoiceController.getInvoices(req as AuthenticatedRequest, res, next),
+  );
 
   return router;
 }

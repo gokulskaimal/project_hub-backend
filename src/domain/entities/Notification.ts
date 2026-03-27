@@ -8,5 +8,6 @@ export class Notification {
     public readonly link: string,
     public readonly isRead: boolean,
     public readonly createdAt: Date,
+    public readonly orgId?: string,
   ) {}
 }

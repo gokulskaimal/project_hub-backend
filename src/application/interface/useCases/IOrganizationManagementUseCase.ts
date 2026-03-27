@@ -7,14 +7,19 @@ export interface IOrganizationManagementUseCase {
   updateOrganizationStatus(
     orgId: string,
     newStatus: OrganizationStatus,
+    requesterId: string,
   ): Promise<Organization>;
 
-  deleteOrganizationCascade(orgId: string): Promise<void>;
+  deleteOrganizationCascade(orgId: string, requesterId: string): Promise<void>;
 
-  createOrganization(data: Partial<Organization>): Promise<Organization>;
+  createOrganization(
+    data: Partial<Organization>,
+    requesterId: string,
+  ): Promise<Organization>;
 
   updateOrganization(
     orgId: string,
     data: Partial<Organization>,
+    requesterId: string,
   ): Promise<Organization>;
 }

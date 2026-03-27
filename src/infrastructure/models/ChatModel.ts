@@ -4,7 +4,7 @@ export interface IChatMessageDoc extends Document {
   projectId: string;
   senderId: string;
   content: string;
-  type: "TEXT" | "FILE" | "IMAGE";
+  type: "TEXT" | "FILE" | "IMAGE" | "SYSTEM" | "ACTIVITY";
   fileUrl: string | null;
   createdAt: Date;
 }
@@ -19,7 +19,11 @@ const ChatSchema = new Schema(
     },
     senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     content: { type: String, required: true },
-    type: { type: String, enum: ["TEXT", "FILE", "IMAGE"], default: "TEXT" },
+    type: {
+      type: String,
+      enum: ["TEXT", "FILE", "IMAGE", "SYSTEM", "ACTIVITY"],
+      default: "TEXT",
+    },
     fileUrl: { type: String, default: null },
   },
   { timestamps: true },

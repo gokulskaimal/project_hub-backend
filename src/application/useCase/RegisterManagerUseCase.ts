@@ -1,26 +1,32 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
+import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
 import { IOtpService } from "../../infrastructure/interface/services/IOtpService";
 import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
 import { IRegisterManagerUseCase } from "../interface/useCases/IRegisterManagerUseCase";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import {
-  ConflictError,
-  ValidationError,
-} from "../../domain/errors/CommonErrors";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { ConflictError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class RegisterManagerUseCase implements IRegisterManagerUseCase {
   constructor(
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.ISocketService)
+    private readonly _socketService: ISocketService,
     @inject(TYPES.IOtpService) private readonly _otpService: IOtpService,
     @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.ICreateNotificationUseCase)
+    private readonly _createNotificationUseCase: ICreateNotificationUseCase,
   ) {}
 
   public async execute(
@@ -38,7 +44,8 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
     });
 
     try {
-      this._validateInput(email, organizationName);
+      this._authValidationService.validateEmail(email);
+      this._authValidationService.validateOrgName(organizationName);
 
       const isNameAvailable =
         await this.validateOrganizationName(organizationName);
@@ -52,7 +59,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
         throw new ConflictError("User already exists and is verified");
       }
 
-      // ✅ FIXED: Use const assertion for organization status
+      //const assertion for organization status
       const organizationData = {
         name: organizationName.trim(),
         status: OrganizationStatus.ACTIVE, // Use const assertion
@@ -95,6 +102,22 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
         `${organizationName} manager registration`,
       );
 
+      const superAdmins = await this._userRepo.findByRole(UserRole.SUPER_ADMIN);
+      for (const admin of superAdmins) {
+        await this._createNotificationUseCase.execute(
+          admin.id,
+          "New Organization Registered",
+          `A new Organization ${organizationName} has been registered by ${email}`,
+          "INFO",
+          organization.id,
+        );
+      }
+      this._socketService.emitToRole(UserRole.SUPER_ADMIN, "org:registered", {
+        organizationName,
+        email,
+        organizationId: organization.id,
+      });
+
       this._logger.info("Manager registration initiated successfully", {
         email,
         organizationName,
@@ -126,18 +149,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
 
       const trimmedName = name.trim();
 
-      if (trimmedName.length < 2) {
-        return false;
-      }
-
-      if (trimmedName.length > 100) {
-        return false;
-      }
-
-      const validNameRegex = /^[a-zA-Z0-9\s\-_.&]+$/;
-      if (!validNameRegex.test(trimmedName)) {
-        return false;
-      }
+      this._authValidationService.validateOrgName(trimmedName);
 
       const existingOrg = await this._orgRepo.findByName(trimmedName);
       const isAvailable = !existingOrg;
@@ -158,38 +170,6 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
     }
   }
 
-  private _validateInput(email: string, organizationName: string): void {
-    if (!email || typeof email !== "string") {
-      throw new ValidationError("Email is required");
-    }
-
-    if (!organizationName || typeof organizationName !== "string") {
-      throw new ValidationError("Organization name is required");
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new ValidationError("Invalid email format");
-    }
-
-    if (email.length > 254) {
-      throw new ValidationError("Email address is too long");
-    }
-
-    const trimmedName = organizationName.trim();
-    if (trimmedName.length < 2) {
-      throw new ValidationError(
-        "Organization name must be at least 2 characters long",
-      );
-    }
-
-    if (trimmedName.length > 100) {
-      throw new ValidationError(
-        "Organization name must be less than 100 characters",
-      );
-    }
-  }
-
   private _generateInvitationToken(): string {
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -202,4 +182,3 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
     return token;
   }
 }
-

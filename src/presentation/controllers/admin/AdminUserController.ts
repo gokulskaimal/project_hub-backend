@@ -7,16 +7,22 @@ import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
-import { EntityNotFoundError, ValidationError } from "../../../domain/errors/CommonErrors";
+import {
+  EntityNotFoundError,
+  ValidationError,
+} from "../../../domain/errors/CommonErrors";
 import { toUserDTO } from "../../../application/dto/UserDTO";
+import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 
 @injectable()
 export class AdminUserController {
   constructor(
-    @inject(TYPES.IUserQueryUseCase) private _userQueryUseCase: IUserQueryUseCase,
-    @inject(TYPES.IUserManagementUseCase) private _userManagementUseCase: IUserManagementUseCase,
+    @inject(TYPES.IUserQueryUseCase)
+    private _userQueryUseCase: IUserQueryUseCase,
+    @inject(TYPES.IUserManagementUseCase)
+    private _userManagementUseCase: IUserManagementUseCase,
     @inject(TYPES.ILogger) private logger: ILogger,
-  ) { }
+  ) {}
 
   private sendSuccess<T>(
     res: Response,
@@ -49,9 +55,11 @@ export class AdminUserController {
       status: typeof status === "string" ? status : undefined,
     };
 
+    const authReq = req as AuthenticatedRequest;
     const result = await this._userQueryUseCase.listUsers(
       Number(limit),
       Number(offset),
+      authReq.user!.id,
       search as string,
       filters,
     );
@@ -66,12 +74,11 @@ export class AdminUserController {
   getUserById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Fetching user by ID", { userId: id });
-    if (!id)
-      throw new ValidationError("User ID is required");
+    if (!id) throw new ValidationError("User ID is required");
 
-    const user = await this._userQueryUseCase.getUserById(id);
-    if (!user)
-      throw new EntityNotFoundError("User", id);
+    const authReq = req as AuthenticatedRequest;
+    const user = await this._userQueryUseCase.getUserById(id, authReq.user!.id);
+    if (!user) throw new EntityNotFoundError("User", id);
 
     this.sendSuccess(res, toUserDTO(user));
   });
@@ -79,8 +86,7 @@ export class AdminUserController {
   updateUser = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Updating user", { userId: id });
-    if (!id)
-      throw new ValidationError("User ID is required");
+    if (!id) throw new ValidationError("User ID is required");
 
     const safeUpdateData = {
       ...(req.body as Record<string, unknown>),
@@ -90,7 +96,12 @@ export class AdminUserController {
     Reflect.deleteProperty(safeUpdateData, "password");
     Reflect.deleteProperty(safeUpdateData, "otp");
 
-    const updatedUser = await this._userManagementUseCase.updateUser(id, safeUpdateData);
+    const authReq = req as AuthenticatedRequest;
+    const updatedUser = await this._userManagementUseCase.updateUser(
+      id,
+      safeUpdateData,
+      authReq.user!.id,
+    );
     if (!updatedUser) throw new EntityNotFoundError("User", id);
 
     this.sendSuccess(res, toUserDTO(updatedUser), COMMON_MESSAGES.UPDATED);
@@ -100,21 +111,24 @@ export class AdminUserController {
     const { id } = req.params;
     const { status } = req.body;
     this.logger.info("Updating user status", { userId: id, status });
-    if (!id)
-      throw new ValidationError("User ID is required");
-    if (!status)
-      throw new ValidationError(COMMON_MESSAGES.INVALID_INPUT);
+    if (!id) throw new ValidationError("User ID is required");
+    if (!status) throw new ValidationError(COMMON_MESSAGES.INVALID_INPUT);
 
-    const updatedUser = await this._userManagementUseCase.updateUserStatus(id, status);
+    const authReq = req as AuthenticatedRequest;
+    const updatedUser = await this._userManagementUseCase.updateUserStatus(
+      id,
+      status,
+      authReq.user!.id,
+    );
     this.sendSuccess(res, toUserDTO(updatedUser), COMMON_MESSAGES.UPDATED);
   });
 
   deleteUser = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Deleting user", { userId: id });
-    if (!id)
-      throw new ValidationError("User ID is required");
-    await this._userManagementUseCase.deleteUser(id);
+    if (!id) throw new ValidationError("User ID is required");
+    const authReq = req as AuthenticatedRequest;
+    await this._userManagementUseCase.deleteUser(id, authReq.user!.id);
     this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);
   });
 }

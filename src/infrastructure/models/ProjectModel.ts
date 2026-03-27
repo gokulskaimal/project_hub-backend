@@ -22,6 +22,7 @@ const ProjectSchema = new Schema<IProjectDoc>(
     },
     tags: [{ type: String }],
     teamMemberIds: [{ type: String }], // Array of User IDs
+    tasksPerWeek: { type: Number, default: 25, min: 1 },
     taskSequence: { type: Number, default: 0 },
     key: { type: String },
   },

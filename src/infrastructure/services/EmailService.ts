@@ -129,7 +129,7 @@ export class EmailService implements IEmailService {
     orgName: string,
     inviterName: string,
   ): Promise<void> {
-    const inviteUrl = `${process.env.BASE_URL || "http://localhost:3000"}/accept-invite?token=${inviteToken}`;
+    const inviteUrl = `${process.env.BASE_URL || "http://localhost:3000"}/invite/accept/${inviteToken}`;
 
     const variables = {
       INVITE_URL: inviteUrl,

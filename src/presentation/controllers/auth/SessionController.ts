@@ -1,4 +1,3 @@
-
 import { injectable, inject } from "inversify";
 import { Request, Response } from "express";
 import { TYPES } from "../../../infrastructure/container/types";
@@ -73,10 +72,7 @@ export class SessionController {
     this._logger.info("Refresh token attempt");
     if (!refreshToken) {
       this._logger.warn("Refresh token missing");
-      res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ success: false, error: "Missing refresh token" });
-      return;
+      throw new ValidationError("Missing refresh token");
     }
     const tokens = await this._tokenRefreshUC.execute(refreshToken);
     if (tokens.refreshToken) {
@@ -146,4 +142,3 @@ export class SessionController {
     }
   });
 }
-

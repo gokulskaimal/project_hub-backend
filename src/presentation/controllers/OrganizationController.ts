@@ -1,4 +1,4 @@
-import { Response, NextFunction } from "express";
+import { Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
@@ -6,6 +6,7 @@ import { IOrganizationQueryUseCase } from "../../application/interface/useCases/
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { IUserQueryUseCase } from "../../application/interface/useCases/IUserQueryUseCase";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { asyncHandler } from "../middleware/ErrorMiddleware";
 
 @injectable()
 export class OrganizationController {
@@ -17,77 +18,74 @@ export class OrganizationController {
     @inject(TYPES.IUserQueryUseCase) private _userQuery: IUserQueryUseCase,
   ) {}
 
-  async getMyOrganization(
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
-    try {
-      const orgId = req.user?.orgId;
-      if (!orgId) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "No Organization ID found in token" });
-        return;
-      }
-
-      const org = await this._orgQuery.getOrganizationById(orgId);
-      if (!org) {
-        res
-          .status(StatusCodes.NOT_FOUND)
-          .json({ error: "Organization not found" });
-        return;
-      }
-
-      res.json(org);
-    } catch (error) {
-      next(error);
-    }
+  private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  async updateOrganization(
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
-    try {
+  getMyOrganization = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const orgId = req.user?.orgId;
+      if (!orgId)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "No Organization ID found",
+        };
+
+      const org = await this._orgQuery.getOrganizationById(orgId);
+      if (!org)
+        throw {
+          status: StatusCodes.NOT_FOUND,
+          message: "Organization not found",
+        };
+
+      this.sendSuccess(res, org, "Organization details retrieved");
+    },
+  );
+
+  updateOrganization = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const orgId = req.user?.orgId;
       const { name } = req.body;
 
-      if (!orgId) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "No Organization ID found" });
-        return;
-      }
+      if (!orgId)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "No Organization ID found",
+        };
+      if (!name)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "Organization name is required",
+        };
 
-      const updated = await this._orgManagement.updateOrganization(orgId, {
-        name,
-      });
-      res.json(updated);
-    } catch (error) {
-      next(error);
-    }
-  }
+      const updated = await this._orgManagement.updateOrganization(
+        orgId,
+        { name },
+        req.user!.id,
+      );
+      this.sendSuccess(res, updated, "Organization updated successfully");
+    },
+  );
 
-  async getOrganizationUsers(
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-  ) {
-    try {
+  getOrganizationUsers = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
       const orgId = req.user?.orgId;
-      if (!orgId) {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "No Organization ID found" });
-        return;
-      }
+      if (!orgId)
+        throw {
+          status: StatusCodes.BAD_REQUEST,
+          message: "No Organization ID found",
+        };
 
-      const users = await this._userQuery.getUsersByOrganization(orgId);
-      res.json({ data: users }); // Consistent with existing API response wrappers if any, or just array
-    } catch (error) {
-      next(error);
-    }
-  }
+      const users = await this._userQuery.getUsersByOrganization(
+        orgId,
+        req.user!.id,
+      );
+      this.sendSuccess(res, users, "Organization users retrieved");
+    },
+  );
 }

@@ -1,5 +1,5 @@
 import { Project } from "../../../domain/entities/Project";
 
 export interface IGetProjectByIdUseCase {
-  execute(projectId: string): Promise<Project | null>;
+  execute(projectId: string, requesterId: string): Promise<Project | null>;
 }

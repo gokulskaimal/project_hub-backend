@@ -6,6 +6,7 @@ import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IGoogleAuthService } from "../../infrastructure/interface/services/IGoogleAuthService";
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { UserRole } from "../../domain/enums/UserRole";
 import { toUserDTO, UserDTO } from "../dto/UserDTO";
@@ -18,6 +19,7 @@ import {
   AccountSuspendedError,
   OrganizationSuspendedError,
 } from "../../domain/errors/AuthErrors";
+import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 
 @injectable()
 export class GoogleSignInUseCase implements IGoogleSignInUseCase {
@@ -28,6 +30,10 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
     private readonly _googleAuthService: IGoogleAuthService,
     @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.ICreateNotificationUseCase)
+    private readonly _createNotificationUseCase: ICreateNotificationUseCase,
   ) {}
 
   async execute(
@@ -110,6 +116,7 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
         if (!orgName) {
           throw new ValidationError("Organization Name Required");
         }
+        this._authValidationService.validateOrgName(orgName);
 
         // Create Organization
         let newOrg;
@@ -145,6 +152,13 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
           password: "",
           createdAt: new Date(),
         });
+
+        if (payload.given_name && payload.family_name) {
+          this._authValidationService.validateName(
+            payload.given_name,
+            payload.family_name,
+          );
+        }
         user = newUser;
 
         this._logger.info("New user created as org manager via Google", {
@@ -152,6 +166,19 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
           email,
           orgId: newOrg.id,
         });
+
+        const superAdmins = await this._userRepo.findByRole(
+          UserRole.SUPER_ADMIN,
+        );
+        for (const admin of superAdmins) {
+          await this._createNotificationUseCase.execute(
+            admin.id!,
+            "New Organization Registered",
+            `A new Organization ${orgName} has been registered via Google SSO by ${email}`,
+            "INFO",
+            "/admin/organizations",
+          );
+        }
       }
     }
 

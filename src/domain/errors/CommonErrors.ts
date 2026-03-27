@@ -47,3 +47,19 @@ export class QuotaExceededError extends AppError {
     super(message);
   }
 }
+
+export class UnauthorizedError extends AppError {
+  readonly code = "UNAUTHORIZED";
+
+  constructor(message: string = "Unauthorized access") {
+    super(message);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  readonly code = "FORBIDDEN";
+
+  constructor(message: string = "Access forbidden") {
+    super(message);
+  }
+}

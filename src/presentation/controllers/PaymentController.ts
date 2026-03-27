@@ -6,6 +6,7 @@ import { IVerifyPaymentUseCase } from "../../application/interface/useCases/IVer
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
+import { ValidationError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class PaymentController {
@@ -16,26 +17,34 @@ export class PaymentController {
     private _verifyPaymentUC: IVerifyPaymentUseCase,
   ) {}
 
+  private sendSuccess<T>(
+    res: Response,
+    data: T,
+    message: string = "Success",
+    status: number = StatusCodes.OK,
+  ): void {
+    res.status(status).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   createSubscription = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const { planId } = req.body;
       const userId = req.user!.id;
 
       if (!planId) {
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: "Plan ID is required",
-        };
+        throw new ValidationError("Plan ID is required");
       }
 
       const subscription = await this._createSubscriptionUC.execute(
         userId,
         planId,
       );
-      res.status(StatusCodes.OK).json({
-        success: true,
-        data: subscription,
-      });
+      this.sendSuccess(res, subscription, "Subscription initiated");
     },
   );
 
@@ -52,10 +61,7 @@ export class PaymentController {
       const orderId = razorpay_order_id || razorpay_subscription_id;
 
       if (!orderId || !razorpay_payment_id || !razorpay_signature) {
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: "Missing payment details",
-        };
+        throw new ValidationError("Missing payment details");
       }
 
       const isValid = await this._verifyPaymentUC.execute(
@@ -66,12 +72,11 @@ export class PaymentController {
       );
 
       if (isValid) {
-        res
-          .status(StatusCodes.OK)
-          .json({
-            success: true,
-            message: "Payment verified and subscription updated",
-          });
+        this.sendSuccess(
+          res,
+          null,
+          "Payment verified and subscription updated",
+        );
       } else {
         res
           .status(StatusCodes.BAD_REQUEST)

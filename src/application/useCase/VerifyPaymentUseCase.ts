@@ -5,6 +5,12 @@ import { IVerifyPaymentUseCase } from "../interface/useCases/IVerifyPaymentUseCa
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
+import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { UserRole } from "../../domain/enums/UserRole";
+import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
+import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { IInvoiceRepo } from "../../infrastructure/interface/repositories/IInvoiceRepo";
+
 @injectable()
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
   constructor(
@@ -13,6 +19,11 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
     @inject(TYPES.ISubscriptionRepo)
     private _subscriptionRepo: ISubscriptionRepo,
+    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
+    @inject(TYPES.ICreateNotificationUseCase)
+    private _createNotificationUseCase: ICreateNotificationUseCase,
+    @inject(TYPES.ISocketService) private _socketService: ISocketService,
+    @inject(TYPES.IInvoiceRepo) private _invoiceRepo: IInvoiceRepo,
   ) {}
 
   async execute(
@@ -22,7 +33,6 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     orgId: string,
   ): Promise<boolean> {
     try {
-      // 1. Verify Signature
       const isValid = this._razorpayService.verifySignature(
         orderId,
         paymentId,
@@ -30,12 +40,6 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
       );
 
       if (!isValid) return false;
-
-      // 2. Identify Plan & Update
-      // Since we now create Orders, 'orderId' is a Razorpay Order ID (starting with order_).
-      // We stored this orderId in the 'Subscription' table under 'razorpaySubscriptionId' field.
-
-      // Find the local subscription record using the Order ID
       const localSub =
         await this._subscriptionRepo.findByRazorpaySubscriptionId(orderId);
 
@@ -43,29 +47,58 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
         const plan = await this._planRepo.findById(localSub.planId);
 
         if (plan) {
-          // Update Organization
           await this._orgRepo.update(orgId, {
             subscriptionStatus: "ACTIVE",
-            razorpaySubscriptionId: orderId, // It's an Order ID now, but we store it here
+            razorpaySubscriptionId: orderId,
             planId: plan.id,
             subscriptionStartsAt: new Date(),
-            subscriptionEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days default for now
-            // Update limits based on plan
+            subscriptionEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             maxUsers: plan.limits.members,
             maxManagers: plan.limits.projects,
           });
 
-          // Update Subscription Status
           await this._subscriptionRepo.update(localSub.id, {
             status: "active",
           });
+
+          await this._invoiceRepo.create({
+            orgId: orgId,
+            planId: plan.id,
+            razorpayPaymentId: paymentId,
+            amount: plan.price,
+            currency: plan.currency || "INR",
+            status: "PAID",
+          });
+
+          const organization = await this._orgRepo.findById(orgId);
+          if (organization) {
+            const superAdmins = await this._userRepo.findByRole(
+              UserRole.SUPER_ADMIN,
+            );
+
+            for (const admin of superAdmins) {
+              await this._createNotificationUseCase.execute(
+                admin.id,
+                "Plan Purchased",
+                `Organization "${organization.name}" has successfully purchased the ${plan.name} plan.`,
+                "SUCCESS",
+                orgId,
+              );
+            }
+          }
+
+          this._socketService.emitToRole(
+            UserRole.SUPER_ADMIN,
+            "plan:purchased",
+            {
+              organizationName: organization?.name,
+              planName: plan.name,
+              organizationId: orgId,
+            },
+          );
         }
       } else {
-        // Fallback for legacy subscriptions or direct Razorpay subscription flow (if any)
-        // This block preserves the old logic just in case, or we can just log error.
-        // For this refactor, let's assume we rely on local DB record.
         console.warn("Local subscription record not found for order:", orderId);
-        // We could try fetching from Razorpay if it was a real Subscription, but we are moving away from it.
       }
     } catch (error) {
       console.error("Failed to verify payment and update subscription", error);

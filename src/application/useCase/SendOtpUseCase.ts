@@ -6,8 +6,8 @@ import { IOtpService } from "../../infrastructure/interface/services/IOtpService
 import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
 import {
-  ValidationError,
   TooManyRequestsError,
   InvalidOperationError,
 } from "../../domain/errors/CommonErrors";
@@ -20,6 +20,8 @@ export class SendOtpUseCase implements ISendOtpUseCase {
     @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.ICacheService) private readonly _cache: ICacheService,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
   ) {}
 
   /**
@@ -34,9 +36,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
 
     try {
       // Business Rule: Validate email format
-      if (!this._isValidEmail(email)) {
-        throw new ValidationError("Invalid email format");
-      }
+      this._authValidationService.validateEmail(email);
 
       // Business Rule: Check rate limiting
       const attemptsRemaining = await this._checkRateLimit(email);
@@ -49,7 +49,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
       const otp = this._otpService.generateOtp(6); // 6-digit OTP
       const expiresAt = this._otpService.generateExpiry(1); // 1 minute from now
 
-      await this._userRepo.ensureUserWithOtp(email, otp, expiresAt);
+      await this._otpService.ensureUserWithOtp(email, otp, expiresAt);
 
       // Send OTP via email
       await this._emailService.sendOtpEmail(email, otp, "Email verification");
@@ -79,7 +79,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
 
     try {
       // Business Rule: Check if previous OTP is still valid
-      const existingOtp = await this._userRepo.getOtp(email);
+      const existingOtp = await this._otpService.getOtp(email);
       if (existingOtp && existingOtp.expiresAt > new Date()) {
         const remainingTime = Math.ceil(
           (existingOtp.expiresAt.getTime() - Date.now()) / 1000 / 60,
@@ -120,15 +120,4 @@ export class SendOtpUseCase implements ISendOtpUseCase {
       return 0;
     }
   }
-
-  /**
-   * Validate email format
-   * @param email - Email to validate
-   * @returns Whether email is valid
-   */
-  private _isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
 }
-

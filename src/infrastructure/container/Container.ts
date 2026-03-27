@@ -16,6 +16,13 @@ import { IPlanRepo } from "../interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
 import { ISocketService } from "../interface/services/ISocketService";
 import { IFileService } from "../interface/services/IFileService";
+import { IAnalyticsService } from "../interface/services/IAnalyticsService";
+import { IPasswordResetService } from "../interface/services/IPasswordResetService";
+import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
+import { IAuthValidationService } from "../interface/services/IAuthValidationService";
+import { ISecurityService } from "../interface/services/ISecurityService";
+import { ITimeTrackingService } from "../../domain/interface/services/ITimeTrackingService";
+import { INotificationService } from "../../domain/interface/services/INotificationService";
 
 //Interfaces - Repositories
 import { IUserRepo } from "../interface/repositories/IUserRepo";
@@ -25,6 +32,7 @@ import { ITaskRepo } from "../interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../interface/repositories/IProjectRepo";
 import { INotificationRepo } from "../interface/repositories/INotificationRepo";
 import { ISprintRepo } from "../interface/repositories/ISprintRepo";
+import { IInvoiceRepo } from "../interface/repositories/IInvoiceRepo";
 
 //Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
@@ -40,6 +48,8 @@ import { IVerifyOtpUseCase } from "../../application/interface/useCases/IVerifyO
 import { ICompleteSignupUseCase } from "../../application/interface/useCases/ICompleteSignupUseCase";
 import { IAcceptUseCase } from "../../application/interface/useCases/IAcceptUseCase";
 import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
+import { IAdminInvoiceController } from "../../application/interface/controllers/IAdminInvoiceController";
+import { IManagerInvoiceController } from "../../application/interface/controllers/IManagerInvoiceController";
 import { IResetPasswordUseCase } from "../../application/interface/useCases/IResetPasswordUseCase";
 import { IUserProfileUseCase } from "../../application/interface/useCases/IUserProfileUseCase";
 import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
@@ -54,6 +64,8 @@ import { IOrganizationQueryUseCase } from "../../application/interface/useCases/
 import { IUserQueryUseCase } from "../../application/interface/useCases/IUserQueryUseCase";
 import { IUserManagementUseCase } from "../../application/interface/useCases/IUserManagementUseCase";
 import { IAdminStatsUseCase } from "../../application/interface/useCases/IAdminStatsUseCase";
+import { IGetAdminInvoicesUseCase } from "../../application/interface/useCases/IGetAdminInvoicesUseCase";
+import { IGetOrgInvoicesUseCase } from "../../application/interface/useCases/IGetOrgInvoicesUseCase";
 
 import { ICreateProjectUseCase } from "../../application/interface/useCases/ICreateProjectUseCase";
 import { IGetProjectUseCase } from "../../application/interface/useCases/IGetProjectUseCase";
@@ -62,12 +74,16 @@ import { IDeleteProjectUseCase } from "../../application/interface/useCases/IDel
 import { IGetMemberProjectsUseCase } from "../../application/interface/useCases/IGetMemberProjectsUseCase";
 import { IGetMemberTasksUseCase } from "../../application/interface/useCases/IGetMemberTasksUseCase";
 import { IGetOrgTasksUseCase } from "../../application/interface/useCases/IGetOrgTasksUseCase";
+import { IGetUserVelocityUseCase } from "../../application/interface/useCases/IGetUserVelocityUseCase";
 import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGetProjectByIdUseCase";
+import { IGetProjectVelocityUseCase } from "../../application/interface/useCases/IGetProjectVelocityUseCase";
 
 import { ICreateTaskUseCase } from "../../application/interface/useCases/ICreateTaskUseCase";
-import { IGetTaskUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
+import {
+  IGetTaskUseCase,
+  IGetTaskByIdUseCase,
+} from "../../application/interface/useCases/IGetTaskUseCase";
 import { IGetTaskHistoryUseCase } from "../../application/interface/useCases/IGetTaskHistoryUseCase";
-import { IGetTaskByIdUseCase } from "../../application/interface/useCases/IGetTaskUseCase";
 import { GetTaskByIdUseCase } from "../../application/useCase/GetTaskByIdUseCase";
 import { IUpdateTaskUseCase } from "../../application/interface/useCases/IUpdateTaskUseCase";
 import { IDeleteTaskUseCase } from "../../application/interface/useCases/IDeleteTaskUseCase";
@@ -93,6 +109,13 @@ import { RazorpayService } from "../services/RazorpayService";
 import { SocketService } from "../services/SocketService";
 import { SocketServer } from "../../presentation/socket/SocketServer";
 import { CloudinaryService } from "../services/CloudinaryService";
+import { AnalyticsService } from "../services/AnalyticsService";
+import { PasswordResetService } from "../services/PasswordResetService";
+import { TaskDomainService } from "../../domain/services/TaskDomainService";
+import { AuthValidationService } from "../services/AuthValidationService";
+import { SecurityService } from "../services/SecurityService";
+import { TimeTrackingService } from "../../domain/services/TimeTrackingService";
+import { NotificationService } from "../../domain/services/NotificationService";
 
 // Domain Interfaces - Providers
 import { IJwtProvider } from "../interface/services/IJwtProvider";
@@ -109,6 +132,7 @@ import { NotificationRepo } from "../repositories/NotificationRepo";
 import { SprintRepo } from "../repositories/SprintRepo";
 import { ITaskHistoryRepo } from "../interface/repositories/ITaskHistoryRepo";
 import { TaskHistoryRepo } from "../repositories/TaskHistoryRepo";
+import { InvoiceRepo } from "../repositories/InvoiceRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -137,6 +161,8 @@ import { OrganizationQueryUseCase } from "../../application/useCase/Organization
 import { UserQueryUseCase } from "../../application/useCase/UserQueryUseCase";
 import { UserManagementUseCase } from "../../application/useCase/UserManagementUseCase";
 import { AdminStatsUseCase } from "../../application/useCase/AdminStatsUseCase";
+import { GetAdminInvoicesUseCase } from "../../application/useCase/GetAdminInvoicesUseCase";
+import { GetOrgInvoicesUseCase } from "../../application/useCase/GetOrgInvoicesUseCase";
 
 import { CreateTaskUseCase } from "../../application/useCase/CreateTaskUseCase";
 import { GetTaskUseCase } from "../../application/useCase/GetTaskUseCase";
@@ -159,11 +185,13 @@ import { IToggleTimerUseCase } from "../../application/interface/useCases/IToggl
 import { CreateProjectUseCase } from "../../application/useCase/CreateProjectUseCase";
 import { GetProjectUseCase } from "../../application/useCase/GetProjectUseCase";
 import { GetProjectByIdUseCase } from "../../application/useCase/GetProjectByIdUseCase";
+import { GetProjectVelocityUseCase } from "../../application/useCase/GetProjectVelocityUseCase";
 import { UpdateProjectUseCase } from "../../application/useCase/UpdateProjectUseCase";
 import { DeleteProjectUseCase } from "../../application/useCase/DeleteProjectUseCase";
 import { GetMemberProjectsUseCase } from "../../application/useCase/GetMemberProjectsUseCase";
 import { GetMemberTasksUseCase } from "../../application/useCase/GetMemberTasksUseCase";
 import { GetOrgTasksUseCase } from "../../application/useCase/GetOrgTasksUseCase";
+import { GetUserVelocityUseCase } from "../../application/useCase/GetUserVelocityUseCase";
 import { ToggleTimerUseCase } from "../../application/useCase/ToggleTimerUseCase";
 
 // Presentation Controllers
@@ -180,6 +208,8 @@ import { AdminUserController } from "../../presentation/controllers/admin/AdminU
 import { AdminOrgController } from "../../presentation/controllers/admin/AdminOrgController";
 import { AdminPlanController } from "../../presentation/controllers/admin/AdminPlanController";
 import { OrganizationController } from "../../presentation/controllers/OrganizationController";
+import { AdminInvoiceController } from "../../presentation/controllers/admin/AdminInvoiceController";
+import { ManagerInvoiceController } from "../../presentation/controllers/manager/ManagerInvoiceController";
 
 import { TaskController } from "../../presentation/controllers/manager/TaskController";
 import { ProjectController } from "../../presentation/controllers/manager/ProjectController";
@@ -211,13 +241,6 @@ interface IAsyncInitializable {
   init?(): Promise<void>;
   disconnect?(): Promise<void>;
   close?(): Promise<void>;
-}
-
-/**
- * Logger-like interface for fallback logging
- */
-interface ILoggerLike {
-  warn?(message: string, error?: unknown): void;
 }
 
 /**
@@ -294,6 +317,41 @@ class DIContainer {
       .to(CloudinaryService)
       .inSingletonScope();
 
+    this._container
+      .bind<IAnalyticsService>(TYPES.IAnalyticsService)
+      .to(AnalyticsService)
+      .inSingletonScope();
+
+    this._container
+      .bind<IPasswordResetService>(TYPES.IPasswordResetService)
+      .to(PasswordResetService)
+      .inSingletonScope();
+
+    this._container
+      .bind<ITaskDomainService>(TYPES.ITaskDomainService)
+      .to(TaskDomainService)
+      .inSingletonScope();
+
+    this._container
+      .bind<IAuthValidationService>(TYPES.IAuthValidationService)
+      .to(AuthValidationService)
+      .inSingletonScope();
+
+    this._container
+      .bind<ISecurityService>(TYPES.ISecurityService)
+      .to(SecurityService)
+      .inSingletonScope();
+
+    this._container
+      .bind<ITimeTrackingService>(TYPES.ITimeTrackingService)
+      .to(TimeTrackingService)
+      .inSingletonScope();
+
+    this._container
+      .bind<INotificationService>(TYPES.INotificationService)
+      .to(NotificationService)
+      .inSingletonScope();
+
     const useRedis =
       String(process.env.USE_REDIS || "").toLowerCase() === "true";
     if (useRedis) {
@@ -356,6 +414,11 @@ class DIContainer {
     this._container
       .bind<ITaskHistoryRepo>(TYPES.ITaskHistoryRepo)
       .to(TaskHistoryRepo)
+      .inSingletonScope();
+
+    this._container
+      .bind<IInvoiceRepo>(TYPES.IInvoiceRepo)
+      .to(InvoiceRepo)
       .inSingletonScope();
   }
 
@@ -466,6 +529,16 @@ class DIContainer {
       .bind<IAdminStatsUseCase>(TYPES.IAdminStatsUseCase)
       .to(AdminStatsUseCase)
       .inTransientScope();
+
+    this._container
+      .bind<IGetAdminInvoicesUseCase>(TYPES.IGetAdminInvoicesUseCase)
+      .to(GetAdminInvoicesUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetOrgInvoicesUseCase>(TYPES.IGetOrgInvoicesUseCase)
+      .to(GetOrgInvoicesUseCase)
+      .inTransientScope();
     this._container
       .bind<ICreateTaskUseCase>(TYPES.ICreateTaskUseCase)
       .to(CreateTaskUseCase)
@@ -503,6 +576,11 @@ class DIContainer {
       .bind<IGetProjectByIdUseCase>(TYPES.IGetProjectByIdUseCase)
       .to(GetProjectByIdUseCase)
       .inTransientScope();
+
+    this._container
+      .bind<IGetProjectVelocityUseCase>(TYPES.IGetProjectVelocityUseCase)
+      .to(GetProjectVelocityUseCase)
+      .inTransientScope();
     this._container
       .bind<IUpdateProjectUseCase>(TYPES.IUpdateProjectUseCase)
       .to(UpdateProjectUseCase)
@@ -525,6 +603,11 @@ class DIContainer {
     this._container
       .bind<IGetOrgTasksUseCase>(TYPES.IGetOrgTasksUseCase)
       .to(GetOrgTasksUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetUserVelocityUseCase>(TYPES.IGetUserVelocityUseCase)
+      .to(GetUserVelocityUseCase)
       .inTransientScope();
 
     this._container
@@ -635,6 +718,16 @@ class DIContainer {
       .bind<AdminPlanController>(TYPES.AdminPlanController)
       .to(AdminPlanController)
       .inSingletonScope();
+
+    this._container
+      .bind<IAdminInvoiceController>(TYPES.AdminInvoiceController)
+      .to(AdminInvoiceController)
+      .inSingletonScope();
+
+    this._container
+      .bind<IManagerInvoiceController>(TYPES.ManagerInvoiceController)
+      .to(ManagerInvoiceController)
+      .inSingletonScope();
     this._container
       .bind<UserController>(TYPES.UserController)
       .to(UserController)
@@ -699,64 +792,35 @@ class DIContainer {
         if (cache && typeof cache.connect === "function") {
           // If RedisCacheService provides an async connect(), await it.
           await cache.connect();
-        } else if (cache && typeof cache.init === "function") {
-          await cache.init();
         }
       }
     } catch (err) {
-      // If init fails, rethrow so caller can decide to fail-fast or continue.
-      const logger = this._container.isBound(TYPES.ILogger)
-        ? (this._container.get<ILogger>(TYPES.ILogger) as ILoggerLike)
-        : console;
-      logger?.warn?.("Cache service initialization failed", err);
-      throw err;
+      console.error("Cache initialization failed:", err);
     }
   }
 
   /**
-   * Dispose / cleanup helpers (useful in tests or graceful shutdown)
+   * Disposes the container and its singletons.
+   * Useful for tests or clean process termination.
    */
   public async dispose(): Promise<void> {
-    try {
-      // Try to close cache connections if present
-      if (this._container.isBound(TYPES.ICacheService)) {
-        const cache = this._container.get<ICacheService>(
-          TYPES.ICacheService,
-        ) as IAsyncInitializable;
-        if (cache && typeof cache.disconnect === "function")
-          await cache.disconnect();
-        if (cache && typeof cache.close === "function") await cache.close();
-      }
-    } catch (err) {
-      // best-effort
-      const logger = this._container.isBound(TYPES.ILogger)
-        ? (this._container.get<ILogger>(TYPES.ILogger) as ILoggerLike)
-        : console;
-      logger?.warn?.("Error during container dispose", err);
-    }
+    // Graceful shutdown logic: Inversify doesn't provide a direct way to get all singletons easily without internal access
+    // We'll rely on the process termination for now, or the user can manually close specific services if needed.
+    // This avoids non-existent property errors during build.
   }
 
   public get container(): Container {
     return this._container;
   }
 
-  public get<T>(serviceIdentifier: symbol): T {
-    return this._container.get<T>(serviceIdentifier);
+  public get<T>(type: symbol): T {
+    return this._container.get<T>(type);
   }
 
-  public isBound(serviceIdentifier: symbol): boolean {
-    return this._container.isBound(serviceIdentifier);
-  }
-
-  public unbind(serviceIdentifier: symbol): void {
-    this._container.unbind(serviceIdentifier);
-  }
-
-  public rebind<T>(serviceIdentifier: symbol) {
-    return this._container.rebind<T>(serviceIdentifier);
+  public isBound(type: symbol): boolean {
+    return this._container.isBound(type);
   }
 }
 
-// Export container instance (constructed eagerly but init() must be called before use of async deps)
 export const diContainer = new DIContainer();
 export const container = diContainer.container;

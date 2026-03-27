@@ -32,11 +32,18 @@ export function createProjectRoutes(container: Container): Router {
   router.get(API_ROUTES.PROJECTS.GET_BY_ID(":id"), (req, res, next) =>
     projectCtrl.getProjectById(req, res, next),
   );
+  router.get(API_ROUTES.PROJECTS.VELOCITY(":id"), (req, res, next) =>
+    projectCtrl.getProjectVelocity(req, res, next),
+  );
   router.put(API_ROUTES.PROJECTS.UPDATE(":id"), (req, res, next) =>
     projectCtrl.updateProject(req, res, next),
   );
   router.delete(API_ROUTES.PROJECTS.DELETE(":id"), (req, res, next) =>
     projectCtrl.deleteProject(req, res, next),
+  );
+
+  router.get(API_ROUTES.PROJECTS.MEMBERS(":id"), (req, res, next) =>
+    projectCtrl.getProjectMembers(req, res, next),
   );
 
   // Tasks
@@ -47,6 +54,9 @@ export function createProjectRoutes(container: Container): Router {
     taskCtrl.getAllTasks(req, res, next),
   );
 
+  router.get(API_ROUTES.PROJECTS.TASK_UPDATE(":id"), (req, res, next) =>
+    taskCtrl.getTaskById(req, res, next),
+  );
   router.put(API_ROUTES.PROJECTS.TASK_UPDATE(":id"), (req, res, next) =>
     taskCtrl.updateTask(req, res, next),
   );
@@ -60,14 +70,12 @@ export function createProjectRoutes(container: Container): Router {
     taskCtrl.getTaskHistory(req, res, next),
   );
 
-  router.post(
-    `${API_ROUTES.PROJECTS.BASE}/tasks/:id/comments`,
-    (req, res, next) => taskCtrl.addComment(req, res, next),
+  router.post(API_ROUTES.PROJECTS.TASK_COMMENTS(":id"), (req, res, next) =>
+    taskCtrl.addComment(req, res, next),
   );
 
-  router.post(
-    `${API_ROUTES.PROJECTS.BASE}/tasks/:id/attachments`,
-    (req, res, next) => taskCtrl.addAttachment(req, res, next),
+  router.post(API_ROUTES.PROJECTS.TASK_ATTACHMENTS(":id"), (req, res, next) =>
+    taskCtrl.addAttachment(req, res, next),
   );
 
   // Sprints

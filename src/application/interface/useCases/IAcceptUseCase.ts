@@ -1,6 +1,5 @@
-import { User } from "../../../domain/entities/User";
-import { Organization } from "../../../domain/entities/Organization";
-import { Invite } from "../../../domain/entities/Invite";
+import { UserDTO } from "../../dto/UserDTO";
+import { InviteDTO } from "../../dto/InviteDTO";
 
 export interface IAcceptUseCase {
   /**
@@ -13,8 +12,8 @@ export interface IAcceptUseCase {
     lastName: string,
     additionalData?: Record<string, unknown>,
   ): Promise<{
-    user: Partial<User>;
-    organization: Partial<Organization>;
+    user: UserDTO;
+    organization: { id: string; name: string; status: string };
     tokens: {
       accessToken: string;
       refreshToken: string;
@@ -27,7 +26,9 @@ export interface IAcceptUseCase {
    */
   validateInvitationToken(token: string): Promise<{
     valid: boolean;
-    invitation?: Partial<Invite>;
+    invitation?: InviteDTO;
     expired?: boolean;
+    cancelled?: boolean;
+    accepted?: boolean;
   }>;
 }

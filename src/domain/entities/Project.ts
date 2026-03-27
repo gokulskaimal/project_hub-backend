@@ -9,6 +9,7 @@ export interface Project {
   priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   tags?: string[];
   teamMemberIds?: string[];
+  tasksPerWeek?: number;
   taskSequence?: number;
   key?: string;
   createdAt: Date;

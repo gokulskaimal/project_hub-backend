@@ -4,12 +4,16 @@ export interface IUserProfileUseCase {
   /**
    * Get user profile by ID
    */
-  getProfile(userId: string): Promise<UserDTO>;
+  getProfile(userId: string, requesterId: string): Promise<UserDTO>;
 
   /**
    * Update user profile
    */
-  updateProfile(userId: string, updateData: UpdateProfileRequestDTO): Promise<UserDTO>;
+  updateProfile(
+    userId: string,
+    updateData: UpdateProfileRequestDTO,
+    requesterId: string,
+  ): Promise<UserDTO>;
 
   /**
    * Change user password
@@ -18,12 +22,17 @@ export interface IUserProfileUseCase {
     userId: string,
     currentPassword: string,
     newPassword: string,
+    requesterId: string,
   ): Promise<void>;
 
   /**
    * Delete user account (soft delete)
    */
-  deleteAccount(userId: string, password: string): Promise<void>;
+  deleteAccount(
+    userId: string,
+    password: string,
+    requesterId: string,
+  ): Promise<void>;
 
   /**
    * Get user activity history
@@ -32,5 +41,6 @@ export interface IUserProfileUseCase {
     userId: string,
     limit: number,
     offset: number,
+    requesterId: string,
   ): Promise<Record<string, unknown>[]>;
 }

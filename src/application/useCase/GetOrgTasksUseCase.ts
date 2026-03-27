@@ -4,16 +4,21 @@ import { TYPES } from "../../infrastructure/container/types";
 import { IGetOrgTasksUseCase } from "../interface/useCases/IGetOrgTasksUseCase";
 import { Task } from "../../domain/entities/Task";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class GetOrgTasksUseCase implements IGetOrgTasksUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
-  async execute(orgId: string): Promise<Task[]> {
-    this._logger.info(`Fetching tasks for organization: ${orgId}`);
+  async execute(orgId: string, requesterId: string): Promise<Task[]> {
+    this._logger.info(
+      `Fetching tasks for organization: ${orgId} (Requested by: ${requesterId})`,
+    );
+    await this._securityService.validateOrgAccess(requesterId, orgId);
     return this._taskRepo.findByOrganization(orgId);
   }
 }

@@ -21,6 +21,9 @@ export function createUserRoutes(container: Container): Router {
   router.post(API_ROUTES.USER.CHANGE_PASSWORD, (req, res, next) =>
     controller.changePassword(req as AuthenticatedRequest, res, next),
   );
+  router.get(API_ROUTES.USER.VELOCITY, (req, res, next) =>
+    controller.getVelocity(req as AuthenticatedRequest, res, next),
+  );
   router.delete(API_ROUTES.USER.DELETE_ACCOUNT, (req, res, next) =>
     controller.deleteAccount(req as AuthenticatedRequest, res, next),
   );

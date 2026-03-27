@@ -40,6 +40,11 @@ export interface Task {
   createdBy?: string;
   timeLogs?: TimeLog[];
   totalTimeSpent?: number;
-  attachments?: string[];
+  attachments?: Array<{
+    name: string;
+    url: string;
+    size?: number;
+    type?: string;
+  }>;
   comments?: TaskComment[];
 }

@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
 import { ICreateTaskUseCase } from "../../../application/interface/useCases/ICreateTaskUseCase";
-import { IGetTaskUseCase } from "../../../application/interface/useCases/IGetTaskUseCase";
-import { IGetTaskByIdUseCase } from "../../../application/interface/useCases/IGetTaskUseCase";
+import {
+  IGetTaskUseCase,
+  IGetTaskByIdUseCase,
+} from "../../../application/interface/useCases/IGetTaskUseCase";
 import { IUpdateTaskUseCase } from "../../../application/interface/useCases/IUpdateTaskUseCase";
 import { IDeleteTaskUseCase } from "../../../application/interface/useCases/IDeleteTaskUseCase";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
@@ -14,12 +16,14 @@ import {
   EntityNotFoundError,
 } from "../../../domain/errors/CommonErrors";
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ISendMessageUseCase } from "../../../application/interface/useCases/ISendMessageUseCase";
 import { toTaskDTO } from "../../../application/dto/TaskDTO";
 import {
   TaskCreateSchema,
   TaskUpdateSchema,
+  TaskCommentCreateSchema,
 } from "../../../application/dto/ValidationSchemas";
-import { Task, TaskComment } from "../../../domain/entities/Task";
+import { Task } from "../../../domain/entities/Task";
 
 import { IGetMemberTasksUseCase } from "../../../application/interface/useCases/IGetMemberTasksUseCase";
 import { IGetOrgTasksUseCase } from "../../../application/interface/useCases/IGetOrgTasksUseCase";
@@ -27,6 +31,7 @@ import { IToggleTimerUseCase } from "../../../application/interface/useCases/ITo
 import { UserRole } from "../../../domain/enums/UserRole";
 
 import { IGetTaskHistoryUseCase } from "../../../application/interface/useCases/IGetTaskHistoryUseCase";
+import { toTaskHistoryDTO } from "../../../application/dto/TaskHistoryDTO";
 
 @injectable()
 export class TaskController {
@@ -46,13 +51,32 @@ export class TaskController {
     private _toggleTimerUC: IToggleTimerUseCase,
     @inject(TYPES.IGetTaskHistoryUseCase)
     private _getTaskHistoryUC: IGetTaskHistoryUseCase,
+    @inject(TYPES.ISendMessageUseCase)
+    private _sendMessageUC: ISendMessageUseCase,
   ) {}
+
+  private sendSuccess<T>(
+    res: Response,
+    data: T,
+    message: string = "Success",
+    status: number = StatusCodes.OK,
+  ): void {
+    res.status(status).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   getTaskHistory = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this._logger.info(`Fetching history for Task ${id}`);
-    const history = await this._getTaskHistoryUC.execute(id);
-    res.status(StatusCodes.OK).json({ success: true, data: history });
+    const history = await this._getTaskHistoryUC.execute(
+      id,
+      (req as AuthenticatedRequest).user!.id,
+    );
+    this.sendSuccess(res, history.map(toTaskHistoryDTO));
   });
 
   createTask = asyncHandler(async (req: Request, res: Response) => {
@@ -60,9 +84,7 @@ export class TaskController {
     if (!authReq.user || !authReq.user.orgId)
       throw new ValidationError("Unauthorized: Missing user context");
 
-    // 1. Zod Parsing & Validation
     const validation = TaskCreateSchema.safeParse(req.body);
-
     if (!validation.success) {
       res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -75,17 +97,17 @@ export class TaskController {
     const validatedData = validation.data;
     const { projectId, title } = validatedData;
 
-    // build typed input with converted dueDate
     const taskInput: Partial<Task> = {
       orgId: authReq.user.orgId,
       projectId: validatedData.projectId,
       title: validatedData.title,
       priority: validatedData.priority,
       type: validatedData.type,
-      description: validatedData.description,
-      storyPoints: validatedData.storyPoints,
-      assignedTo: validatedData.assignedTo,
-      parentTaskId: validatedData.parentTaskId,
+      description: validatedData.description ?? undefined,
+      storyPoints: validatedData.storyPoints ?? undefined,
+      assignedTo: validatedData.assignedTo ?? undefined,
+      sprintId: (req.body as { sprintId?: string }).sprintId,
+      parentTaskId: validatedData.parentTaskId ?? undefined,
       ...(validatedData.dueDate
         ? { dueDate: new Date(validatedData.dueDate) }
         : {}),
@@ -93,18 +115,26 @@ export class TaskController {
 
     this._logger.info(`Creating task '${title}' in Project ${projectId}`);
     const task = await this._createTaskUC.execute(taskInput, authReq.user.id);
-    res
-      .status(StatusCodes.CREATED)
-      .json({ success: true, data: toTaskDTO(task) });
+    this.sendSuccess(res, toTaskDTO(task), "Task created", StatusCodes.CREATED);
+  });
+
+  getTaskById = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    this._logger.info(`Fetching Task ${id}`);
+    const task = await this._getTaskByIdUC.execute(
+      id,
+      (req as AuthenticatedRequest).user!.id,
+    );
+    if (!task) throw new EntityNotFoundError("Task", id);
+    this.sendSuccess(res, toTaskDTO(task));
   });
 
   getAllTasks = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
+    const authReq = req as AuthenticatedRequest;
     this._logger.info(`Fetching tasks for Project ${projectId}`);
-    const tasks = await this._getTaskUC.execute(projectId);
-    res
-      .status(StatusCodes.OK)
-      .json({ success: true, data: tasks.map(toTaskDTO) });
+    const tasks = await this._getTaskUC.execute(projectId, authReq.user!.id);
+    this.sendSuccess(res, tasks.map(toTaskDTO));
   });
 
   getMemberTasks = asyncHandler(async (req: Request, res: Response) => {
@@ -124,15 +154,13 @@ export class TaskController {
       if (!orgId)
         throw new ValidationError("Unauthorized: Missing org context");
       this._logger.info(`Fetching tasks for org ${orgId}`);
-      tasks = await this._getOrgTasksUC.execute(orgId);
+      tasks = await this._getOrgTasksUC.execute(orgId, userId);
     } else {
       this._logger.info(`Fetching tasks for member ${userId}`);
-      tasks = await this._getMemberTasksUC.execute(userId);
+      tasks = await this._getMemberTasksUC.execute(userId, userId);
     }
 
-    res
-      .status(StatusCodes.OK)
-      .json({ success: true, data: tasks.map(toTaskDTO) });
+    this.sendSuccess(res, tasks.map(toTaskDTO));
   });
 
   updateTask = asyncHandler(async (req: Request, res: Response) => {
@@ -140,7 +168,6 @@ export class TaskController {
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user) throw new ValidationError("Unauthorized");
 
-    // Zod parsing & Validation
     const validation = TaskUpdateSchema.safeParse(req.body);
     if (!validation.success) {
       res.status(StatusCodes.BAD_REQUEST).json({
@@ -151,10 +178,16 @@ export class TaskController {
       return;
     }
 
-    const { dueDate, parentTaskId, ...rest } = validation.data;
+    const { dueDate, parentTaskId, status, sprintId, ...rest } =
+      validation.data;
     const taskInput: Partial<Task> = {
       ...rest,
-      ...(parentTaskId ? { parentTaskId } : {}),
+      status: status as Task["status"],
+      sprintId: sprintId ?? undefined,
+      parentTaskId: parentTaskId ?? undefined,
+      description: rest.description ?? undefined,
+      storyPoints: rest.storyPoints ?? undefined,
+      assignedTo: rest.assignedTo ?? undefined,
       ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
     };
 
@@ -164,14 +197,17 @@ export class TaskController {
       taskInput,
       authReq.user.id,
     );
-    res.status(StatusCodes.OK).json({ success: true, data: toTaskDTO(task) });
+    this.sendSuccess(res, toTaskDTO(task), "Task updated");
   });
 
   deleteTask = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
+
     this._logger.info(`Deleting task ${id}`);
-    await this._deleteTaskUC.execute(id);
-    res.status(StatusCodes.OK).json({ success: true, message: "Task deleted" });
+    await this._deleteTaskUC.execute(id, authReq.user.id);
+    this.sendSuccess(res, null, "Task deleted");
   });
 
   toggleTimer = asyncHandler(async (req: Request, res: Response) => {
@@ -192,60 +228,115 @@ export class TaskController {
       throw new EntityNotFoundError("Task", id);
     }
 
-    res.status(StatusCodes.OK).json({ success: true, data: toTaskDTO(task) });
+    this.sendSuccess(res, toTaskDTO(task));
   });
 
   addComment = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { text } = req.body;
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user) throw new ValidationError("Unauthorized");
 
+    const validation = TaskCommentCreateSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation Error",
+        errors: validation.error.format(),
+      });
+      return;
+    }
+
+    const { text } = validation.data;
     this._logger.info(
       `Adding comment to task ${id} by user ${authReq.user.id}`,
     );
 
-    // use dedicated query use case for lookup
-    const task = await this._getTaskByIdUC.execute(id);
+    const task = await this._getTaskByIdUC.execute(id, authReq.user.id);
     if (!task) throw new EntityNotFoundError("Task not found");
 
-    const updatedComments: TaskComment[] = task.comments || [];
-    updatedComments.push({
-      userId: authReq.user.id,
-      text,
-      createdAt: new Date(),
-    });
+    const existingComments = (task.comments || []).map(
+      (c: { userId: string; text: string; createdAt: Date }) => ({
+        userId: c.userId,
+        text: c.text,
+        createdAt: c.createdAt,
+      }),
+    );
+
+    const updatedComments = [
+      ...existingComments,
+      {
+        userId: authReq.user.id,
+        text,
+        createdAt: new Date(),
+      },
+    ];
 
     const updated = await this._updateTaskUC.execute(
       id,
       { comments: updatedComments },
       authReq.user.id,
     );
-    res
-      .status(StatusCodes.OK)
-      .json({ success: true, data: toTaskDTO(updated) });
+
+    this.sendSuccess(res, toTaskDTO(updated), "Comment added");
+
+    // Send an activity message to the project chat
+    try {
+      const userName = authReq.user.firstName
+        ? `${authReq.user.firstName} ${authReq.user.lastName || ""}`.trim()
+        : authReq.user.name || "A team member";
+
+      await this._sendMessageUC.execute(
+        authReq.user.id,
+        task.projectId,
+        `${userName} commented on task #${task.id.slice(-4)}: "${text.substring(0, 50)}${text.length > 50 ? "..." : ""}"`,
+        "ACTIVITY",
+      );
+    } catch (chatErr) {
+      this._logger.error(
+        "Failed to post task comment to project chat",
+        chatErr as Error,
+      );
+    }
   });
 
   addAttachment = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { url } = req.body; // URL from cloudinary upload
+    const { url, name, size, type } = req.body;
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user) throw new ValidationError("Unauthorized");
 
     this._logger.info(`Adding attachment to task ${id}`);
 
-    const task = await this._getTaskByIdUC.execute(id);
+    const task = await this._getTaskByIdUC.execute(id, authReq.user.id);
     if (!task) throw new EntityNotFoundError("Task not found");
     const updatedAttachments = task.attachments || [];
-    updatedAttachments.push(url);
+    updatedAttachments.push({ url, name: name || "Attachment", size, type });
 
     const updated = await this._updateTaskUC.execute(
       id,
       { attachments: updatedAttachments },
       authReq.user.id,
     );
-    res
-      .status(StatusCodes.OK)
-      .json({ success: true, data: toTaskDTO(updated) });
+
+    this.sendSuccess(res, toTaskDTO(updated), "Attachment added");
+
+    // Send an activity message to the project chat
+    try {
+      const userName = authReq.user.firstName
+        ? `${authReq.user.firstName} ${authReq.user.lastName || ""}`.trim()
+        : authReq.user.name || "A team member";
+
+      await this._sendMessageUC.execute(
+        authReq.user.id,
+        task.projectId,
+        `${userName} attached "${name}" to task #${task.id.slice(-4)}`,
+        "ACTIVITY",
+      );
+    } catch (chatErr) {
+      this._logger.error(
+        "Failed to post task attachment to project chat",
+        chatErr as Error,
+      );
+    }
   });
 }

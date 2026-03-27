@@ -1,6 +1,5 @@
 import { IUserReadRepo } from "./IUserReadRepo";
 import { IUserWriteRepo } from "./IUserWriteRepo";
-import { IUserOtpRepo } from "./IUserOtpRepo";
 
 /**
  * User Repository Interface
@@ -10,7 +9,14 @@ import { IUserOtpRepo } from "./IUserOtpRepo";
  * @extends {IUserWriteRepo}
  * @extends {IUserOtpRepo}
  */
-export interface IUserRepo
-  extends IUserReadRepo,
-    IUserWriteRepo,
-    IUserOtpRepo {}
+export interface IUserRepo extends IUserReadRepo, IUserWriteRepo {
+  getGlobalStats(): Promise<{
+    total: number;
+    active: number;
+    inactive: number;
+    pending: number;
+    verified: number;
+    unverified: number;
+    byRole: Record<string, number>;
+  }>;
+}

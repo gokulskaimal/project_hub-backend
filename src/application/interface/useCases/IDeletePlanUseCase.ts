@@ -1,3 +1,3 @@
 export interface IDeletePlanUseCase {
-  execute(id: string): Promise<boolean>;
+  execute(id: string, requesterId: string): Promise<boolean>;
 }

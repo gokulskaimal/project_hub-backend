@@ -13,10 +13,11 @@ export interface ProjectDTO {
   priority?: string;
   tags?: string[];
   teamMemberIds?: string[];
+  tasksPerWeek?: number;
 }
 
 export function toProjectDTO(project: Project): ProjectDTO {
-  const toIso = (d?: Date | string): string | undefined => 
+  const toIso = (d?: Date | string): string | undefined =>
     d ? new Date(d).toISOString() : undefined;
 
   return {
@@ -31,6 +32,7 @@ export function toProjectDTO(project: Project): ProjectDTO {
     orgId: project.orgId,
     priority: project.priority,
     tags: project.tags,
-    teamMemberIds: project.teamMemberIds
+    teamMemberIds: project.teamMemberIds,
+    tasksPerWeek: project.tasksPerWeek,
   };
 }

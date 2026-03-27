@@ -11,6 +11,13 @@ export const TYPES = {
   IRazorpayService: Symbol.for("IRazorpayService"),
   ISocketService: Symbol.for("ISocketService"),
   IFileService: Symbol.for("IFileService"),
+  IAnalyticsService: Symbol.for("IAnalyticsService"),
+  IPasswordResetService: Symbol.for("IPasswordResetService"),
+  ITaskDomainService: Symbol.for("ITaskDomainService"),
+  IAuthValidationService: Symbol.for("IAuthValidationService"),
+  ISecurityService: Symbol.for("ISecurityService"),
+  ITimeTrackingService: Symbol.for("ITimeTrackingService"),
+  INotificationService: Symbol.for("INotificationService"),
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),
@@ -40,6 +47,7 @@ export const TYPES = {
   IAcceptUseCase: Symbol.for("IAcceptUseCase"),
   IInviteMemberUseCase: Symbol.for("IInviteMemberUseCase"),
   IGetOrgTasksUseCase: Symbol.for("IGetOrgTasksUseCase"),
+  IGetUserVelocityUseCase: Symbol.for("IGetUserVelocityUseCase"),
   IResetPasswordUseCase: Symbol.for("IResetPasswordUseCase"),
   IUserProfileUseCase: Symbol.for("IUserProfileUseCase"),
   IOrganizationManagementUseCase: Symbol.for("IOrganizationManagementUseCase"),
@@ -69,6 +77,7 @@ export const TYPES = {
   ICreateProjectUseCase: Symbol.for("ICreateProjectUseCase"),
   IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
   IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
+  IGetProjectVelocityUseCase: Symbol.for("IGetProjectVelocityUseCase"),
   IUpdateProjectUseCase: Symbol.for("IUpdateProjectUseCase"),
   IDeleteProjectUseCase: Symbol.for("IDeleteProjectUseCase"),
   ICreateNotificationUseCase: Symbol.for("ICreateNotificationUseCase"),
@@ -103,6 +112,8 @@ export const TYPES = {
   ChatController: Symbol.for("ChatController"),
   UploadController: Symbol.for("UploadController"),
   SprintController: Symbol.for("SprintController"),
+  AdminInvoiceController: Symbol.for("AdminInvoiceController"),
+  ManagerInvoiceController: Symbol.for("ManagerInvoiceController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),
@@ -121,6 +132,11 @@ export const TYPES = {
   JwtConfig: Symbol.for("JwtConfig"),
   EmailConfig: Symbol.for("EmailConfig"),
   IBootstrapService: Symbol.for("IBootstrapService"),
+
+  // ===== INVOICE SYSTEM =====
+  IInvoiceRepo: Symbol.for("IInvoiceRepo"),
+  IGetAdminInvoicesUseCase: Symbol.for("IGetAdminInvoicesUseCase"),
+  IGetOrgInvoicesUseCase: Symbol.for("IGetOrgInvoicesUseCase"),
 } as const;
 
 /**

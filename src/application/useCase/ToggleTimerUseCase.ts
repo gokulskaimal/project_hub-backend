@@ -5,12 +5,14 @@ import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo
 import { Task } from "../../domain/entities/Task";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class ToggleTimerUseCase implements IToggleTimerUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
   async execute(
@@ -20,6 +22,11 @@ export class ToggleTimerUseCase implements IToggleTimerUseCase {
   ): Promise<Task | null> {
     const task = await this._taskRepo.findById(taskId);
     if (!task) throw new EntityNotFoundError("Task Not Found", taskId);
+
+    // RBAC Check
+    if (task.orgId) {
+      await this._securityService.validateOrgAccess(userId, task.orgId);
+    }
 
     const now = new Date();
 
@@ -59,9 +66,18 @@ export class ToggleTimerUseCase implements IToggleTimerUseCase {
       totalTimeSpent: task.totalTimeSpent,
     });
 
-    if (updatedTask) {
-      this._socketService.emitToOrganization(
+    if (updatedTask && task.orgId) {
+      // 1. Project Room
+      this._socketService.emitToProject(
+        updatedTask.projectId,
+        "task:updated",
+        updatedTask,
+      );
+
+      // 2. Org Managers
+      this._socketService.emitToRoleInOrg(
         task.orgId,
+        "ORG MANAGER",
         "task:updated",
         updatedTask,
       );

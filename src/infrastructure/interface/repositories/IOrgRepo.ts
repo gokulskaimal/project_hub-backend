@@ -95,16 +95,9 @@ export interface IOrgRepo {
    * @param excludeId - Organization ID to exclude from check
    * @returns Whether name exists
    */
-  nameExists(name: string, excludeId?: string): Promise<boolean>;
-
   /**
-   * Get organization statistics
-   * @returns Organization statistics
+   * Get distribution of organizations by status
+   * @returns Array of status counts
    */
-  getStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    byStatus: Record<string, number>;
-  }>;
+  getStatusDistribution(): Promise<Array<{ _id: string; count: number }>>;
 }

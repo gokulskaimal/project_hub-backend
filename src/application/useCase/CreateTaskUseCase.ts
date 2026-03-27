@@ -4,15 +4,16 @@ import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo
 import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
 import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
 import { ICreateTaskUseCase } from "../interface/useCases/ICreateTaskUseCase";
-import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
+import { INotificationService } from "../../domain/interface/services/INotificationService";
+import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { Task } from "../../domain/entities/Task";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import {
   EntityNotFoundError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
-import { NotificationType } from "../../domain/enums/NotificationType";
 import { User } from "../../domain/entities/User";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
@@ -25,12 +26,18 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.ICreateNotificationUseCase)
-    private _createNotificationUC: ICreateNotificationUseCase,
+    @inject(TYPES.INotificationService)
+    private _notificationService: INotificationService,
+    @inject(TYPES.ITaskDomainService)
+    private _taskDomainService: ITaskDomainService,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
   async execute(data: Partial<Task>, creatorId: string): Promise<Task> {
+    if (data.orgId) {
+      await this._securityService.validateOrgAccess(creatorId, data.orgId);
+    }
     if (!data.projectId) throw new ValidationError("Project Id is required");
     const project = await this._projectRepo.findById(data.projectId);
     if (!project)
@@ -39,35 +46,71 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       throw new ValidationError("Project does not belong to this organization");
 
     if (data.dueDate) {
-      const taskDueDate = new Date(data.dueDate);
+      const sprint = data.sprintId
+        ? await this._sprintRepo.findById(data.sprintId)
+        : null;
+      this._taskDomainService.validateDueDate(
+        new Date(data.dueDate),
+        sprint,
+        project,
+      );
+    }
 
-      if (data.sprintId) {
-        const sprint = await this._sprintRepo.findById(data.sprintId);
-        if (sprint && sprint.startDate && sprint.endDate) {
-          const sprintStart = new Date(sprint.startDate);
-          const sprintEnd = new Date(sprint.endDate);
-          if (taskDueDate < sprintStart || taskDueDate > sprintEnd) {
-            throw new ValidationError(
-              "Task due date must be within the assigned Sprint's start and end dates.",
-            );
-          }
-        }
-      } else {
-        const projectEnd = new Date(project.endDate);
-        const projectStart = project.startDate
-          ? new Date(project.startDate)
-          : null;
+    if (data.sprintId) {
+      const sprint = await this._sprintRepo.findById(data.sprintId);
+      if (!sprint) throw new ValidationError("Sprint not found");
 
-        if (projectStart && taskDueDate < projectStart) {
-          throw new ValidationError(
-            "Task due date cannot be before Project start date.",
-          );
-        }
-        if (taskDueDate > projectEnd) {
-          throw new ValidationError(
-            "Task due date cannot be after Project end date.",
-          );
-        }
+      const capacity = this._taskDomainService.calculateSprintCapacity(
+        sprint,
+        project.tasksPerWeek,
+      );
+      const currentCount = await this._taskRepo.countBySprint(data.sprintId);
+      if (currentCount >= capacity) {
+        throw new ValidationError("Sprint task capacity exceeded.");
+      }
+    }
+
+    const getDayRangeLocal = (): { start: Date; end: Date } => {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    };
+
+    const getSprintWeeks = (start: Date, end: Date): number => {
+      const ms = end.getTime() - start.getTime();
+      return Math.max(1, Math.ceil(ms / (7 * 24 * 60 * 60 * 1000)));
+    };
+
+    if (data.sprintId) {
+      const { start, end } = getDayRangeLocal();
+      const dailyCount = await this._taskRepo.countBySprintAssignedAtRange(
+        data.sprintId,
+        start,
+        end,
+      );
+      if (dailyCount >= 3) {
+        throw new ValidationError(
+          "Daily sprint task limit reached (max 3 tasks per day).",
+        );
+      }
+
+      const sprint = await this._sprintRepo.findById(data.sprintId);
+      if (!sprint) {
+        throw new ValidationError("Sprint not found");
+      }
+
+      const tasksPerWeek = project.tasksPerWeek ?? 25;
+      const weeks = getSprintWeeks(
+        new Date(sprint.startDate),
+        new Date(sprint.endDate),
+      );
+      const sprintCapacity = tasksPerWeek * weeks;
+
+      const currentCount = await this._taskRepo.countBySprint(data.sprintId);
+      if (currentCount >= sprintCapacity) {
+        throw new ValidationError("Sprint task capacity exceeded.");
       }
     }
 
@@ -95,32 +138,39 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
 
     const newTask = await this._taskRepo.create(taskData);
 
-    this._socketService.emitToOrganization(
+    // [NEW] Targeted Real-time Alerts
+    // 1. Project Room (Project Details Live Update)
+    this._socketService.emitToProject(
+      newTask.projectId,
+      "task:created",
+      newTask,
+    );
+
+    // 2. Org Managers (Manager Dashboard Live Update)
+    this._socketService.emitToRoleInOrg(
       data.orgId!,
+      "ORG MANAGER",
       "task:created",
       newTask,
     );
 
     if (newTask.assignedTo) {
+      // Validate that the assignee belongs to this organization
+      await this._securityService.validateUserBelongsToOrg(
+        newTask.assignedTo,
+        data.orgId!,
+      );
+
       this._socketService.emitToUser(
         newTask.assignedTo,
         "task:assigned",
         newTask,
       );
 
-      let message = `You have been assigned to task: ${newTask.title}`;
       const creator = await this._userRepo.findById(creatorId);
       if (creator) {
-        message = `Task assigned to you by ${this.formatUserName(creator)}`;
+        await this._notificationService.notifyTaskAssignment(newTask, creator);
       }
-
-      await this._createNotificationUC.execute(
-        newTask.assignedTo,
-        "New Task Assigned",
-        message,
-        NotificationType.INFO,
-        `/manager/projects/${newTask.projectId}`,
-      );
     }
 
     return newTask;

@@ -6,6 +6,7 @@ import { IHashService } from "../../infrastructure/interface/services/IHashServi
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { toUserDTO } from "../dto/UserDTO";
 import { AuthResult } from "../interface/useCases/types";
@@ -26,10 +27,15 @@ export class LoginUseCase implements ILoginUseCase {
     @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
   ) {}
 
   async execute(email: string, password: string): Promise<AuthResult> {
     this._logger.info("User login attempt", { email });
+
+    this._authValidationService.validateEmail(email);
+    this._authValidationService.validatePassword(password);
 
     try {
       // Super-admin check (env)

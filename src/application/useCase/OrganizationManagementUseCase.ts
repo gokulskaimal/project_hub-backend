@@ -12,6 +12,7 @@ import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizat
 import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
 import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
 import { IDeleteProjectUseCase } from "../interface/useCases/IDeleteProjectUseCase";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class OrganizationManagementUseCase implements IOrganizationManagementUseCase {
@@ -23,6 +24,8 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     @inject(TYPES.IProjectRepo) private readonly _projectRepo: IProjectRepo,
     @inject(TYPES.IDeleteProjectUseCase)
     private readonly _deleteProjectUseCase: IDeleteProjectUseCase,
+    @inject(TYPES.ISecurityService)
+    private readonly _securityService: ISecurityService,
   ) {}
 
   /**
@@ -30,8 +33,12 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
    *
    * @param orgId - Organization ID to delete
    */
-  async deleteOrganizationCascade(orgId: string): Promise<void> {
+  async deleteOrganizationCascade(
+    orgId: string,
+    requesterId: string,
+  ): Promise<void> {
     try {
+      await this._securityService.validateSuperAdmin(requesterId);
       this._logger.info("Deleting organization with cascading deletion", {
         orgId,
       });
@@ -63,7 +70,7 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
       if (projectsInOrg && projectsInOrg.length > 0) {
         let deletedProjects = 0;
         for (const project of projectsInOrg) {
-          await this._deleteProjectUseCase.execute(project.id);
+          await this._deleteProjectUseCase.execute(project.id, requesterId);
           deletedProjects++;
         }
         this._logger.info(
@@ -103,8 +110,10 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
   async updateOrganizationStatus(
     orgId: string,
     newStatus: OrganizationStatus,
+    requesterId: string,
   ): Promise<Organization> {
     try {
+      await this._securityService.validateSuperAdmin(requesterId);
       this._logger.info("Updating organization status with cascading effects", {
         orgId,
         newStatus,
@@ -168,14 +177,20 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     }
   }
 
-  async createOrganization(data: Partial<Organization>): Promise<Organization> {
+  async createOrganization(
+    data: Partial<Organization>,
+    requesterId: string,
+  ): Promise<Organization> {
+    await this._securityService.validateSuperAdmin(requesterId);
     return this._orgRepo.create(data);
   }
 
   async updateOrganization(
     orgId: string,
     data: Partial<Organization>,
+    requesterId: string,
   ): Promise<Organization> {
+    await this._securityService.validateOrgManager(requesterId, orgId);
     const updatedOrg = await this._orgRepo.update(orgId, data);
     if (!updatedOrg) {
       throw new OrganizationNotFoundError();

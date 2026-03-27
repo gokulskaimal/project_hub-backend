@@ -5,10 +5,9 @@ import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprint
 import { Sprint } from "../../domain/entities/Sprint";
 import { ValidationError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
-
-export interface ICreateSprintUseCase {
-  execute(data: Partial<Sprint>): Promise<Sprint>;
-}
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ICreateSprintUseCase } from "../interface/useCases/ICreateSprintUseCase";
 
 @injectable()
 export class CreateSprintUseCase implements ICreateSprintUseCase {
@@ -16,10 +15,16 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.IAuthValidationService)
+    private _authValidationService: IAuthValidationService,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
-  async execute(data: Partial<Sprint>): Promise<Sprint> {
+  async execute(data: Partial<Sprint>, requesterId: string): Promise<Sprint> {
     if (!data.projectId) throw new ValidationError("Project ID is required");
+    this._logger.info(
+      `Creating new sprint in project ${data.projectId} by user ${requesterId}`,
+    );
     if (!data.startDate || !data.endDate) {
       throw new ValidationError("Start Date and End Date are required");
     }
@@ -29,31 +34,49 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
       throw new ValidationError("Project not found");
     }
 
+    // RBAC Check
+    await this._securityService.validateOrgManager(requesterId, project.orgId);
+
     const sprintStart = new Date(data.startDate);
     const sprintEnd = new Date(data.endDate);
     const projectEnd = new Date(project.endDate);
     const projectStart = project.startDate ? new Date(project.startDate) : null;
 
-    if (projectStart && sprintStart < projectStart) {
+    this._authValidationService.validateSprintDates(
+      sprintStart,
+      sprintEnd,
+      projectStart,
+      projectEnd,
+    );
+
+    const getWeekRangeLocal = (): { start: Date; end: Date } => {
+      const now = new Date();
+      const day = now.getDay(); // 0=Sun..6=Sat (local)
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+
+      const start = new Date(now);
+      start.setDate(now.getDate() + diffToMonday);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+
+      return { start, end };
+    };
+
+    const { start, end } = getWeekRangeLocal();
+    const weeklyCount = await this._sprintRepo.countByProjectAndDateRange(
+      data.projectId,
+      start,
+      end,
+    );
+
+    if (weeklyCount >= 5) {
       throw new ValidationError(
-        "Sprint start date is before project start date",
+        "Weekly sprint creation limit reached (max 5 sprints per week).",
       );
     }
-
-    if (sprintEnd > projectEnd) {
-      throw new ValidationError("Sprint end date is after project end date");
-    }
-
-    // // Check sprint limit for today
-    // const sprintsToday = await this._sprintRepo.countSprint(data.projectId);
-
-    // if (sprintsToday >= 2) {
-    //   throw new ValidationError(
-    //     "Daily limit reached. You can only create 2 Sprints per day.",
-    //   );
-    // }
-
-    this._logger.info(`Creating new sprint in project ${data.projectId}`);
 
     const sprintData = {
       ...data,

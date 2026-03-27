@@ -4,12 +4,11 @@ import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprint
 import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
 import { Sprint } from "../../domain/entities/Sprint";
-import {
-  EntityNotFoundError,
-  ValidationError,
-} from "../../domain/errors/CommonErrors";
+import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { IUpdateSprintUseCase } from "../interface/useCases/IUpdateSprintUseCase";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class UpdateSprintUseCase implements IUpdateSprintUseCase {
@@ -18,13 +17,29 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.IAuthValidationService)
+    private _authValidationService: IAuthValidationService,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
-  async execute(id: string, updateData: Partial<Sprint>): Promise<Sprint> {
-    this._logger.info(`Updating sprint ${id}`);
+  async execute(
+    id: string,
+    updateData: Partial<Sprint>,
+    requesterId: string,
+  ): Promise<Sprint> {
+    this._logger.info(`Updating sprint ${id} by user ${requesterId}`);
 
     const sprint = await this._sprintRepo.findById(id);
     if (!sprint) throw new EntityNotFoundError("Sprint", id);
+
+    // RBAC Check
+    const projectCheck = await this._projectRepo.findById(sprint.projectId);
+    if (!projectCheck)
+      throw new EntityNotFoundError("Project", sprint.projectId);
+    await this._securityService.validateOrgManager(
+      requesterId,
+      projectCheck.orgId,
+    );
 
     if (updateData.startDate || updateData.endDate) {
       const project = await this._projectRepo.findById(sprint.projectId);
@@ -41,16 +56,12 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
           ? new Date(project.startDate)
           : null;
 
-        if (projectStart && sprintStart < projectStart) {
-          throw new ValidationError(
-            "Sprint start date cannot be before Project start date",
-          );
-        }
-        if (sprintEnd > projectEnd) {
-          throw new ValidationError(
-            "Sprint end date cannot be after Project end date",
-          );
-        }
+        this._authValidationService.validateSprintDates(
+          sprintStart,
+          sprintEnd,
+          projectStart,
+          projectEnd,
+        );
       }
     }
 

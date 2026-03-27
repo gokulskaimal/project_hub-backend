@@ -21,7 +21,8 @@ interface IInviteDoc extends Document {
 @injectable()
 export class InviteRepo
   extends BaseRepository<Invite, IInviteDoc>
-  implements IInviteRepo {
+  implements IInviteRepo
+{
   constructor() {
     // Cast to unknown first to resolve strict Mongoose type incompatibilities
     super(InviteModel as unknown as Model<IInviteDoc>);
@@ -133,14 +134,11 @@ export class InviteRepo
     return result.modifiedCount;
   }
 
-  // --- Implemented Missing Interface Methods ---
-
   async isValidInvitation(token: string): Promise<boolean> {
     const doc = await this.model.findOne({ token, status: "PENDING" });
     if (!doc) return false;
 
     if (doc.expiry < new Date()) {
-      // It's expired but wasn't marked yet. Mark it now.
       await this.expire(token);
       return false;
     }

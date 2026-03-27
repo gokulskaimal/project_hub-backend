@@ -5,6 +5,7 @@ import { UserRole } from "../../domain/enums/UserRole";
 // Task Priorities and Types must strictly match application ENUMs
 export const PRIORITY_LEVELS = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export const TASK_TYPES = ["STORY", "BUG", "TASK"] as const;
+export const STORY_POINTS = [0, 1, 2, 3, 5, 8, 13] as const;
 export const TASK_STATUS = [
   "TODO",
   "IN_PROGRESS",
@@ -16,42 +17,67 @@ export const TASK_STATUS = [
 export const TaskCreateSchema = z.object({
   projectId: z.string().min(1, "Project ID is required"),
   title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   priority: z.enum(PRIORITY_LEVELS, {
     errorMap: () => ({ message: "Invalid priority level" }),
   }),
   type: z.enum(TASK_TYPES, {
     errorMap: () => ({ message: "Invalid task type" }),
   }),
-  storyPoints: z.number().min(0).optional(),
-  dueDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Invalid due date")
+  storyPoints: z
+    .number()
+    .int()
+    .refine((v) => STORY_POINTS.includes(v as (typeof STORY_POINTS)[number]), {
+      message: "Story points must be one of 0,1,2,3,5,8,13",
+    })
+    .nullable()
     .optional(),
-  assignedTo: z.string().optional(),
-  parentTaskId: z.string().optional(),
+  dueDate: z
+    .preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
+      z.string().optional(),
+    )
+    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid due date"),
+  assignedTo: z.string().nullable().optional(),
+  parentTaskId: z.string().nullable().optional(),
 });
 
 export const TaskUpdateSchema = TaskCreateSchema.partial().extend({
   status: z.enum(TASK_STATUS).optional(),
   sprintId: z.string().nullable().optional(),
-  attachments: z.array(z.string().url()).optional(),
+  attachments: z
+    .array(
+      z.object({
+        name: z.string(),
+        url: z.string().url(),
+        size: z.number().optional(),
+        type: z.string().optional(),
+      }),
+    )
+    .optional(),
   comments: z.array(z.any()).optional(),
   parentTaskId: z.string().optional(),
+});
+
+export const TaskCommentCreateSchema = z.object({
+  text: z
+    .string()
+    .min(1, "Comment text is required")
+    .max(1000, "Comment is too long"),
 });
 
 export const SprintCreateSchema = z
   .object({
     projectId: z.string().min(1, "Project ID is required"),
     name: z.string().min(3, "Sprint name must be at least 3 characters"),
-    description: z.string().optional(),
+    description: z.string().nullable().optional(),
     startDate: z
       .string()
       .refine((date) => !isNaN(Date.parse(date)), "Invalid start date"),
     endDate: z
       .string()
       .refine((date) => !isNaN(Date.parse(date)), "Invalid end date"),
-    goal: z.string().optional(),
+    goal: z.string().nullable().optional(),
   })
   .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
     message: "End date must be after or equal to start date",
@@ -89,19 +115,23 @@ export const ProjectCreateSchema = z.object({
   name: z.string().min(3, "Project name must be at least 3 characters"),
   description: z.string().optional(),
   startDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Invalid start date")
-    .transform((val) => new Date(val))
-    .optional(),
+    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
+    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid start date")
+    .transform((val) => (val ? new Date(val) : undefined)),
   endDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Invalid end date")
-    .transform((val) => new Date(val))
-    .optional(),
+    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
+    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid end date")
+    .transform((val) => (val ? new Date(val) : undefined)),
   priority: z
     .enum(PRIORITY_LEVELS, {
       errorMap: () => ({ message: "Invalid priority level" }),
     })
+    .optional(),
+  tasksPerWeek: z
+    .number()
+    .int()
+    .min(1, "Tasks per week must be at least 1")
+    .max(1000, "Tasks per week is too large")
     .optional(),
   tags: z.array(z.string()).optional(),
   teamMemberIds: z.array(z.string()).optional(),
@@ -114,19 +144,23 @@ export const ProjectUpdateSchema = z.object({
     .optional(),
   description: z.string().optional(),
   startDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Invalid start date")
-    .transform((val) => new Date(val))
-    .optional(),
+    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
+    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid start date")
+    .transform((val) => (val ? new Date(val) : undefined)),
   endDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Invalid end date")
-    .transform((val) => new Date(val))
-    .optional(),
+    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
+    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid end date")
+    .transform((val) => (val ? new Date(val) : undefined)),
   priority: z
     .enum(PRIORITY_LEVELS, {
       errorMap: () => ({ message: "Invalid priority level" }),
     })
+    .optional(),
+  tasksPerWeek: z
+    .number()
+    .int()
+    .min(1, "Tasks per week must be at least 1")
+    .max(1000, "Tasks per week is too large")
     .optional(),
   tags: z.array(z.string()).optional(),
   teamMemberIds: z.array(z.string()).optional(),

@@ -15,6 +15,7 @@ import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/I
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 import { NotificationType } from "../../domain/enums/NotificationType";
 
 @injectable()
@@ -30,18 +31,24 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
     @inject(TYPES.ISubscriptionRepo)
     private _subscriptionRepo: ISubscriptionRepo,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
   async execute(
     senderId: string,
     projectId: string,
     content: string,
-    type?: "TEXT" | "FILE",
+    type?: "TEXT" | "FILE" | "IMAGE" | "SYSTEM" | "ACTIVITY",
     fileUrl?: string,
   ): Promise<ChatMessage> {
     const project = await this._projectRepo.findById(projectId);
     if (!project) {
       throw new EntityNotFoundError("Project not found");
+    }
+
+    // RBAC Check
+    if (project.orgId) {
+      await this._securityService.validateOrgAccess(senderId, project.orgId);
     }
 
     // --- Message & Feature Limits Check ---

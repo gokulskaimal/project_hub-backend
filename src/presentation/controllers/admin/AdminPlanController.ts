@@ -9,7 +9,12 @@ import { ILogger } from "../../../infrastructure/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
-import { EntityNotFoundError, ValidationError } from "../../../domain/errors/CommonErrors";
+import {
+  EntityNotFoundError,
+  ValidationError,
+} from "../../../domain/errors/CommonErrors";
+import { toPlanDTO } from "../../../application/dto/PlanDTO";
+import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 
 @injectable()
 export class AdminPlanController {
@@ -54,10 +59,14 @@ export class AdminPlanController {
       throw new ValidationError(COMMON_MESSAGES.INVALID_INPUT);
     }
 
-    const newPlan = await this._createPlanUseCase.execute(planData);
+    const authReq = req as AuthenticatedRequest;
+    const newPlan = await this._createPlanUseCase.execute(
+      planData,
+      authReq.user!.id,
+    );
     this.sendSuccess(
       res,
-      newPlan,
+      toPlanDTO(newPlan),
       COMMON_MESSAGES.CREATED,
       StatusCodes.CREATED,
     );
@@ -65,31 +74,34 @@ export class AdminPlanController {
 
   getPlans = asyncHandler(async (req: Request, res: Response) => {
     this.logger.info("Fetching Subscritption Plans");
-    const plans = await this._getPlanUseCase.execute({isActive : true});
-    this.sendSuccess(res, plans);
+    const plans = await this._getPlanUseCase.execute({ isActive: true });
+    this.sendSuccess(res, plans.map(toPlanDTO));
   });
 
   updatePlan = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const planData = req.body;
     this.logger.info("Updating Subscription Plan", { planId: id });
-    if (!id)
-      throw new ValidationError("Plan ID is required");
+    if (!id) throw new ValidationError("Plan ID is required");
 
-    const updatedPlan = await this._updatePlanUseCase.execute(id, planData);
-    if (!updatedPlan)
-      throw new EntityNotFoundError("Plan", id);
+    const authReq = req as AuthenticatedRequest;
+    const updatedPlan = await this._updatePlanUseCase.execute(
+      id,
+      planData,
+      authReq.user!.id,
+    );
+    if (!updatedPlan) throw new EntityNotFoundError("Plan", id);
 
-    this.sendSuccess(res, updatedPlan, COMMON_MESSAGES.UPDATED);
+    this.sendSuccess(res, toPlanDTO(updatedPlan), COMMON_MESSAGES.UPDATED);
   });
 
   deletePlan = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     this.logger.info("Deleting Subscription Plan", { planId: id });
-    if (!id)
-      throw new ValidationError("Plan ID is required");
+    if (!id) throw new ValidationError("Plan ID is required");
 
-    const success = await this._deletePlanUseCase.execute(id);
+    const authReq = req as AuthenticatedRequest;
+    const success = await this._deletePlanUseCase.execute(id, authReq.user!.id);
     if (!success) throw new EntityNotFoundError("Plan", id);
 
     this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);

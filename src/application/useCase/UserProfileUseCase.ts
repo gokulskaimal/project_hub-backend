@@ -5,6 +5,7 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
 import {
   UserDTO,
   toUserDTO,
@@ -16,6 +17,7 @@ import {
   ValidationError,
 } from "../../domain/errors/CommonErrors";
 import { InvalidCredentialsError } from "../../domain/errors/AuthErrors";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class UserProfileUseCase implements IUserProfileUseCase {
@@ -24,9 +26,19 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.ISecurityService)
+    private readonly _securityService: ISecurityService,
   ) {}
 
-  public async getProfile(userId: string): Promise<UserDTO> {
+  public async getProfile(
+    userId: string,
+    requesterId?: string,
+  ): Promise<UserDTO> {
+    if (requesterId) {
+      await this._securityService.validateUserOwnership(requesterId, userId);
+    }
     this._logger.info("Getting user profile", { userId });
 
     // Handle synthetic Super Admin ID (from env-based login)
@@ -86,7 +98,11 @@ export class UserProfileUseCase implements IUserProfileUseCase {
   public async updateProfile(
     userId: string,
     updateData: UpdateProfileRequestDTO,
+    requesterId?: string,
   ): Promise<UserDTO> {
+    if (requesterId) {
+      await this._securityService.validateUserOwnership(requesterId, userId);
+    }
     this._logger.info("Updating user profile", {
       userId,
       fields: Object.keys(updateData),
@@ -137,7 +153,11 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     userId: string,
     currentPassword: string,
     newPassword: string,
+    requesterId?: string,
   ): Promise<void> {
+    if (requesterId) {
+      await this._securityService.validateUserOwnership(requesterId, userId);
+    }
     this._logger.info("Changing user password", { userId });
 
     try {
@@ -153,8 +173,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
       if (!isCurrentPasswordValid) {
         throw new InvalidCredentialsError();
       }
-
-      this._validatePassword(newPassword);
+      this._authValidationService.validatePassword(newPassword);
 
       const isSamePassword = await this._hashService.compare(
         newPassword,
@@ -178,8 +197,13 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     }
   }
 
-  public async deleteAccount(userId: string, password: string): Promise<void> {
-    this._logger.info("Deleting user account", { userId });
+  public async deleteAccount(
+    userId: string,
+    password: string,
+    requesterId: string,
+  ): Promise<void> {
+    await this._securityService.validateUserOwnership(requesterId, userId);
+    this._logger.info("Deleting user account", { userId, requesterId });
 
     try {
       const user = await this._userRepo.findById(userId);
@@ -213,9 +237,12 @@ export class UserProfileUseCase implements IUserProfileUseCase {
     userId: string,
     limit: number = 50,
     offset: number = 0,
+    requesterId: string,
   ): Promise<Record<string, unknown>[]> {
+    await this._securityService.validateUserOwnership(requesterId, userId);
     this._logger.info("Getting user activity history", {
       userId,
+      requesterId,
       limit,
       offset,
     });
@@ -251,28 +278,6 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         userId,
       });
       throw error;
-    }
-  }
-
-  private _validatePassword(password: string): void {
-    if (!password || typeof password !== "string") {
-      throw new ValidationError("Password is required");
-    }
-
-    if (password.length < 8) {
-      throw new ValidationError("Password must be at least 8 characters long");
-    }
-
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      throw new ValidationError(
-        "Password must contain at least one lowercase letter, one uppercase letter, and one number",
-      );
-    }
-
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new ValidationError(
-        "Password must contain at least one special character",
-      );
     }
   }
 }

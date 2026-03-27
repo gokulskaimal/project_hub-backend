@@ -10,7 +10,7 @@ export class MarkNotificationReadUseCase implements IMarkNotificationReadUseCase
     private _notificationRepo: INotificationRepo,
   ) {}
 
-  async execute(notificationId: string): Promise<void> {
-    await this._notificationRepo.markAsRead(notificationId);
+  async execute(notificationId: string, userId: string): Promise<void> {
+    await this._notificationRepo.markAsRead(notificationId, userId);
   }
 }

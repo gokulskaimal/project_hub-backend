@@ -26,6 +26,7 @@ export class ProjectRepo
       priority: obj.priority,
       tags: obj.tags,
       teamMemberIds: obj.teamMemberIds,
+      tasksPerWeek: obj.tasksPerWeek,
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
     } as Project;
@@ -40,10 +41,11 @@ export class ProjectRepo
     return docs.map((d) => this.toDomain(d));
   }
 
-  async findByTeamMember(userId: string): Promise<Project[]> {
-    const docs = await this.model
-      .find({ teamMemberIds: userId })
-      .sort({ createdAt: -1 });
+  async findByTeamMember(userId: string, orgId?: string): Promise<Project[]> {
+    const query: Record<string, unknown> = { teamMemberIds: userId };
+    if (orgId) query.orgId = orgId;
+
+    const docs = await this.model.find(query).sort({ createdAt: -1 });
     return docs.map((d) => this.toDomain(d));
   }
 }

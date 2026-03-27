@@ -9,12 +9,15 @@ import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
 import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
 import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
 import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 import { QuotaExceededError } from "../../domain/errors/CommonErrors";
 import {
   ConflictError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
 import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
+import { UserRole } from "../../domain/enums/UserRole";
 
 @injectable()
 export class InviteMemberUseCase implements IInviteMemberUseCase {
@@ -28,11 +31,16 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     private readonly _subRepo: ISubscriptionRepo,
     @inject(TYPES.IPlanRepo) private readonly _planRepo: IPlanRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.ISecurityService)
+    private readonly _securityService: ISecurityService,
   ) {}
 
   public async execute(
     email: string,
     orgId: string,
+    requesterId: string,
     role?: string,
     expiresIn: number = 1,
   ): Promise<{
@@ -44,7 +52,11 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     this._logger.info("Processing member invitation", { email, orgId, role });
 
     try {
-      this._validateInput(email, orgId);
+      this._validateOrgId(orgId);
+      // RBAC Check
+      await this._securityService.validateOrgManager(requesterId, orgId);
+
+      this._authValidationService.validateEmail(email);
 
       const organization = await this._orgRepo.findById(orgId);
       if (!organization) {
@@ -120,7 +132,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
         token: hashedToken,
         status: "PENDING" as const,
         expiry,
-        role: role || "TEAM_MEMBER",
+        role: role || UserRole.TEAM_MEMBER,
         createdAt: new Date(),
       };
 
@@ -154,6 +166,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
   public async bulkInvite(
     emails: string[],
     orgId: string,
+    requesterId: string,
     role?: string,
     expiresIn?: number,
   ): Promise<{
@@ -172,7 +185,13 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
     for (const email of emails) {
       try {
-        const result = await this.execute(email, orgId, role, expiresIn);
+        const result = await this.execute(
+          email,
+          orgId,
+          requesterId,
+          role,
+          expiresIn,
+        );
 
         successful.push({
           email,
@@ -211,22 +230,9 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     };
   }
 
-  private _validateInput(email: string, orgId: string): void {
-    if (!email || typeof email !== "string") {
-      throw new ValidationError("Email is required");
-    }
-
+  private _validateOrgId(orgId: string): void {
     if (!orgId || typeof orgId !== "string") {
       throw new ValidationError("Organization ID is required");
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new ValidationError("Invalid email format");
-    }
-
-    if (email.length > 254) {
-      throw new ValidationError("Email address is too long");
     }
   }
 

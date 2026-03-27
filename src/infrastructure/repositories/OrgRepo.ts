@@ -167,31 +167,18 @@ export class OrgRepo implements IOrgRepo {
     const query: Record<string, unknown> = {
       name: new RegExp(`^${name.trim()}$`, "i"),
     };
-    if (excludeId) query._id = { $ne: excludeId };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
     const exists = await OrgModel.findOne(query).select("_id");
     return !!exists;
   }
 
-  async getStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    byStatus: Record<string, number>;
-  }> {
-    const total = await OrgModel.countDocuments();
-    const active = await OrgModel.countDocuments({
-      status: OrganizationStatus.ACTIVE,
-    });
-    const inactive = await OrgModel.countDocuments({
-      status: OrganizationStatus.INACTIVE,
-    });
-    const agg: Array<{ _id: string; count: number }> = await OrgModel.aggregate(
-      [{ $group: { _id: "$status", count: { $sum: 1 } } }],
-    );
-    const byStatus: Record<string, number> = {};
-    agg.forEach((s) => {
-      byStatus[s._id] = s.count;
-    });
-    return { total, active, inactive, byStatus };
+  async getStatusDistribution(): Promise<
+    Array<{ _id: string; count: number }>
+  > {
+    return await OrgModel.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
   }
 }

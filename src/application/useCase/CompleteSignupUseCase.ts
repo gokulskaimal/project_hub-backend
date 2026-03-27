@@ -4,10 +4,10 @@ import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo
 import { ICompleteSignupUseCase } from "../interface/useCases/ICompleteSignupUseCase";
 import { IHashService } from "../../infrastructure/interface/services/IHashService";
 import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
 import { User } from "../../domain/entities/User";
 import {
-  ValidationError,
   EntityNotFoundError,
   ConflictError,
 } from "../../domain/errors/CommonErrors";
@@ -20,66 +20,22 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
     @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
   ) {}
+
   async validateSignupData(data: {
     email: string;
     password: string;
     firstName: string;
     lastName: string;
   }): Promise<boolean> {
-    const { email, password, firstName, lastName } = data;
-
-    if (!email || typeof email !== "string") {
-      throw new ValidationError("Email is required");
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new ValidationError("Invalid email format");
-    }
-
-    if (
-      !firstName ||
-      typeof firstName !== "string" ||
-      firstName.trim().length < 2
-    ) {
-      throw new ValidationError(
-        "First name must be at least 2 characters long",
-      );
-    }
-    if (firstName.trim().length > 100) {
-      throw new ValidationError(
-        "First name must be less than 100 characters long",
-      );
-    }
-
-    if (
-      !lastName ||
-      typeof lastName !== "string" ||
-      lastName.trim().length < 2
-    ) {
-      throw new ValidationError(
-        "Last name must be at least 2 characters long",
-      );
-    }
-    if (lastName.trim().length > 100) {
-      throw new ValidationError(
-        "Last name must be less than 100 characters long",
-      );
-    }
-
-    // Validate password strength using existing helper
-    this._validatePassword(password);
-
+    this._authValidationService.validateEmail(data.email);
+    this._authValidationService.validatePassword(data.password);
+    this._authValidationService.validateName(data.firstName, data.lastName);
     return true;
   }
 
-  /**
-   * Complete user signup process
-   * @param email - User email
-   * @param name - User full name
-   * @param password - User password
-   * @returns Updated user data
-   */
   public async execute(
     email: string,
     password: string,
@@ -166,54 +122,4 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
       throw error;
     }
   }
-  private _validatePassword(password: string): void {
-    if (!password || typeof password !== "string") {
-      throw new ValidationError("Password is required");
-    }
-    if (password.length < 8) {
-      throw new ValidationError(
-        "Password must be at least 8 characters long",
-      );
-    }
-    if (password.length > 128) {
-      throw new ValidationError(
-        "Password must be less than 128 characters long",
-      );
-    }
-    if (!/[a-z]/.test(password)) {
-      throw new ValidationError(
-        "Password must contain at least one lowercase letter",
-      );
-    }
-    if (!/[A-Z]/.test(password)) {
-      throw new ValidationError(
-        "Password must contain at least one uppercase letter",
-      );
-    }
-    if (!/\d/.test(password)) {
-      throw new ValidationError(
-        "Password must contain at least one number",
-      );
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      throw new ValidationError(
-        "Password must contain at least one special character",
-      );
-    }
-    const weakPasswords = [
-      "password",
-      "12345678",
-      "qwerty",
-      "abc123",
-      "password1",
-      "admin123",
-      "welcome1",
-    ];
-    if (weakPasswords.includes(password.toLowerCase())) {
-      throw new ValidationError(
-        "Password is too common. Please choose a stronger password",
-      );
-    }
-  }
 }
-

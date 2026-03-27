@@ -3,6 +3,7 @@ import { Container } from "inversify";
 import { AdminUserController } from "../controllers/admin/AdminUserController";
 import { AdminOrgController } from "../controllers/admin/AdminOrgController";
 import { AdminPlanController } from "../controllers/admin/AdminPlanController";
+import { IAdminInvoiceController } from "../../application/interface/controllers/IAdminInvoiceController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";
@@ -20,6 +21,9 @@ export function createAdminRoutes(container: Container): Router {
   );
   const planController = container.get<AdminPlanController>(
     TYPES.AdminPlanController,
+  );
+  const invoiceController = container.get<IAdminInvoiceController>(
+    TYPES.AdminInvoiceController,
   );
 
   router.use(
@@ -85,6 +89,11 @@ export function createAdminRoutes(container: Container): Router {
   );
   router.delete(`${API_ROUTES.ADMIN.PLANS}/:id`, (req, res, next) =>
     planController.deletePlan(req as AuthenticatedRequest, res, next),
+  );
+
+  // Invoices
+  router.get(API_ROUTES.ADMIN.INVOICES, (req, res, next) =>
+    invoiceController.getInvoices(req, res, next),
   );
 
   return router;

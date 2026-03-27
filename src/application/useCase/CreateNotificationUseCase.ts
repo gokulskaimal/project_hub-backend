@@ -18,6 +18,7 @@ export class CreateNotificationUseCase implements ICreateNotificationUseCase {
     title: string,
     message: string,
     type: "INFO" | "SUCCESS" | "WARNING" | "ERROR",
+    orgId: string,
     link?: string,
   ): Promise<void> {
     const notification = new Notification(
@@ -29,6 +30,7 @@ export class CreateNotificationUseCase implements ICreateNotificationUseCase {
       link || "",
       false,
       new Date(),
+      orgId,
     );
     const saved = await this._notificationRepo.create(notification);
     this._socketService.emitToUser(userId, "notification:new", saved);

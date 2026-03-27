@@ -1,28 +1,27 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IAnalyticsService } from "../../infrastructure/interface/services/IAnalyticsService";
 import { IAdminStatsUseCase } from "../interface/useCases/IAdminStatsUseCase";
 
 @injectable()
 export class AdminStatsUseCase implements IAdminStatsUseCase {
   constructor(
-    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
-    @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.IAnalyticsService)
+    private readonly _analyticsService: IAnalyticsService,
   ) {}
 
   async getDashboardStats() {
     const [userStats, orgStats] = await Promise.all([
-      this._userRepo.getStats(),
-      this._orgRepo.getStats(),
+      this._analyticsService.getUserStats(),
+      this._analyticsService.getOrgStats(),
     ]);
     return { users: userStats, organizations: orgStats };
   }
 
   async getReports() {
     const [userStats, orgStats] = await Promise.all([
-      this._userRepo.getStats(),
-      this._orgRepo.getStats(),
+      this._analyticsService.getUserStats(),
+      this._analyticsService.getOrgStats(),
     ]);
 
     return {

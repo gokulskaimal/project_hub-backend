@@ -11,6 +11,8 @@ import { toUserDTO } from "../../../application/dto/UserDTO";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
+import { toOrgDTO } from "../../../application/dto/OrgDTO";
+import { toInviteDTO } from "../../../application/dto/InviteDTO";
 import {
   InviteMemberSchema,
   BulkInviteSchema,
@@ -28,8 +30,13 @@ export class ManagerController {
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
   ) {}
 
-  private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
-    res.status(StatusCodes.OK).json({
+  private sendSuccess<T>(
+    res: Response,
+    data: T,
+    message: string = "Success",
+    status: number = StatusCodes.OK,
+  ): void {
+    res.status(status).json({
       success: true,
       message,
       data,
@@ -54,8 +61,16 @@ export class ManagerController {
       const { email } = validation.data;
       this._logger.info("Manager inviting member", { orgId, email });
 
-      const result = await this._inviteMemberUC.execute(email, orgId);
-      this.sendSuccess(res, result, COMMON_MESSAGES.INVITATION_SENT);
+      const result = await this._inviteMemberUC.execute(
+        email,
+        orgId,
+        req.user!.id,
+      );
+      const safeResult = {
+        ...result,
+        expiresAt: result.expiresAt.toISOString(),
+      };
+      this.sendSuccess(res, safeResult, COMMON_MESSAGES.INVITATION_SENT);
     },
   );
 
@@ -84,8 +99,16 @@ export class ManagerController {
 
       for (const email of emails) {
         try {
-          const result = await this._inviteMemberUC.execute(email, orgId);
-          results.push({ email, status: "success", result });
+          const result = await this._inviteMemberUC.execute(
+            email,
+            orgId,
+            req.user!.id,
+          );
+          const safeResult = {
+            ...result,
+            expiresAt: result.expiresAt.toISOString(),
+          };
+          results.push({ email, status: "success", result: safeResult });
         } catch (error) {
           this._logger.error("Bulk invite failed for email", error as Error, {
             email,
@@ -120,8 +143,12 @@ export class ManagerController {
       const orgId = req.user!.orgId!;
       this._logger.info("Listing invitations", { orgId });
       const invitations =
-        (await this._inviteRepo.findByOrganization?.(orgId)) || [];
-      this.sendSuccess(res, invitations, COMMON_MESSAGES.INVITATIONS_RETRIEVED);
+        (await this._inviteRepo.findPendingByOrganization?.(orgId)) || [];
+      this.sendSuccess(
+        res,
+        invitations.map(toInviteDTO),
+        COMMON_MESSAGES.INVITATIONS_RETRIEVED,
+      );
     },
   );
 
@@ -251,7 +278,7 @@ export class ManagerController {
           message: "Organization not found",
         };
 
-      this.sendSuccess(res, org, "Organization details retrieved");
+      this.sendSuccess(res, toOrgDTO(org), "Organization details retrieved");
     },
   );
 }

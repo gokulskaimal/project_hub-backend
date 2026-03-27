@@ -4,4 +4,7 @@ export interface AuthenticatedUser {
   id: string;
   role: UserRole;
   orgId: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
 }

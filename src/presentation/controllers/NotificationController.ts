@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
@@ -6,6 +6,8 @@ import { IGetNotificationsUseCase } from "../../application/interface/useCases/I
 import { IMarkNotificationReadUseCase } from "../../application/interface/useCases/IMarkNotificationReadUseCase";
 import { IMarkAllNotificationsReadUseCase } from "../../application/interface/useCases/IMarkAllNotificationsReadUseCase";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { toNotificationDTO } from "../../application/dto/NotificationDTO";
+import { asyncHandler } from "../middleware/ErrorMiddleware";
 
 @injectable()
 export class NotificationController {
@@ -18,37 +20,44 @@ export class NotificationController {
     private _markAllReadUC: IMarkAllNotificationsReadUseCase,
   ) {}
 
-  async getNotification(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userId = (req as AuthenticatedRequest).user!.id;
+  private sendSuccess<T>(
+    res: Response,
+    data: T,
+    message: string = "Success",
+    status: number = StatusCodes.OK,
+  ): void {
+    res.status(status).json({
+      success: true,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  getNotification = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const userId = req.user!.id;
       const notifications = await this._getNotificationsUC.execute(userId);
-      res.status(StatusCodes.OK).json(notifications);
-    } catch (error) {
-      next(error);
-    }
-  }
+      this.sendSuccess(
+        res,
+        notifications.map(toNotificationDTO),
+        "Notifications fetched successfully",
+      );
+    },
+  );
 
-  async markRead(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { id } = req.params;
-      await this._markReadUC.execute(id);
-      res
-        .status(StatusCodes.OK)
-        .json({ success: true, message: "Notification marked as read" });
-    } catch (error) {
-      next(error);
-    }
-  }
+  markRead = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const userId = req.user!.id;
+    await this._markReadUC.execute(id, userId);
+    this.sendSuccess(res, null, "Notification marked as read");
+  });
 
-  async markAllRead(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userId = (req as AuthenticatedRequest).user!.id;
+  markAllRead = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const userId = req.user!.id;
       await this._markAllReadUC.execute(userId);
-      res
-        .status(StatusCodes.OK)
-        .json({ success: true, message: "All notifications marked as read" });
-    } catch (error) {
-      next(error);
-    }
-  }
+      this.sendSuccess(res, null, "All notifications marked as read");
+    },
+  );
 }

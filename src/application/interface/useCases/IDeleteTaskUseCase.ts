@@ -1,3 +1,3 @@
 export interface IDeleteTaskUseCase {
-  execute(id: string): Promise<boolean>;
+  execute(id: string, requesterId: string): Promise<boolean>;
 }

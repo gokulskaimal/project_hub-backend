@@ -45,38 +45,6 @@ export class UserRepo
     };
   }
 
-  async storeOtp(email: string, otp: string, expiry: Date): Promise<void> {
-    try {
-      await UserModel.findOneAndUpdate(
-        { email },
-        { otp, otpExpiry: expiry },
-        { upsert: false },
-      );
-    } catch (error) {
-      this._logger.error(`Failed to store OTP`, error as Error, { email });
-      throw new Error(`Failed to store OTP: ${(error as Error).message}`);
-    }
-  }
-  async getOtp(
-    email: string,
-  ): Promise<{ otp: string; expiresAt: Date } | null> {
-    try {
-      const user = await UserModel.findOne({ email }).select("otp otpExpiry");
-
-      if (!user || !user.otp || !user.otpExpiry) {
-        return null;
-      }
-
-      return {
-        otp: user.otp,
-        expiresAt: user.otpExpiry,
-      };
-    } catch (error) {
-      this._logger.error(`Failed to get OTP`, error as Error, { email });
-      throw new Error(`Failed to get OTP: ${(error as Error).message}`);
-    }
-  }
-
   async findOrganizationById?(orgId: string): Promise<Organization | null> {
     try {
       const org = await OrgModel.findById(orgId);
@@ -105,40 +73,6 @@ export class UserRepo
     return this.toDomainUser(created);
   }
 
-  async ensureUserWithOtp(
-    email: string,
-    otp: string,
-    expiry: Date,
-  ): Promise<User> {
-    const existing = await UserModel.findOne({ email });
-
-    const update = {
-      otp,
-      otpExpiry: expiry,
-      emailVerified: false,
-    };
-
-    if (existing) {
-      const updated = await UserModel.findOneAndUpdate({ email }, update, {
-        new: true,
-      });
-
-      if (!updated) throw new Error("Unable to update OTP");
-      return this.toDomainUser(updated);
-    }
-
-    const created = await UserModel.create({
-      email,
-      role: UserRole.ORG_MANAGER,
-      password: "",
-      status: "PENDING_VERIFICATION",
-      createdAt: new Date(),
-      ...update,
-    });
-
-    return this.toDomainUser(created);
-  }
-
   async findByEmail(email: string): Promise<User | null> {
     const user = await UserModel.findOne({ email });
     return user ? this.toDomainUser(user) : null;
@@ -149,38 +83,9 @@ export class UserRepo
     return doc ? this.toDomain(doc) : null;
   }
 
-  async updatePassword(id: string, hashedPassword: string): Promise<void> {
-    await UserModel.findByIdAndUpdate(id, {
-      password: hashedPassword,
-      resetPasswordToken: undefined,
-      resetPasswordExpires: undefined,
-    });
-  }
-
-  async clearResetPasswordToken(id: string): Promise<void> {
-    await UserModel.findByIdAndUpdate(id, {
-      resetPasswordToken: undefined,
-      resetPasswordExpires: undefined,
-    });
-  }
-
-  async setResetPasswordToken(
-    email: string,
-    token: string,
-    expires: Date,
-  ): Promise<void> {
-    await UserModel.findOneAndUpdate(
-      { email },
-      { resetPasswordToken: token, resetPasswordExpires: expires },
-    );
-  }
-
-  async findByResetToken(token: string): Promise<User | null> {
-    const user = await UserModel.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: new Date() },
-    });
-    return user ? this.toDomainUser(user) : null;
+  async findByIds(ids: string[]): Promise<User[]> {
+    const docs = await this.model.find({ _id: { $in: ids } });
+    return docs.map((d) => this.toDomain(d));
   }
 
   async verifyEmail(id: string): Promise<void> {
@@ -195,19 +100,6 @@ export class UserRepo
     const updated = await UserModel.findByIdAndUpdate(id, data, { new: true });
     if (!updated) throw new Error("User not found");
     return this.toDomainUser(updated);
-  }
-
-  async saveOtp(email: string, otp: string, expiry: Date): Promise<void> {
-    await UserModel.findOneAndUpdate({ email }, { otp, otpExpiry: expiry });
-  }
-
-  async verifyOtp(email: string, otp: string): Promise<User | null> {
-    const user = await UserModel.findOne({
-      email,
-      otp,
-      otpExpiry: { $gt: new Date() },
-    });
-    return user ? this.toDomainUser(user) : null;
   }
 
   async findByOrg(orgId: string): Promise<User[]> {
@@ -249,6 +141,151 @@ export class UserRepo
       );
       throw error;
     }
+  }
+
+  async findByResetToken(token: string): Promise<User | null> {
+    const user = await UserModel.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    return user ? this.toDomainUser(user) : null;
+  }
+
+  async findByEmailAndOtp(email: string, otp: string): Promise<User | null> {
+    const user = await UserModel.findOne({
+      email,
+      otp,
+      otpExpiry: { $gt: new Date() },
+    });
+    return user ? this.toDomainUser(user) : null;
+  }
+
+  async updateResetToken(
+    email: string,
+    token: string | undefined,
+    expiry: Date | undefined,
+  ): Promise<void> {
+    await UserModel.findOneAndUpdate(
+      { email },
+      { $set: { resetPasswordToken: token, resetPasswordExpires: expiry } },
+    );
+  }
+
+  async updatePassword(email: string, passwordHash: string): Promise<void> {
+    await UserModel.findOneAndUpdate(
+      { email },
+      {
+        $set: { password: passwordHash },
+        $unset: { resetPasswordToken: 1, resetPasswordExpires: 1 },
+      },
+    );
+  }
+
+  async updateOtp(email: string, otp: string, expiry: Date): Promise<void> {
+    await UserModel.findOneAndUpdate(
+      { email },
+      { $set: { otp, otpExpiry: expiry } },
+    );
+  }
+
+  async clearOtp(email: string): Promise<void> {
+    await UserModel.findOneAndUpdate(
+      { email },
+      { $unset: { otp: 1, otpExpiry: 1 } },
+    );
+  }
+
+  async upsertOtpUser(
+    email: string,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    await UserModel.findOneAndUpdate(
+      { email },
+      {
+        $set: { ...data, updatedAt: new Date() },
+        $setOnInsert: {
+          status: "PENDING_VERIFICATION",
+          role: "USER",
+          emailVerified: false,
+          createdAt: new Date(),
+        },
+      },
+      { upsert: true, new: true },
+    );
+  }
+
+  async cleanExpiredOtps(): Promise<number> {
+    const result = await UserModel.updateMany(
+      { otpExpiry: { $lt: new Date() } },
+      { $unset: { otp: 1, otpExpiry: 1 } },
+    );
+    return result.modifiedCount;
+  }
+
+  async countByStatus(status: string): Promise<number> {
+    return await UserModel.countDocuments({ status });
+  }
+
+  async countVerified(): Promise<number> {
+    return await UserModel.countDocuments({ emailVerified: true });
+  }
+
+  async getRoleDistribution(): Promise<Array<{ _id: string; count: number }>> {
+    return await UserModel.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } },
+    ]);
+  }
+
+  async getGlobalStats(): Promise<{
+    total: number;
+    active: number;
+    inactive: number;
+    pending: number;
+    verified: number;
+    unverified: number;
+    byRole: Record<string, number>;
+  }> {
+    const results = await UserModel.aggregate([
+      {
+        $facet: {
+          total: [{ $count: "count" }],
+          statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+          verifiedCounts: [
+            { $group: { _id: "$emailVerified", count: { $sum: 1 } } },
+          ],
+          roleCounts: [{ $group: { _id: "$role", count: { $sum: 1 } } }],
+        },
+      },
+    ]);
+
+    const facet = results[0];
+    const stats = {
+      total: facet.total[0]?.count || 0,
+      active: 0,
+      inactive: 0,
+      pending: 0,
+      verified: 0,
+      unverified: 0,
+      byRole: {} as Record<string, number>,
+    };
+
+    facet.statusCounts.forEach((s: { _id: string; count: number }) => {
+      if (s._id === "ACTIVE") stats.active = s.count;
+      if (s._id === "INACTIVE" || s._id === "BLOCKED")
+        stats.inactive += s.count;
+      if (s._id === "PENDING_VERIFICATION") stats.pending = s.count;
+    });
+
+    facet.verifiedCounts.forEach((v: { _id: boolean; count: number }) => {
+      if (v._id === true) stats.verified = v.count;
+      if (v._id === false) stats.unverified = v.count;
+    });
+
+    facet.roleCounts.forEach((r: { _id: string; count: number }) => {
+      stats.byRole[r._id || "UNKNOWN"] = r.count;
+    });
+
+    return stats;
   }
 
   async updateStatus(id: string, status: string): Promise<User> {
@@ -392,35 +429,6 @@ export class UserRepo
     }
   }
 
-  async findUsersWithExpiredOtp(): Promise<User[]> {
-    try {
-      const users = await UserModel.find({
-        otpExpiry: { $lt: new Date() },
-        otp: { $exists: true, $ne: null },
-      });
-      return users.map((u) => this.toDomainUser(u));
-    } catch (error) {
-      this._logger.error(
-        "Error finding users with expired OTP:",
-        error as Error,
-      );
-      throw error;
-    }
-  }
-
-  async cleanExpiredOtps(): Promise<number> {
-    try {
-      const result = await UserModel.updateMany(
-        { otpExpiry: { $lt: new Date() } },
-        { $unset: { otp: 1, otpExpiry: 1 } },
-      );
-      return result.modifiedCount;
-    } catch (error) {
-      this._logger.error("Error cleaning expired OTPs:", error as Error);
-      throw error;
-    }
-  }
-
   async emailExists(email: string, excludeUserId?: string): Promise<boolean> {
     try {
       const query: Record<string, unknown> = { email };
@@ -433,52 +441,6 @@ export class UserRepo
       this._logger.error("Error checking if email exists:", error as Error, {
         email,
       });
-      throw error;
-    }
-  }
-
-  async getStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    pending: number;
-    verified: number;
-    unverified: number;
-    byRole: Record<string, number>;
-  }> {
-    try {
-      const totalCount = await UserModel.countDocuments();
-      const activeCount = await UserModel.countDocuments({ status: "ACTIVE" });
-      const inactiveCount = await UserModel.countDocuments({
-        status: "INACTIVE",
-      });
-      const pendingCount = await UserModel.countDocuments({
-        status: "PENDING_VERIFICATION",
-      });
-      const verifiedCount = await UserModel.countDocuments({
-        emailVerified: true,
-      });
-
-      const roleStats = await UserModel.aggregate([
-        { $group: { _id: "$role", count: { $sum: 1 } } },
-      ]);
-
-      const byRole: Record<string, number> = {};
-      roleStats.forEach((stat) => {
-        byRole[stat._id || "UNKNOWN"] = stat.count;
-      });
-
-      return {
-        total: totalCount,
-        active: activeCount,
-        inactive: inactiveCount,
-        pending: pendingCount,
-        verified: verifiedCount,
-        unverified: totalCount - verifiedCount,
-        byRole,
-      };
-    } catch (error) {
-      this._logger.error("Error getting user stats:", error as Error);
       throw error;
     }
   }

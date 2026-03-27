@@ -102,10 +102,17 @@ export class SocketServer {
     this._logger.info(`User ${user.id} connected`);
     socket.join(`user:${user.id}`);
     this._logger.info(`User joined room: user:${user.id}`);
+    socket.join(`role:${user.role}`);
 
     if (user.orgId) {
       socket.join(`org:${user.orgId}`);
       this._logger.info(`User joined room: org:${user.orgId}`);
+
+      // [NEW] Role-specific room for targeted role broadcasts
+      socket.join(`org:${user.orgId}:role:${user.role}`);
+      this._logger.info(
+        `User joined role-specific room: org:${user.orgId}:role:${user.role}`,
+      );
     } else {
       this._logger.warn(`User ${user.id} has no orgId, not joining org room`);
     }

@@ -17,7 +17,12 @@ export interface TaskDTO {
   createdAt: string;
   updatedAt?: string;
   completedAt?: string;
-  attachments?: string[];
+  attachments?: Array<{
+    name: string;
+    url: string;
+    size?: number;
+    type?: string;
+  }>;
   comments?: TaskComment[];
   parentTaskId?: string;
   dependencies?: {

@@ -12,7 +12,10 @@ import { Project } from "../../domain/entities/Project";
 import {
   QuotaExceededError,
   EntityNotFoundError,
+  ValidationError,
 } from "../../domain/errors/CommonErrors";
+import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 import { PLAN_DEFAULTS } from "../../infrastructure/config/common.constants";
 
 import { ILogger } from "../../infrastructure/interface/services/ILogger";
@@ -28,6 +31,9 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
     @inject(TYPES.ICreateNotificationUseCase)
     private _createNotificationUseCase: ICreateNotificationUseCase,
     @inject(TYPES.ILogger) private _logger: ILogger,
+    @inject(TYPES.IAuthValidationService)
+    private _authValidationService: IAuthValidationService,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
   async execute(
@@ -35,6 +41,12 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
     orgId: string,
     data: Partial<Project>,
   ): Promise<Project> {
+    if (!data.name) throw new ValidationError("Project name is required");
+    this._authValidationService.validateProjectName(data.name);
+
+    // RBAC Check
+    await this._securityService.validateOrgManager(userId, orgId);
+
     this._logger.info(`Checking subscription for userId: ${userId}`);
 
     let limit: number = PLAN_DEFAULTS.PROJECT_LIMIT; // Default
@@ -93,12 +105,26 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
       priority: data.priority,
       tags: data.tags,
       teamMemberIds: data.teamMemberIds,
+      tasksPerWeek: data.tasksPerWeek,
     });
+
+    // Validate that all assigned team members belong to this organization
+    if (project.teamMemberIds && project.teamMemberIds.length > 0) {
+      await this._securityService.validateMembersBelongToOrg(
+        project.teamMemberIds,
+        orgId,
+      );
+    }
 
     // [NEW] Real-time & Notifications
 
-    // 1. Notify Organization (Manager Dashboard Live Update)
-    this._socketService.emitToOrganization(orgId, "project:created", project);
+    // 1. Notify Org Managers (Manager Dashboard Live Update)
+    this._socketService.emitToRoleInOrg(
+      orgId,
+      "ORG MANAGER",
+      "project:created",
+      project,
+    );
 
     // 2. Notify Assigned Team Members
     if (project.teamMemberIds && project.teamMemberIds.length > 0) {

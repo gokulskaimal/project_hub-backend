@@ -7,6 +7,8 @@ import {
   EntityNotFoundError,
   ValidationError,
   ConflictError,
+  QuotaExceededError,
+  TooManyRequestsError,
 } from "../../domain/errors/CommonErrors";
 import {
   InvalidCredentialsError,
@@ -35,8 +37,13 @@ export function notFoundHandler(_req: Request, res: Response): void {
 
 export const asyncHandler =
   (fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>) =>
-  (req: Request, res: Response, next: NextFunction) =>
-    Promise.resolve(fn(req, res, next)).catch(next);
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await fn(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  };
 
 export function errorHandler(
   err: Error | HttpError | AppError,
@@ -51,25 +58,38 @@ export function errorHandler(
   // 2. Map Domain Errors to HTTP Statuses
   if (
     err instanceof AppError ||
-    (typeof (err as { code?: string }).code === "string" &&
-      (err as { code?: string }).code?.startsWith("AUTH_")) ||
-    (typeof (err as { code?: string }).code === "string" &&
-      (err as { code?: string }).code?.startsWith("COMMON_"))
+    (err as { code?: string }).code?.startsWith("AUTH_") ||
+    (err as { code?: string }).code?.startsWith("COMMON_") ||
+    (err as { code?: string }).code === "QUOTA_EXCEEDED" ||
+    (err as { code?: string }).code === "TOO_MANY_REQUESTS" ||
+    (err as { code?: string }).code === "VALIDATION_ERROR" ||
+    (err as { code?: string }).code === "ENTITY_NOT_FOUND" ||
+    (err as { code?: string }).code === "CONFLICT_ERROR"
   ) {
     code = (err as unknown as AppError).code || "INTERNAL_ERROR";
     message = err.message;
 
     const errCode = (err as unknown as AppError).code;
 
-    if (err instanceof EntityNotFoundError || errCode === "COMMON_NOT_FOUND") {
+    if (err instanceof EntityNotFoundError || errCode === "ENTITY_NOT_FOUND") {
       status = StatusCodes.NOT_FOUND;
     } else if (
       err instanceof ValidationError ||
-      errCode === "COMMON_VALIDATION_ERROR"
+      errCode === "VALIDATION_ERROR"
     ) {
       status = StatusCodes.BAD_REQUEST;
-    } else if (err instanceof ConflictError || errCode === "COMMON_CONFLICT") {
+    } else if (err instanceof ConflictError || errCode === "CONFLICT_ERROR") {
       status = StatusCodes.CONFLICT;
+    } else if (
+      err instanceof QuotaExceededError ||
+      errCode === "QUOTA_EXCEEDED"
+    ) {
+      status = StatusCodes.FORBIDDEN;
+    } else if (
+      err instanceof TooManyRequestsError ||
+      errCode === "TOO_MANY_REQUESTS"
+    ) {
+      status = StatusCodes.TOO_MANY_REQUESTS;
     } else if (
       err instanceof InvalidCredentialsError ||
       err instanceof InvalidTokenError ||

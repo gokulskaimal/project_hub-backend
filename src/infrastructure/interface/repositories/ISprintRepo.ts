@@ -4,5 +4,9 @@ import { IBaseRepository } from "./IBaseRepo";
 export interface ISprintRepo extends IBaseRepository<Sprint> {
   findByProject(projectId: string): Promise<Sprint[]>;
   findActiveSprint(projectId: string): Promise<Sprint | null>;
-  countSprint(projectId: string): Promise<number>;
+  countByProjectAndDateRange(
+    projectId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number>;
 }

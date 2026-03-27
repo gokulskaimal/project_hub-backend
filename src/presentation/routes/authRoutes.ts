@@ -36,7 +36,7 @@ export function createAuthRoutes(container: Container): Router {
     (req, res, next) => regCtrl.register(req, res, next),
   );
   router.post(
-    API_ROUTES.AUTH.REGISTER_MANAGER,
+    API_ROUTES.AUTH.SIGNUP_MANAGER,
     validate(registerSchema),
     (req, res, next) => regCtrl.registerManager(req, res, next),
   );
@@ -68,9 +68,6 @@ export function createAuthRoutes(container: Container): Router {
     pwdCtrl.resetPassword(req, res, next),
   );
 
-  router.post(API_ROUTES.AUTH.INVITE_MEMBER, (req, res, next) =>
-    inviteCtrl.inviteMember(req, res, next),
-  );
   router.post(API_ROUTES.AUTH.ACCEPT_INVITE, (req, res, next) =>
     inviteCtrl.acceptInvite(req, res, next),
   );

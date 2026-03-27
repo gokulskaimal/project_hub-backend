@@ -10,6 +10,13 @@ const TimeLogSchema = new Schema<TimeLog>({
   duration: { type: Number },
 });
 
+const AttachmentSchema = new Schema({
+  name: { type: String, required: true },
+  url: { type: String, required: true },
+  size: { type: Number },
+  type: { type: String },
+});
+
 const TaskCommentSchema = new Schema({
   userId: { type: String, required: true },
   text: { type: String, required: true },
@@ -58,7 +65,7 @@ const TaskSchema = new Schema<ITaskDoc>(
     createdBy: { type: String },
     timeLogs: [TimeLogSchema],
     totalTimeSpent: { type: Number, default: 0 },
-    attachments: [{ type: String }],
+    attachments: [AttachmentSchema],
     comments: [TaskCommentSchema],
   },
   { timestamps: true },

@@ -7,6 +7,7 @@ import { IUserQueryUseCase } from "../../../application/interface/useCases/IUser
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
 import { IAdminStatsUseCase } from "../../../application/interface/useCases/IAdminStatsUseCase";
 import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import {
   Organization,
   OrganizationStatus,
@@ -19,7 +20,6 @@ import {
   ValidationError,
 } from "../../../domain/errors/CommonErrors";
 import { toOrgDTO } from "../../../application/dto/OrgDTO";
-import { toUserDTO } from "../../../application/dto/UserDTO";
 import {
   OrgCreateSchema,
   OrgUpdateSchema,
@@ -84,15 +84,19 @@ export class AdminOrgController {
       return;
     }
     const { name, description, settings } = validation.data;
-    this.logger.info("Creating organization", { name });
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
 
-    const newOrg = await this._orgManagementUseCase.createOrganization({
-      name,
-      description,
-      settings: settings || {},
-      status: OrganizationStatus.ACTIVE,
-      createdAt: new Date(),
-    });
+    const newOrg = await this._orgManagementUseCase.createOrganization(
+      {
+        name,
+        description,
+        settings: settings || {},
+        status: OrganizationStatus.ACTIVE,
+        createdAt: new Date(),
+      },
+      authReq.user.id,
+    );
     this.sendSuccess(
       res,
       toOrgDTO(newOrg),
@@ -110,6 +114,9 @@ export class AdminOrgController {
   });
 
   updateOrganization = asyncHandler(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
+
     const { id } = req.params;
     if (!id) throw new ValidationError("Organization ID is required");
 
@@ -134,6 +141,7 @@ export class AdminOrgController {
         await this._orgManagementUseCase.updateOrganizationStatus(
           id,
           updateData.status,
+          authReq.user.id,
         );
 
       const otherFields = { ...updateData };
@@ -144,6 +152,7 @@ export class AdminOrgController {
         const finalOrg = await this._orgManagementUseCase.updateOrganization(
           id,
           otherFields as Partial<Organization>,
+          authReq.user.id,
         );
         this.sendSuccess(res, toOrgDTO(finalOrg), COMMON_MESSAGES.UPDATED);
         return;
@@ -157,24 +166,24 @@ export class AdminOrgController {
     const updatedOrg = await this._orgManagementUseCase.updateOrganization(
       id,
       updateData as Partial<Organization>,
+      authReq.user.id,
     );
     this.sendSuccess(res, toOrgDTO(updatedOrg), COMMON_MESSAGES.UPDATED);
   });
 
   deleteOrganization = asyncHandler(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
+
     const { id } = req.params;
     this.logger.info("Deleting organization", { orgId: id });
     if (!id) throw new ValidationError("Organization ID is required");
 
-    await this._orgManagementUseCase.deleteOrganizationCascade(id);
+    await this._orgManagementUseCase.deleteOrganizationCascade(
+      id,
+      authReq.user.id,
+    );
     this.sendSuccess(res, null, COMMON_MESSAGES.DELETED);
-  });
-
-  getUsersByOrganization = asyncHandler(async (req: Request, res: Response) => {
-    const { orgId } = req.params;
-    this.logger.info("Fetching users by organization", { orgId });
-    const users = await this._userQueryUseCase.getUsersByOrganization(orgId);
-    this.sendSuccess(res, users.map(toUserDTO));
   });
 
   inviteMember = asyncHandler(async (req: Request, res: Response) => {
@@ -188,12 +197,24 @@ export class AdminOrgController {
       return;
     }
     const { email, orgId, role } = validation.data;
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
+
     this.logger.info("Admin inviting member", { email, orgId, role });
 
-    const result = await this._inviteMemberUseCase.execute(email, orgId, role);
+    const result = await this._inviteMemberUseCase.execute(
+      email,
+      orgId,
+      authReq.user.id,
+      role,
+    );
+    const safeResult = {
+      ...result,
+      expiresAt: result.expiresAt.toISOString(),
+    };
     this.sendSuccess(
       res,
-      result,
+      safeResult,
       COMMON_MESSAGES.INVITATION_SENT,
       StatusCodes.CREATED,
     );
@@ -217,9 +238,13 @@ export class AdminOrgController {
       role,
     });
 
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) throw new ValidationError("Unauthorized");
+
     const result = await this._inviteMemberUseCase.bulkInvite(
       emails,
       orgId,
+      authReq.user.id,
       role,
     );
     this.sendSuccess(res, result, COMMON_MESSAGES.INVITATION_SENT);

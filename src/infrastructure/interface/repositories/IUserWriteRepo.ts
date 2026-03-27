@@ -22,13 +22,6 @@ export interface IUserWriteRepo {
   update(id: string, data: Partial<User>): Promise<User | null>;
 
   /**
-   * Update user password
-   * @param id - User ID
-   * @param hashedPassword - Hashed password
-   */
-  updatePassword(id: string, hashedPassword: string): Promise<void>;
-
-  /**
    * Update user profile
    * @param id - User ID
    * @param data - Partial user data to update
@@ -45,28 +38,63 @@ export interface IUserWriteRepo {
   updateStatus(id: string, status: string): Promise<User>;
 
   /**
+   * Update last login timestamp
+   * @param id - User ID
+   * @param loginTime - Login timestamp
+   */
+  updateLastLogin(id: string, loginTime: Date): Promise<void>;
+
+  /**
+   * Update user's reset token
+   * @param email - User email
+   * @param token - Reset token (or undefined to clear)
+   * @param expiry - Token expiry date (or undefined to clear)
+   */
+  updateResetToken(
+    email: string,
+    token: string | undefined,
+    expiry: Date | undefined,
+  ): Promise<void>;
+
+  /**
+   * Update user's password
+   * @param email - User email
+   * @param passwordHash - New hashed password
+   */
+  updatePassword(email: string, passwordHash: string): Promise<void>;
+
+  /**
+   * Update user's OTP
+   * @param email - User email
+   * @param otp - OTP code
+   * @param expiry - OTP expiry date
+   */
+  updateOtp(email: string, otp: string, expiry: Date): Promise<void>;
+
+  /**
+   * Clear user's OTP
+   * @param email - User email
+   */
+  clearOtp(email: string): Promise<void>;
+
+  /**
+   * Upsert OTP user data
+   * @param email - User email
+   * @param data - Data to upsert
+   */
+  upsertOtpUser(email: string, data: Record<string, unknown>): Promise<void>;
+
+  /**
+   * Clean up expired OTPs
+   * @returns Number of deleted OTPs
+   */
+  cleanExpiredOtps(): Promise<number>;
+
+  /**
    * Verify user email
    * @param id - User ID
    */
   verifyEmail(id: string): Promise<void>;
-
-  /**
-   * Set password reset token
-   * @param email - User email
-   * @param token - Reset token
-   * @param expires - Token expiration date
-   */
-  setResetPasswordToken(
-    email: string,
-    token: string,
-    expires: Date,
-  ): Promise<void>;
-
-  /**
-   * Clear password reset token
-   * @param id - User ID
-   */
-  clearResetPasswordToken(id: string): Promise<void>;
 
   /**
    * Delete user (soft delete)
@@ -87,19 +115,4 @@ export interface IUserWriteRepo {
    * @param loginTime - Login timestamp
    */
   updateLastLogin(id: string, loginTime: Date): Promise<void>;
-
-  /**
-   * Ensure user exists with OTP (create if not exists, update if exists)
-   * @param email - User email
-   * @param otp - OTP code
-   * @param expiry - OTP expiration date
-   * @returns User with OTP
-   */
-  ensureUserWithOtp(email: string, otp: string, expiry: Date): Promise<User>;
-
-  /**
-   * Clean expired OTPs
-   * @returns Number of cleaned OTPs
-   */
-  cleanExpiredOtps(): Promise<number>;
 }

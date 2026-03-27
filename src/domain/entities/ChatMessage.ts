@@ -4,7 +4,7 @@ export class ChatMessage {
     public projectId: string,
     public senderId: string,
     public content: string,
-    public type: "TEXT" | "FILE" | "IMAGE",
+    public type: "TEXT" | "FILE" | "IMAGE" | "SYSTEM" | "ACTIVITY",
     public fileUrl: string | null,
     public createdAt: Date,
     public senderName?: string, // Populated field

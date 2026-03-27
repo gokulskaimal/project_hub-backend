@@ -8,6 +8,7 @@ import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprint
 import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
 import { ITaskHistoryRepo } from "../../infrastructure/interface/repositories/ITaskHistoryRepo";
 import { IChatRepo } from "../../infrastructure/interface/repositories/IChatRepo";
+import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
 
 @injectable()
 export class DeleteProjectUseCase implements IDeleteProjectUseCase {
@@ -18,13 +19,19 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.ITaskHistoryRepo) private _taskHistoryRepo: ITaskHistoryRepo,
     @inject(TYPES.IChatRepo) private _chatRepo: IChatRepo,
+    @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
 
-  async execute(id: string): Promise<boolean> {
-    this._logger.info(`Deleting project ${id} and all related data`);
+  async execute(id: string, requesterId: string): Promise<boolean> {
+    this._logger.info(
+      `Deleting project ${id} and all related data by user ${requesterId}`,
+    );
 
     const project = await this._projectRepo.findById(id);
     if (!project) throw new EntityNotFoundError("Project", id);
+
+    // RBAC Check
+    await this._securityService.validateOrgManager(requesterId, project.orgId);
 
     const tasks = await this._taskRepo.findByProject(id);
     if (tasks.length > 0) {

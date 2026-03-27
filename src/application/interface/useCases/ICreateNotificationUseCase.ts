@@ -4,6 +4,7 @@ export interface ICreateNotificationUseCase {
     title: string,
     message: string,
     type: "INFO" | "SUCCESS" | "WARNING" | "ERROR",
+    orgId: string,
     link?: string,
   ): Promise<void>;
 }

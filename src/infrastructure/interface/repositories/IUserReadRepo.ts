@@ -13,7 +13,6 @@ export interface IUserReadRepo {
    * @returns User or null if not found
    */
   findByEmail(email: string): Promise<User | null>;
-  countByOrg(orgId : string) : Promise<number>;
   /**
    * Find user by ID
    * @param id - User ID
@@ -29,11 +28,6 @@ export interface IUserReadRepo {
   findByOrg(orgId: string): Promise<User[]>;
 
   /**
-   * Find all users
-   * @returns Array of all users
-   */
-  findAll(): Promise<User[]>;
-
   /**
    * Find users by role
    * @param role - User role
@@ -48,13 +42,6 @@ export interface IUserReadRepo {
    * @returns Array of users
    */
   findByOrgAndRole(orgId: string, role: string): Promise<User[]>;
-
-  /**
-   * Find user by reset token
-   * @param token - Reset token
-   * @returns User or null if not found
-   */
-  findByResetToken(token: string): Promise<User | null>;
 
   /**
    * Find users with pagination
@@ -88,12 +75,6 @@ export interface IUserReadRepo {
   findByStatus(status: string): Promise<User[]>;
 
   /**
-   * Find users with expired OTP
-   * @returns Array of users with expired OTP
-   */
-  findUsersWithExpiredOtp(): Promise<User[]>;
-
-  /**
    * Count users by organization
    * @param orgId - Organization ID
    * @returns User count
@@ -122,23 +103,49 @@ export interface IUserReadRepo {
   emailExists(email: string, excludeUserId?: string): Promise<boolean>;
 
   /**
+   * Find user by reset token
+   * @param token - Reset token
+   * @returns User or null if not found
+   */
+  findByResetToken(token: string): Promise<User | null>;
+
+  /**
+   * Find user by email and OTP
+   * @param email - User email
+   * @param otp - OTP code
+   * @returns User or null if not found
+   */
+  findByEmailAndOtp(email: string, otp: string): Promise<User | null>;
+
+  /**
+   * Count users by status
+   * @param status - User status
+   * @returns User count
+   */
+  countByStatus(status: string): Promise<number>;
+
+  /**
+   * Count verified users
+   * @returns Verified user count
+   */
+  countVerified(): Promise<number>;
+
+  /**
+   * Get role distribution
+   * @returns Array of role counts
+   */
+  getRoleDistribution(): Promise<Array<{ _id: string; count: number }>>;
+
+  /**
+   * Find users by ID list
+   * @param ids - Array of User IDs
+   * @returns Array of users
+   */
+  findByIds(ids: string[]): Promise<User[]>;
+
+  /**
    * @param orgId - Organization ID
    * @returns Organization or null
    */
   findOrganizationById?(orgId: string): Promise<Organization | null>;
-
-  /**
-   * Get user statistics
-   * @returns User statistics
-   */
-  getStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    pending: number;
-    verified: number;
-    unverified: number;
-    byRole: Record<string, number>;
-  }>;
 }
- 

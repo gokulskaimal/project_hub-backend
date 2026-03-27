@@ -25,7 +25,7 @@ export class TaskRepo
       priority: obj.priority,
       type: obj.type,
       storyPoints: obj.storyPoints,
-      sprintId: obj.sprintId, // Ensure this is mapped!
+      sprintId: obj.sprintId?.toString(),
       sprintAssignedAt: obj.sprintAssignedAt,
       assignedTo: obj.assignedTo,
       dueDate: obj.dueDate,
@@ -53,9 +53,12 @@ export class TaskRepo
     return docs.map((d) => this.toDomain(d));
   }
 
-  async findByAssignee(userId: string): Promise<Task[]> {
+  async findByAssignee(userId: string, orgId?: string): Promise<Task[]> {
+    const query: Record<string, unknown> = { assignedTo: userId };
+    if (orgId) query.orgId = orgId;
+
     const docs = await this.model
-      .find({ assignedTo: userId })
+      .find(query)
       .sort({ createdAt: -1 })
       .populate("project", "name");
     return docs.map((d) => this.toDomain(d));
@@ -67,6 +70,57 @@ export class TaskRepo
       .sort({ createdAt: -1 })
       .populate("project", "name");
     return docs.map((d) => this.toDomain(d));
+  }
+
+  async countBySprint(sprintId: string): Promise<number> {
+    return this.model.countDocuments({ sprintId });
+  }
+
+  async countBySprintAssignedAtRange(
+    sprintId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number> {
+    return this.model.countDocuments({
+      sprintId,
+      sprintAssignedAt: { $gte: start, $lte: end },
+    });
+  }
+
+  async sumDonePointsByUserInRange(
+    userId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number> {
+    const result = await this.model.aggregate([
+      {
+        $match: {
+          assignedTo: userId,
+          status: "DONE",
+          completedAt: { $gte: start, $lte: end },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$storyPoints" } } },
+    ]);
+    return result[0]?.total || 0;
+  }
+
+  async sumDonePointsByProjectInRange(
+    projectId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number> {
+    const result = await this.model.aggregate([
+      {
+        $match: {
+          projectId,
+          status: "DONE",
+          completedAt: { $gte: start, $lte: end },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$storyPoints" } } },
+    ]);
+    return result[0]?.total || 0;
   }
 
   async deleteSubtasks(parentId: string): Promise<boolean> {

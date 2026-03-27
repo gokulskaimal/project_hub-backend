@@ -39,17 +39,15 @@ export class SprintRepo
     return doc ? this.toDomain(doc) : null;
   }
 
-  async countSprint(projectId: string): Promise<number> {
-    const start = new Date();
-
-    start.setHours(0, 0, 0, 0);
-
-    const end = new Date();
-    end.setHours(23, 0, 0, 0);
-    const count = await this.model.countDocuments(
-      { projectId },
-      { createdAt: { $gte: start, $lte: end } },
-    );
+  async countByProjectAndDateRange(
+    projectId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number> {
+    const count = await this.model.countDocuments({
+      projectId,
+      createdAt: { $gte: start, $lte: end },
+    });
     return count;
   }
 }
