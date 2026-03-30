@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IUserQueryUseCase } from "../../../application/interface/useCases/IUserQueryUseCase";
 import { IUserManagementUseCase } from "../../../application/interface/useCases/IUserManagementUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";

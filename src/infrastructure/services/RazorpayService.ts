@@ -5,19 +5,21 @@ import {
   IRazorpayService,
   RazorpayOrder,
   RazorpaySubscription,
-} from "../interface/services/IRazorpayService";
+} from "../../application/interface/services/IRazorpayService";
 import { TYPES } from "../container/types";
-import { ILogger } from "../interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { AppConfig } from "../../config/AppConfig";
 
 @injectable()
 export class RazorpayService implements IRazorpayService {
   private readonly _razorpay: Razorpay | null = null;
 
   constructor(
-    @inject(TYPES.ILogger) private readonly _logger: ILogger
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
   ) {
-    const key_id = process.env.RAZORPAY_KEY_ID;
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    const key_id = this.config.razorpay.keyId;
+    const key_secret = this.config.razorpay.keySecret;
 
     if (key_id && key_secret) {
       this._razorpay = new Razorpay({
@@ -49,7 +51,9 @@ export class RazorpayService implements IRazorpayService {
       }
     }
 
-    this._logger.info(`[MOCK] createOrder: amount=${amount}, currency=${currency}`);
+    this._logger.info(
+      `[MOCK] createOrder: amount=${amount}, currency=${currency}`,
+    );
     return {
       id: `order_mock_${Date.now()}`,
       amount: Math.round(amount * 100),
@@ -78,7 +82,10 @@ export class RazorpayService implements IRazorpayService {
         const subscription = await this._razorpay.subscriptions.create(options);
         return subscription as unknown as RazorpaySubscription;
       } catch (error) {
-        this._logger.error("Razorpay createSubscription failed", error as Error);
+        this._logger.error(
+          "Razorpay createSubscription failed",
+          error as Error,
+        );
         throw error;
       }
     }
@@ -112,7 +119,7 @@ export class RazorpayService implements IRazorpayService {
       return true;
     }
 
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    const key_secret = this.config.razorpay.keySecret;
     if (!key_secret) return false;
 
     try {
@@ -214,7 +221,10 @@ export class RazorpayService implements IRazorpayService {
       const sub = await this._razorpay.subscriptions.fetch(subscriptionId);
       return sub as unknown as RazorpaySubscription;
     } catch (error) {
-      this._logger.error("Failed to fetch subscription from Razorpay", error as Error);
+      this._logger.error(
+        "Failed to fetch subscription from Razorpay",
+        error as Error,
+      );
       return null;
     }
   }

@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { INotificationRepo } from "../interface/repositories/INotificationRepo";
+import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
 import { Notification } from "../../domain/entities/Notification";
 import {
   INotificationDoc,

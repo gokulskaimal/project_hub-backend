@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ILoginUseCase } from "../interface/useCases/ILoginUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IHashService } from "../../infrastructure/interface/services/IHashService";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { toUserDTO } from "../dto/UserDTO";
 import { AuthResult } from "../interface/useCases/types";
@@ -125,7 +125,7 @@ export class LoginUseCase implements ILoginUseCase {
       const payload = {
         id: user.id,
         email: user.email,
-        role: user.role,
+        role: user.role.replace(/\s+/g, "_") as UserRole,
         orgId: user.orgId,
       };
 

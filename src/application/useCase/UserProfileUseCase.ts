@@ -1,11 +1,11 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IUserProfileUseCase } from "../interface/useCases/IUserProfileUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IHashService } from "../../infrastructure/interface/services/IHashService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import {
   UserDTO,
   toUserDTO,
@@ -17,7 +17,7 @@ import {
   ValidationError,
 } from "../../domain/errors/CommonErrors";
 import { InvalidCredentialsError } from "../../domain/errors/AuthErrors";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class UserProfileUseCase implements IUserProfileUseCase {

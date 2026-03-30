@@ -1,9 +1,9 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { IGetProjectVelocityUseCase } from "../interface/useCases/IGetProjectVelocityUseCase";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetProjectVelocityUseCase implements IGetProjectVelocityUseCase {

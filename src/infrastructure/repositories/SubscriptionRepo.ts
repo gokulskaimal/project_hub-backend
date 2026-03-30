@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepo";
 import { Subscription } from "../../domain/entities/Subscription";
-import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
 import SubscriptionModel, {
   ISubscriptionDoc,
 } from "../models/SubscriptionModel";
@@ -10,7 +10,8 @@ import { Model } from "mongoose";
 @injectable()
 export class SubscriptionRepo
   extends BaseRepository<Subscription, ISubscriptionDoc>
-  implements ISubscriptionRepo {
+  implements ISubscriptionRepo
+{
   constructor() {
     super(SubscriptionModel as unknown as Model<ISubscriptionDoc>);
   }

@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
 import { IAcceptUseCase } from "../../../application/interface/useCases/IAcceptUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../../utils/asyncHandler";
@@ -58,6 +58,7 @@ export class InviteController {
       firstName,
       lastName,
     });
+    res.setHeader("Referrer-Policy", "no-referrer");
     const result = await this._acceptUC.execute(
       token,
       password,
@@ -70,6 +71,7 @@ export class InviteController {
   validateInviteToken = asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.params;
     this._logger.info("Validating invite token", { token: "REDACTED" });
+    res.setHeader("Referrer-Policy", "no-referrer");
     const result = await this._acceptUC.validateInvitationToken(token);
     this.sendSuccess(res, result, "Token validation result");
   });

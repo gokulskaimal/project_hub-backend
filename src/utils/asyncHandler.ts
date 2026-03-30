@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../infrastructure/config/common.constants";
 import logger from "../infrastructure/services/Logger";
+import { config } from "../config/AppConfig";
 
 // 1. Custom Error Class
 export class HttpError extends Error {
@@ -70,7 +71,7 @@ export function errorHandler(
     error: message,
     timestamp: new Date().toISOString(),
     // In production, do not send stack traces
-    ...(process.env.NODE_ENV === "development" &&
+    ...(config.nodeEnv === "development" &&
       status >= 500 && { stack: err.stack }),
   });
 }

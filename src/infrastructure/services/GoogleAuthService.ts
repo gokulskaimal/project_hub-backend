@@ -1,12 +1,14 @@
 import { OAuth2Client, TokenPayload } from "google-auth-library";
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../container/types";
+import { AppConfig } from "../../config/AppConfig";
 
 @injectable()
 export class GoogleAuthService {
   private client: OAuth2Client;
 
-  constructor() {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
+  constructor(@inject(TYPES.AppConfig) private readonly config: AppConfig) {
+    const clientId = this.config.google.clientId;
     if (!clientId) {
       console.warn(
         "WARNING: GOOGLE_CLIENT_ID is not defined in environment variables.",
@@ -18,7 +20,7 @@ export class GoogleAuthService {
   async verifyToken(idToken: string): Promise<TokenPayload> {
     const ticket = await this.client.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: this.config.google.clientId,
     });
 
     const payload = ticket.getPayload();

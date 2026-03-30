@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { IRazorpayService } from "../../infrastructure/interface/services/IRazorpayService";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { IRazorpayService } from "../../application/interface/services/IRazorpayService";
 import { Plan } from "../../domain/entities/Plan";
 import { ICreatePlanUseCase } from "../interface/useCases/ICreatePlanUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class CreatePlanUseCase implements ICreatePlanUseCase {

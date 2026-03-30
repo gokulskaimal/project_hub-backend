@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { Project } from "../../domain/entities/Project";
-import { IProjectRepo } from "../interface/repositories/IProjectRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ProjectModel, IProjectDoc } from "../models/ProjectModel";
 import { BaseRepository } from "./BaseRepo";
 import { Model } from "mongoose";

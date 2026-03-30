@@ -1,13 +1,13 @@
 import { injectable, inject } from "inversify";
 import { BaseRepository } from "./BaseRepo";
-import { IUserRepo } from "../interface/repositories/IUserRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { User } from "../../domain/entities/User";
 import { Organization } from "../../domain/entities/Organization";
 import UserModel, { IUserDoc } from "../models/UserModel";
 import { UserRole } from "../../domain/enums/UserRole";
 import OrgModel from "../models/OrgModel";
 import { TYPES } from "../container/types";
-import { ILogger } from "../interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
 export class UserRepo

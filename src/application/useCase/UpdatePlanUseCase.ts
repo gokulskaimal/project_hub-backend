@@ -1,9 +1,9 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
 import { Plan } from "../../domain/entities/Plan";
 import { IUpdatePlanUseCase } from "../interface/useCases/IUpdatePlanUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class UpdatePlanUseCase implements IUpdatePlanUseCase {

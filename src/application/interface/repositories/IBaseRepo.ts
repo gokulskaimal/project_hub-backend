@@ -1,5 +1,3 @@
-import { FilterQuery } from "mongoose";
-
 /**
  * Base Repository Interface
  *
@@ -30,7 +28,7 @@ export interface IBaseRepository<T, ID = string> {
    * @param filter - The filter to apply to the query
    * @returns A promise resolving to an array of entities
    */
-  findAll(filter?: FilterQuery<T>): Promise<T[]>;
+  findAll(filter?: Record<string, unknown>): Promise<T[]>;
   /**
    * Updates an entity by its ID
    *
@@ -52,7 +50,7 @@ export interface IBaseRepository<T, ID = string> {
    * @param filter - The filter to apply to the query
    * @returns A promise resolving to the count of matching entities
    */
-  count(filter?: FilterQuery<T>): Promise<number>;
+  count(filter?: Record<string, unknown>): Promise<number>;
   /**
    * Checks if an entity exists by its ID
    *

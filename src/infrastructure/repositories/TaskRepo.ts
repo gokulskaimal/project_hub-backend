@@ -1,5 +1,5 @@
 import { BaseRepository } from "./BaseRepo";
-import { ITaskRepo } from "../interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
 import { TaskModel, ITaskDoc } from "../models/TaskModel";
 import { Model } from "mongoose";

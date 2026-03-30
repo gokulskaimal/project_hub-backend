@@ -1,9 +1,9 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IInvoiceRepo } from "../../infrastructure/interface/repositories/IInvoiceRepo";
+import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 import { IGetOrgInvoicesUseCase } from "../interface/useCases/IGetOrgInvoicesUseCase";
 import { Invoice } from "../../domain/entities/Invoice";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetOrgInvoicesUseCase implements IGetOrgInvoicesUseCase {

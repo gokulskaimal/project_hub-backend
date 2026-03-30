@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGetOrgTasksUseCase } from "../interface/useCases/IGetOrgTasksUseCase";
 import { Task } from "../../domain/entities/Task";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetOrgTasksUseCase implements IGetOrgTasksUseCase {

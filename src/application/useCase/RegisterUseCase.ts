@@ -1,14 +1,14 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IRegisterUseCase } from "../interface/useCases/IRegisterUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IHashService } from "../../infrastructure/interface/services/IHashService";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { User } from "../../domain/entities/User";
 import { toUserDTO } from "../dto/UserDTO";
 import { AuthResult } from "../interface/useCases/types";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ConflictError } from "../../domain/errors/CommonErrors";
 
 @injectable()
@@ -51,7 +51,7 @@ export class RegisterUseCase implements IRegisterUseCase {
     const payload = {
       id: created.id,
       email: created.email,
-      role: created.role,
+      role: (created.role as string).replace(/\s+/g, "_"),
       orgId: created.orgId ?? null,
     };
 

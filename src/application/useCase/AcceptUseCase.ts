@@ -2,18 +2,18 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IInviteRepo } from "../../application/interface/repositories/IInviteRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { IAcceptUseCase } from "../interface/useCases/IAcceptUseCase";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IHashService } from "../../infrastructure/interface/services/IHashService";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { IJwtService } from "../../application/interface/services/IJwtService";
 import { toUserDTO, UserDTO } from "../../application/dto/UserDTO";
 import { toInviteDTO, InviteDTO } from "../../application/dto/InviteDTO";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { NotificationType } from "../../domain/enums/NotificationType";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { ISocketService } from "../../application/interface/services/ISocketService";
 import {
   ConflictError,
   EntityNotFoundError,
@@ -160,7 +160,7 @@ export class AcceptUseCase implements IAcceptUseCase {
       const accessToken = this._jwtService.generateAccessToken({
         id: newUser.id,
         email: newUser.email,
-        role: newUser.role,
+        role: (newUser.role as string).replace(/\s+/g, "_"),
         orgId: newUser.orgId,
       });
 

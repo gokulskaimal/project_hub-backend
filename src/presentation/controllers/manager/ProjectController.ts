@@ -20,8 +20,8 @@ import {
 } from "../../../application/dto/ValidationSchemas";
 import { z } from "zod";
 
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
-import { IUserRepo } from "../../../infrastructure/interface/repositories/IUserRepo";
+import { ILogger } from "../../../application/interface/services/ILogger";
+import { IUserRepo } from "../../../application/interface/repositories/IUserRepo";
 
 import { IGetMemberProjectsUseCase } from "../../../application/interface/useCases/IGetMemberProjectsUseCase";
 

@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { IUserQueryUseCase } from "../interface/useCases/IUserQueryUseCase";
 import { User } from "../../domain/entities/User";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { UserRole } from "../../domain/enums/UserRole";
 import { ForbiddenError } from "../../domain/errors/CommonErrors";
 

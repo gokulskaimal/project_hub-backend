@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { injectable, inject } from "inversify";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IUserProfileUseCase } from "../../../application/interface/useCases/IUserProfileUseCase";
 import { IGetUserVelocityUseCase } from "../../../application/interface/useCases/IGetUserVelocityUseCase";

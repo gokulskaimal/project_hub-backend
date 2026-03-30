@@ -1,14 +1,16 @@
-import { injectable } from "inversify";
-import { IFileService } from "../interface/services/IFileService";
+import { injectable, inject } from "inversify";
+import { IFileService } from "../../application/interface/services/IFileService";
 import { v2 as cloudinary } from "cloudinary";
+import { TYPES } from "../container/types";
+import { AppConfig } from "../../config/AppConfig";
 
 @injectable()
 export class CloudinaryService implements IFileService {
-  constructor() {
+  constructor(@inject(TYPES.AppConfig) private readonly config: AppConfig) {
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
+      cloud_name: this.config.upload.cloudName,
+      api_key: this.config.upload.apiKey,
+      api_secret: this.config.upload.apiSecret,
     });
   }
 

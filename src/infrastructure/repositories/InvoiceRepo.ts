@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IInvoiceRepo } from "../interface/repositories/IInvoiceRepo";
+import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 import { Invoice } from "../../domain/entities/Invoice";
 import { InvoiceModel } from "../models/InvoiceModel";
 import mongoose, { PipelineStage } from "mongoose";

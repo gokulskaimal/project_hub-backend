@@ -49,53 +49,68 @@ export function errorHandler(
   err: Error | HttpError | AppError,
   req: Request,
   res: Response,
+  _next: NextFunction, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): void {
   // 1. Default fallback
   let status = StatusCodes.INTERNAL_SERVER_ERROR;
   let message: string = COMMON_MESSAGES.SERVER_ERROR;
   let code = "INTERNAL_ERROR";
 
-  // 2. Map Domain Errors to HTTP Statuses
+  // 2. Map Domain Errors to HTTP Statuses (Robust String-based detection)
+  const errCode = (err as AppError).code || "";
+  const errName = err.constructor.name;
+  const isValidationError =
+    err instanceof ValidationError ||
+    errCode === "VALIDATION_ERROR" ||
+    errName === "ValidationError" ||
+    err.message.includes("Organization Name Required");
+
   if (
     err instanceof AppError ||
-    (err as { code?: string }).code?.startsWith("AUTH_") ||
-    (err as { code?: string }).code?.startsWith("COMMON_") ||
-    (err as { code?: string }).code === "QUOTA_EXCEEDED" ||
-    (err as { code?: string }).code === "TOO_MANY_REQUESTS" ||
-    (err as { code?: string }).code === "VALIDATION_ERROR" ||
-    (err as { code?: string }).code === "ENTITY_NOT_FOUND" ||
-    (err as { code?: string }).code === "CONFLICT_ERROR"
+    errCode.startsWith("AUTH_") ||
+    errCode.startsWith("COMMON_") ||
+    errCode === "QUOTA_EXCEEDED" ||
+    errCode === "TOO_MANY_REQUESTS" ||
+    isValidationError ||
+    errCode === "ENTITY_NOT_FOUND" ||
+    errCode === "CONFLICT_ERROR" ||
+    errName.includes("Error") // Catch-all for our custom Error classes
   ) {
-    code = (err as unknown as AppError).code || "INTERNAL_ERROR";
+    code =
+      errCode || (isValidationError ? "VALIDATION_ERROR" : "INTERNAL_ERROR");
     message = err.message;
 
-    const errCode = (err as unknown as AppError).code;
-
-    if (err instanceof EntityNotFoundError || errCode === "ENTITY_NOT_FOUND") {
-      status = StatusCodes.NOT_FOUND;
-    } else if (
-      err instanceof ValidationError ||
-      errCode === "VALIDATION_ERROR"
+    if (
+      err instanceof EntityNotFoundError ||
+      errCode === "ENTITY_NOT_FOUND" ||
+      errName === "EntityNotFoundError"
     ) {
+      status = StatusCodes.NOT_FOUND;
+    } else if (isValidationError) {
       status = StatusCodes.BAD_REQUEST;
-    } else if (err instanceof ConflictError || errCode === "CONFLICT_ERROR") {
+    } else if (
+      err instanceof ConflictError ||
+      errCode === "CONFLICT_ERROR" ||
+      errName === "ConflictError"
+    ) {
       status = StatusCodes.CONFLICT;
     } else if (
       err instanceof QuotaExceededError ||
-      errCode === "QUOTA_EXCEEDED"
+      errCode === "QUOTA_EXCEEDED" ||
+      errName === "QuotaExceededError"
     ) {
       status = StatusCodes.FORBIDDEN;
     } else if (
       err instanceof TooManyRequestsError ||
-      errCode === "TOO_MANY_REQUESTS"
+      errCode === "TOO_MANY_REQUESTS" ||
+      errName === "TooManyRequestsError"
     ) {
       status = StatusCodes.TOO_MANY_REQUESTS;
     } else if (
       err instanceof InvalidCredentialsError ||
       err instanceof InvalidTokenError ||
       err instanceof TokenExpiredError ||
-      errCode === "AUTH_INVALID_CREDENTIALS" ||
-      errCode === "AUTH_TOKEN_EXPIRED"
+      errCode.startsWith("AUTH_")
     ) {
       status = StatusCodes.UNAUTHORIZED;
     } else if (
@@ -103,12 +118,11 @@ export function errorHandler(
       err instanceof EmailNotVerifiedError ||
       err instanceof OrganizationSuspendedError ||
       err instanceof OrganizationNotFoundError ||
-      errCode === "AUTH_ACCOUNT_SUSPENDED" ||
-      errCode === "AUTH_ORG_NOT_FOUND"
+      errName.includes("Suspended")
     ) {
       status = StatusCodes.FORBIDDEN;
     } else {
-      status = StatusCodes.BAD_REQUEST; // Default for other domain errors
+      status = StatusCodes.BAD_REQUEST; // Default for other recognized domain errors
     }
   }
   // 3. Handle Legacy HttpErrors (Transition period support)

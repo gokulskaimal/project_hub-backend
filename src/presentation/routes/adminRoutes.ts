@@ -3,7 +3,7 @@ import { Container } from "inversify";
 import { AdminUserController } from "../controllers/admin/AdminUserController";
 import { AdminOrgController } from "../controllers/admin/AdminOrgController";
 import { AdminPlanController } from "../controllers/admin/AdminPlanController";
-import { IAdminInvoiceController } from "../../application/interface/controllers/IAdminInvoiceController";
+import { IAdminInvoiceController } from "../interfaces/controllers/IAdminInvoiceController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";

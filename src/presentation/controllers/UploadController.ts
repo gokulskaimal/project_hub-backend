@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IFileService } from "../../infrastructure/interface/services/IFileService";
+import { IFileService } from "../../application/interface/services/IFileService";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { asyncHandler } from "../middleware/ErrorMiddleware";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";

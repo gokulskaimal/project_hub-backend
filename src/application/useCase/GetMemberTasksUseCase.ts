@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGetMemberTasksUseCase } from "../interface/useCases/IGetMemberTasksUseCase";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetMemberTasksUseCase implements IGetMemberTasksUseCase {

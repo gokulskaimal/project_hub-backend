@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IEditMessageUseCase } from "../interface/useCases/IEditMessageUseCase";
-import { IChatRepo } from "../../infrastructure/interface/repositories/IChatRepo";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ChatMessage } from "../../domain/entities/ChatMessage";
 import {
   EntityNotFoundError,

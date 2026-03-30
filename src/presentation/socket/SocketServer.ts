@@ -3,13 +3,17 @@ import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+
+import { AppConfig } from "../../config/AppConfig";
+
+import { UserRole } from "../../domain/enums/UserRole";
 
 interface AuthenticatedUser {
   id: string;
   orgId: string;
-  role: string;
+  role: UserRole;
   [key: string]: unknown;
 }
 
@@ -20,6 +24,7 @@ export class SocketServer {
   constructor(
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+    @inject(TYPES.AppConfig) private config: AppConfig,
   ) {}
 
   public initialize(httpServer: HttpServer, allowedOrigins: string | string[]) {
@@ -40,7 +45,7 @@ export class SocketServer {
       try {
         const decoded = jwt.verify(
           token,
-          process.env.JWT_ACCESS_SECRET!,
+          this.config.jwt.accessSecret,
         ) as AuthenticatedUser;
         socket.data.user = decoded;
         next();
@@ -62,11 +67,11 @@ export class SocketServer {
 
           // Authorization Check
           const isManager =
-            user.role === "ORG MANAGER" && project.orgId === user.orgId;
+            user.role === UserRole.ORG_MANAGER && project.orgId === user.orgId;
           const isMember =
-            user.role === "TEAM MEMBER" &&
+            user.role === UserRole.TEAM_MEMBER &&
             project.teamMemberIds?.includes(user.id);
-          const isAdmin = user.role === "SUPER ADMIN";
+          const isAdmin = user.role === UserRole.SUPER_ADMIN;
 
           if (isManager || isMember || isAdmin) {
             this._logger.info(

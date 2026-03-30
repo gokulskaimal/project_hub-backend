@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepo";
-import { ISprintRepo } from "../interface/repositories/ISprintRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { Sprint } from "../../domain/entities/Sprint";
 import { ISprintDoc, SprintModel } from "../models/SprintModel";
 

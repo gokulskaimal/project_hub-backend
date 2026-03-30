@@ -14,7 +14,7 @@ export interface User {
   role: UserRole;
   provider?: string;
   googleId?: string;
-  avatar?: string;
+  avatar?: string | null;
   orgId?: string;
   otp?: string;
   otpExpiry?: Date;

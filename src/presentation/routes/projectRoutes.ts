@@ -5,6 +5,8 @@ import { TaskController } from "../controllers/manager/TaskController";
 import { SprintController } from "../controllers/manager/SprintController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
+import { roleMiddleware } from "../middleware/RoleMiddleware";
+import { UserRole } from "../../domain/enums/UserRole";
 import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant";
 
 export function createProjectRoutes(container: Container): Router {
@@ -16,8 +18,10 @@ export function createProjectRoutes(container: Container): Router {
   router.use(API_ROUTES.PROJECTS.BASE, authMiddleware);
 
   // Projects
-  router.post(API_ROUTES.PROJECTS.CREATE, (req, res, next) =>
-    projectCtrl.createProject(req, res, next),
+  router.post(
+    API_ROUTES.PROJECTS.CREATE,
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => projectCtrl.createProject(req, res, next),
   );
   router.get(API_ROUTES.PROJECTS.GET_getAll, (req, res, next) =>
     projectCtrl.getAllProjects(req, res, next),
@@ -35,11 +39,15 @@ export function createProjectRoutes(container: Container): Router {
   router.get(API_ROUTES.PROJECTS.VELOCITY(":id"), (req, res, next) =>
     projectCtrl.getProjectVelocity(req, res, next),
   );
-  router.put(API_ROUTES.PROJECTS.UPDATE(":id"), (req, res, next) =>
-    projectCtrl.updateProject(req, res, next),
+  router.put(
+    API_ROUTES.PROJECTS.UPDATE(":id"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => projectCtrl.updateProject(req, res, next),
   );
-  router.delete(API_ROUTES.PROJECTS.DELETE(":id"), (req, res, next) =>
-    projectCtrl.deleteProject(req, res, next),
+  router.delete(
+    API_ROUTES.PROJECTS.DELETE(":id"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => projectCtrl.deleteProject(req, res, next),
   );
 
   router.get(API_ROUTES.PROJECTS.MEMBERS(":id"), (req, res, next) =>
@@ -79,17 +87,23 @@ export function createProjectRoutes(container: Container): Router {
   );
 
   // Sprints
-  router.post(API_ROUTES.PROJECTS.SPRINT_CREATE, (req, res, next) =>
-    sprintCtrl.createSprint(req, res, next),
+  router.post(
+    API_ROUTES.PROJECTS.SPRINT_CREATE,
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => sprintCtrl.createSprint(req, res, next),
   );
   router.get(API_ROUTES.PROJECTS.SPRINTS(":projectId"), (req, res, next) =>
     sprintCtrl.getProjectSprints(req, res, next),
   );
-  router.put(API_ROUTES.PROJECTS.SPRINT_UPDATE(":id"), (req, res, next) =>
-    sprintCtrl.updateSprint(req, res, next),
+  router.put(
+    API_ROUTES.PROJECTS.SPRINT_UPDATE(":id"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => sprintCtrl.updateSprint(req, res, next),
   );
-  router.delete(API_ROUTES.PROJECTS.SPRINT_DELETE(":id"), (req, res, next) =>
-    sprintCtrl.deleteSprint(req, res, next),
+  router.delete(
+    API_ROUTES.PROJECTS.SPRINT_DELETE(":id"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => sprintCtrl.deleteSprint(req, res, next),
   );
 
   return router;

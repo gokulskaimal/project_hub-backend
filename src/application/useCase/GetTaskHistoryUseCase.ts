@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGetTaskHistoryUseCase } from "../interface/useCases/IGetTaskHistoryUseCase";
-import { ITaskHistoryRepo } from "../../infrastructure/interface/repositories/ITaskHistoryRepo";
+import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { TaskHistory } from "../../domain/entities/TaskHistory";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 
 @injectable()

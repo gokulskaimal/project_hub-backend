@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Server } from "socket.io";
-import { ISocketService } from "../interface/services/ISocketService";
-import { ILogger } from "../interface/services/ILogger";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { TYPES } from "../container/types";
 
 @injectable()

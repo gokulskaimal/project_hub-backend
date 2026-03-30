@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IChatRepo } from "../../infrastructure/interface/repositories/IChatRepo";
+import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ChatMessage } from "../../domain/entities/ChatMessage";
 import { IGetProjectMessagesUseCase } from "../interface/useCases/IGetProjectMessagesUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetProjectMessagesUseCase implements IGetProjectMessagesUseCase {

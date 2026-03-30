@@ -15,7 +15,7 @@ import {
   ValidationError,
   EntityNotFoundError,
 } from "../../../domain/errors/CommonErrors";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { ISendMessageUseCase } from "../../../application/interface/useCases/ISendMessageUseCase";
 import { toTaskDTO } from "../../../application/dto/TaskDTO";
 import {

@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGoogleSignInUseCase } from "../interface/useCases/IGoogleSignInUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IGoogleAuthService } from "../../infrastructure/interface/services/IGoogleAuthService";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IGoogleAuthService } from "../../application/interface/services/IGoogleAuthService";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { UserRole } from "../../domain/enums/UserRole";
 import { toUserDTO, UserDTO } from "../dto/UserDTO";
@@ -201,7 +201,7 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
     const tokenPayload = {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role.replace(/\s+/g, "_") as UserRole,
       orgId: user.orgId ?? null,
     };
 

@@ -1,14 +1,14 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IResetPasswordUseCase } from "../interface/useCases/IResetPasswordUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IHashService } from "../../infrastructure/interface/services/IHashService";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { IEmailService } from "../../application/interface/services/IEmailService";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { InvalidTokenError } from "../../domain/errors/AuthErrors";
-import { IPasswordResetService } from "../../infrastructure/interface/services/IPasswordResetService";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IPasswordResetService } from "../../application/interface/services/IPasswordResetService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 
 @injectable()
 export class ResetPasswordUseCase implements IResetPasswordUseCase {

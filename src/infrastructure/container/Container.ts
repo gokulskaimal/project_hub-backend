@@ -1,38 +1,39 @@
-// src/infrastructure/container/Container.ts
 import "reflect-metadata";
 import { Container } from "inversify";
+import { AppConfig, config } from "../../config/AppConfig";
 import { TYPES } from "./types";
 
 //Interfaces - Services
-import { ILogger } from "../interface/services/ILogger";
-import { IHashService } from "../interface/services/IHashService";
-import { IJwtService } from "../interface/services/IJwtService";
-import { IEmailService } from "../interface/services/IEmailService";
-import { IOtpService } from "../interface/services/IOtpService";
-import { ICacheService } from "../interface/services/ICacheService";
-import { IGoogleAuthService } from "../interface/services/IGoogleAuthService";
-import { IRazorpayService } from "../interface/services/IRazorpayService";
-import { IPlanRepo } from "../interface/repositories/IPlanRepo";
-import { ISubscriptionRepo } from "../interface/repositories/ISubscriptionRepo";
-import { ISocketService } from "../interface/services/ISocketService";
-import { IFileService } from "../interface/services/IFileService";
-import { IAnalyticsService } from "../interface/services/IAnalyticsService";
-import { IPasswordResetService } from "../interface/services/IPasswordResetService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { IEmailService } from "../../application/interface/services/IEmailService";
+import { IOtpService } from "../../application/interface/services/IOtpService";
+import { ICacheService } from "../../application/interface/services/ICacheService";
+import { IGoogleAuthService } from "../../application/interface/services/IGoogleAuthService";
+import { IRazorpayService } from "../../application/interface/services/IRazorpayService";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IFileService } from "../../application/interface/services/IFileService";
+import { IAnalyticsService } from "../../application/interface/services/IAnalyticsService";
+import { IPasswordResetService } from "../../application/interface/services/IPasswordResetService";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
-import { IAuthValidationService } from "../interface/services/IAuthValidationService";
-import { ISecurityService } from "../interface/services/ISecurityService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ITimeTrackingService } from "../../domain/interface/services/ITimeTrackingService";
 import { INotificationService } from "../../domain/interface/services/INotificationService";
+import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
 
 //Interfaces - Repositories
-import { IUserRepo } from "../interface/repositories/IUserRepo";
-import { IOrgRepo } from "../interface/repositories/IOrgRepo";
-import { IInviteRepo } from "../interface/repositories/IInviteRepo";
-import { ITaskRepo } from "../interface/repositories/ITaskRepo";
-import { IProjectRepo } from "../interface/repositories/IProjectRepo";
-import { INotificationRepo } from "../interface/repositories/INotificationRepo";
-import { ISprintRepo } from "../interface/repositories/ISprintRepo";
-import { IInvoiceRepo } from "../interface/repositories/IInvoiceRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IInviteRepo } from "../../application/interface/repositories/IInviteRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
+import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 
 //Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
@@ -48,8 +49,8 @@ import { IVerifyOtpUseCase } from "../../application/interface/useCases/IVerifyO
 import { ICompleteSignupUseCase } from "../../application/interface/useCases/ICompleteSignupUseCase";
 import { IAcceptUseCase } from "../../application/interface/useCases/IAcceptUseCase";
 import { IInviteMemberUseCase } from "../../application/interface/useCases/IInviteMemberUseCase";
-import { IAdminInvoiceController } from "../../application/interface/controllers/IAdminInvoiceController";
-import { IManagerInvoiceController } from "../../application/interface/controllers/IManagerInvoiceController";
+import { IAdminInvoiceController } from "../../presentation/interfaces/controllers/IAdminInvoiceController";
+import { IManagerInvoiceController } from "../../presentation/interfaces/controllers/IManagerInvoiceController";
 import { IResetPasswordUseCase } from "../../application/interface/useCases/IResetPasswordUseCase";
 import { IUserProfileUseCase } from "../../application/interface/useCases/IUserProfileUseCase";
 import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
@@ -116,9 +117,10 @@ import { AuthValidationService } from "../services/AuthValidationService";
 import { SecurityService } from "../services/SecurityService";
 import { TimeTrackingService } from "../../domain/services/TimeTrackingService";
 import { NotificationService } from "../../domain/services/NotificationService";
+import { SprintDomainService } from "../../domain/services/SprintDomainService";
 
 // Domain Interfaces - Providers
-import { IJwtProvider } from "../interface/services/IJwtProvider";
+import { IJwtProvider } from "../../application/interface/services/IJwtProvider";
 
 // Infrastructure Implementations - Repositories
 import { UserRepo } from "../repositories/UserRepo";
@@ -130,7 +132,7 @@ import { TaskRepo } from "../repositories/TaskRepo";
 import { ProjectRepo } from "../repositories/ProjectRepo";
 import { NotificationRepo } from "../repositories/NotificationRepo";
 import { SprintRepo } from "../repositories/SprintRepo";
-import { ITaskHistoryRepo } from "../interface/repositories/ITaskHistoryRepo";
+import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { TaskHistoryRepo } from "../repositories/TaskHistoryRepo";
 import { InvoiceRepo } from "../repositories/InvoiceRepo";
 
@@ -219,7 +221,7 @@ import { UploadController } from "../../presentation/controllers/UploadControlle
 import { SprintController } from "../../presentation/controllers/manager/SprintController";
 
 // Chat Interfaces
-import { IChatRepo } from "../interface/repositories/IChatRepo";
+import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ISendMessageUseCase } from "../../application/interface/useCases/ISendMessageUseCase";
 import { IGetProjectMessagesUseCase } from "../../application/interface/useCases/IGetProjectMessagesUseCase";
 
@@ -270,6 +272,7 @@ class DIContainer {
   }
 
   private _bindServices(): void {
+    this._container.bind<AppConfig>(TYPES.AppConfig).toConstantValue(config);
     this._container.bind<ILogger>(TYPES.ILogger).to(Logger).inSingletonScope();
     this._container
       .bind(TYPES.IBootstrapService)
@@ -350,6 +353,11 @@ class DIContainer {
     this._container
       .bind<INotificationService>(TYPES.INotificationService)
       .to(NotificationService)
+      .inSingletonScope();
+
+    this._container
+      .bind<ISprintDomainService>(TYPES.ISprintDomainService)
+      .to(SprintDomainService)
       .inSingletonScope();
 
     const useRedis =

@@ -1,11 +1,12 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
+import { UserRole } from "../../domain/enums/UserRole";
 import { IToggleTimerUseCase } from "../interface/useCases/IToggleTimerUseCase";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class ToggleTimerUseCase implements IToggleTimerUseCase {
@@ -77,7 +78,7 @@ export class ToggleTimerUseCase implements IToggleTimerUseCase {
       // 2. Org Managers
       this._socketService.emitToRoleInOrg(
         task.orgId,
-        "ORG MANAGER",
+        UserRole.ORG_MANAGER,
         "task:updated",
         updatedTask,
       );

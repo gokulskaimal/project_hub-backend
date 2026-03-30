@@ -3,10 +3,10 @@ import { TYPES } from "../../infrastructure/container/types";
 import {
   IRazorpayService,
   RazorpayOrder,
-} from "../../infrastructure/interface/services/IRazorpayService";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+} from "../../application/interface/services/IRazorpayService";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { ICreateSubscriptionUseCase } from "../interface/useCases/ICreateSubscriptionUseCase";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { Subscription } from "../../domain/entities/Subscription";

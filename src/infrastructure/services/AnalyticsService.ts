@@ -3,9 +3,9 @@ import {
   IAnalyticsService,
   UserStats,
   OrgStats,
-} from "../interface/services/IAnalyticsService";
-import { IUserRepo } from "../interface/repositories/IUserRepo";
-import { IOrgRepo } from "../interface/repositories/IOrgRepo";
+} from "../../application/interface/services/IAnalyticsService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 import { TYPES } from "../container/types";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 

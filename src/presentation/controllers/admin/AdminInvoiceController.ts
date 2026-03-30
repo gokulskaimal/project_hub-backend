@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IGetAdminInvoicesUseCase } from "../../../application/interface/useCases/IGetAdminInvoicesUseCase";
-import { IAdminInvoiceController } from "../../../application/interface/controllers/IAdminInvoiceController";
+import { IAdminInvoiceController } from "../../interfaces/controllers/IAdminInvoiceController";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";

@@ -88,7 +88,7 @@ export interface RegisterRequestDTO {
 export interface UpdateProfileRequestDTO {
   firstName?: string;
   lastName?: string;
-  avatar?: string;
+  avatar?: string | null;
 }
 
 /**

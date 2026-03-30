@@ -1,13 +1,14 @@
 import { injectable, inject } from "inversify";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { TYPES } from "../../infrastructure/container/types";
+import { UserRole } from "../../domain/enums/UserRole";
 import { IUpdateProjectUseCase } from "../interface/useCases/IUpdateProjectUseCase";
 import { Project } from "../../domain/entities/Project";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
 export class UpdateProjectUseCase implements IUpdateProjectUseCase {
@@ -38,6 +39,17 @@ export class UpdateProjectUseCase implements IUpdateProjectUseCase {
     // RBAC Check
     await this._securityService.validateOrgManager(requesterId, project.orgId);
 
+    // [SCURM] Domain Rule: Immutability (Completed projects are locked)
+    if (project.status === "COMPLETED") {
+      try {
+        await this._securityService.validateSuperAdmin(requesterId);
+      } catch {
+        throw new Error(
+          "Completed projects are locked and cannot be modified.",
+        );
+      }
+    }
+
     // Validate that all new team members belong to this organization
     if (data.teamMemberIds && data.teamMemberIds.length > 0) {
       await this._securityService.validateMembersBelongToOrg(
@@ -56,7 +68,7 @@ export class UpdateProjectUseCase implements IUpdateProjectUseCase {
     if (updated.orgId) {
       this._socketService.emitToRoleInOrg(
         updated.orgId,
-        "ORG MANAGER",
+        UserRole.ORG_MANAGER,
         "project:updated",
         updated,
       );

@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IOrgRepo } from "../interface/repositories/IOrgRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 import {
   Organization,
   OrganizationStatus,

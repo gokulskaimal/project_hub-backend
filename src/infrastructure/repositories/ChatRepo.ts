@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IChatRepo } from "../interface/repositories/IChatRepo";
+import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ChatMessage } from "../../domain/entities/ChatMessage";
 import { ChatModel, IChatMessageDoc } from "../models/ChatModel";
 

@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 import { IOrganizationQueryUseCase } from "../interface/useCases/IOrganizationQueryUseCase";
 import { Organization } from "../../domain/entities/Organization";
 

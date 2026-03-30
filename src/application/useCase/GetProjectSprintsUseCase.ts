@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { Sprint } from "../../domain/entities/Sprint";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { IGetProjectSprintsUseCase } from "../interface/useCases/IGetProjectSprintsUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetProjectSprintsUseCase implements IGetProjectSprintsUseCase {

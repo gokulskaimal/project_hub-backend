@@ -1,8 +1,9 @@
 import { SocketServer } from "./presentation/socket/SocketServer";
-import { ISocketService } from "./infrastructure/interface/services/ISocketService";
+import { ISocketService } from "./application/interface/services/ISocketService";
 import { SocketService } from "./infrastructure/services/SocketService";
 import "reflect-metadata";
 import "dotenv/config";
+import { config } from "./config/AppConfig";
 import express from "express";
 import http from "http";
 import mongoose from "mongoose";
@@ -16,7 +17,7 @@ import { API_ROUTES } from "./infrastructure/config/apiRoutes.constant";
 // Import DI Container
 import { diContainer, container } from "./infrastructure/container/Container";
 import { TYPES } from "./infrastructure/container/types";
-import { ILogger } from "./infrastructure/interface/services/ILogger";
+import { ILogger } from "./application/interface/services/ILogger";
 
 // Import Route Factory
 import { createRoutes } from "./presentation/routes/index";
@@ -26,16 +27,16 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./presentation/middleware/ErrorMiddleware"; // Correct path to robust handlers
-import { IBootstrapService } from "./infrastructure/interface/services/IBootstrapService";
+import { IBootstrapService } from "./application/interface/services/IBootstrapService";
 
 let logger: ILogger;
-const port = parseInt(process.env.PORT || "4000");
+const port = config.port;
 
 function setupMiddleware(app: express.Application): void {
   // Security middleware
   app.use(
     helmet({
-      contentSecurityPolicy: process.env.NODE_ENV === "production",
+      contentSecurityPolicy: config.nodeEnv === "production",
       crossOriginEmbedderPolicy: false,
     }),
   );
@@ -71,7 +72,7 @@ function setupMiddleware(app: express.Application): void {
 
   app.use(
     cors({
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      origin: config.frontend.url,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -125,7 +126,7 @@ function setupRoutes(app: express.Application): void {
       status: "OK",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: process.env.NODE_ENV || "development",
+      environment: config.nodeEnv,
       version: "1.0.0",
     });
   });
@@ -147,7 +148,7 @@ function setupRoutes(app: express.Application): void {
     app.use("/api", router);
   });
 
-  if (process.env.NODE_ENV === "development") {
+  if (config.nodeEnv === "development") {
     app.get("/debug/container", (req, res) => {
       const types = Object.keys(TYPES);
       const boundServices = types.filter((type) =>
@@ -179,7 +180,7 @@ function setupErrorHandling(app: express.Application): void {
  */
 async function connectDatabase(): Promise<void> {
   try {
-    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    const mongoUri = config.mongoUri;
     if (!mongoUri) {
       logger.warn("No MongoDB URI provided. Skipping database connection.");
       return;
@@ -215,7 +216,7 @@ process.on("unhandledRejection", (reason) => {
 
 async function startServer(): Promise<void> {
   try {
-    if (!process.env.MONGO_URI && !process.env.MONGODB_URI) {
+    if (!config.mongoUri) {
       throw new Error("FATAL: MONGO_URI is missing.");
     }
 
@@ -242,9 +243,7 @@ async function startServer(): Promise<void> {
 
     try {
       const socketServer = diContainer.get<SocketServer>(TYPES.SocketServer);
-      const io = socketServer.initialize(httpServer, [
-        process.env.FRONTEND_URL || "http://localhost:3000",
-      ]);
+      const io = socketServer.initialize(httpServer, [config.frontend.url]);
 
       const socketService = diContainer.get<ISocketService>(
         TYPES.ISocketService,
@@ -258,7 +257,7 @@ async function startServer(): Promise<void> {
     // 7. Listen
     httpServer.listen(port, () => {
       logger.info(`Project Hub Server running on: http://localhost:${port}`);
-      logger.info(`Environment: ${process.env.NODE_ENV}`);
+      logger.info(`Environment: ${config.nodeEnv}`);
     });
 
     const shutdown = async (signal: string) => {

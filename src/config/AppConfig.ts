@@ -49,11 +49,36 @@ export interface AppConfig {
     cookieSecret: string;
   };
 
-  // File Upload Configuration
+  // File Upload / Cloudinary Configuration
   upload: {
     maxFileSize: number;
     allowedTypes: string[];
     uploadPath: string;
+    cloudName: string;
+    apiKey: string;
+    apiSecret: string;
+  };
+
+  // Third Party APIs (Google, Razorpay)
+  razorpay: {
+    keyId: string;
+    keySecret: string;
+    webhookSecret: string;
+  };
+
+  google: {
+    clientId: string;
+  };
+
+  // Redis Cache
+  redis: {
+    url: string;
+  };
+
+  // Bootstrap Super Admin
+  bootstrap: {
+    adminEmail: string;
+    adminPassword?: string;
   };
 
   // Logging Configuration
@@ -61,6 +86,11 @@ export interface AppConfig {
     level: string;
     maxFiles: number;
     maxSize: string;
+  };
+
+  // Invite Configuration
+  invite: {
+    expiryDays: number;
   };
 
   // OTP Configuration
@@ -186,7 +216,7 @@ export function loadConfig(): AppConfig {
         process.env.COOKIE_SECRET || "your-cookie-secret-change-in-production",
     },
 
-    // File Upload Configuration
+    // File Upload / Cloudinary Configuration
     upload: {
       maxFileSize: parseNumber(
         process.env.UPLOAD_MAX_FILE_SIZE,
@@ -199,6 +229,31 @@ export function loadConfig(): AppConfig {
         "application/pdf",
       ]),
       uploadPath: process.env.UPLOAD_PATH || "./uploads",
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+      apiKey: process.env.CLOUDINARY_API_KEY || "",
+      apiSecret: process.env.CLOUDINARY_API_SECRET || "",
+    },
+
+    // Third Party APIs
+    razorpay: {
+      keyId: process.env.RAZORPAY_KEY_ID || "",
+      keySecret: process.env.RAZORPAY_KEY_SECRET || "",
+      webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || "",
+    },
+
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+    },
+
+    // Redis
+    redis: {
+      url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
+    },
+
+    // Bootstrap Configuration
+    bootstrap: {
+      adminEmail: process.env.SUPER_ADMIN_EMAIL?.trim() || "",
+      adminPassword: process.env.SUPER_ADMIN_PASSWORD,
     },
 
     // Logging Configuration
@@ -206,6 +261,11 @@ export function loadConfig(): AppConfig {
       level: process.env.LOG_LEVEL || "info",
       maxFiles: parseNumber(process.env.LOG_MAX_FILES, 10),
       maxSize: process.env.LOG_MAX_SIZE || "10m",
+    },
+
+    // Invite Configuration
+    invite: {
+      expiryDays: parseNumber(process.env.INVITE_EXPIRY_DAYS, 7),
     },
 
     // OTP Configuration
@@ -349,7 +409,7 @@ LOG_MAX_FILES=10
 LOG_MAX_SIZE=10m
 
 # OTP Configuration
-OTP_EXPIRY_MINUTES=10
+OTP_EXPIRY_MINUTES=5
 OTP_LENGTH=6
 OTP_MAX_ATTEMPTS=3
 

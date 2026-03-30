@@ -1,22 +1,23 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
-import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { ICreateTaskUseCase } from "../interface/useCases/ICreateTaskUseCase";
 import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { Task } from "../../domain/entities/Task";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { UserRole } from "../../domain/enums/UserRole";
 import {
   EntityNotFoundError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
 import { User } from "../../domain/entities/User";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ISocketService } from "../../application/interface/services/ISocketService";
 
 @injectable()
 export class CreateTaskUseCase implements ICreateTaskUseCase {
@@ -60,6 +61,9 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       const sprint = await this._sprintRepo.findById(data.sprintId);
       if (!sprint) throw new ValidationError("Sprint not found");
 
+      // [SCURM] Domain Rule: Assignment to Sprint (Must be estimated)
+      this._taskDomainService.validateAssignmentToSprint(data as Task);
+
       const capacity = this._taskDomainService.calculateSprintCapacity(
         sprint,
         project.tasksPerWeek,
@@ -90,9 +94,9 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
         start,
         end,
       );
-      if (dailyCount >= 3) {
+      if (dailyCount >= 20) {
         throw new ValidationError(
-          "Daily sprint task limit reached (max 3 tasks per day).",
+          "Daily sprint task limit reached (max 20 tasks per day).",
         );
       }
 
@@ -149,7 +153,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     // 2. Org Managers (Manager Dashboard Live Update)
     this._socketService.emitToRoleInOrg(
       data.orgId!,
-      "ORG MANAGER",
+      UserRole.ORG_MANAGER,
       "task:created",
       newTask,
     );

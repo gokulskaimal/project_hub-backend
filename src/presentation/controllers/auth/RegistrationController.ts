@@ -7,7 +7,7 @@ import { IRegisterManagerUseCase } from "../../../application/interface/useCases
 import { ISendOtpUseCase } from "../../../application/interface/useCases/ISendOtpUseCase";
 import { IVerifyOtpUseCase } from "../../../application/interface/useCases/IVerifyOtpUseCase";
 import { ICompleteSignupUseCase } from "../../../application/interface/useCases/ICompleteSignupUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../../utils/asyncHandler";

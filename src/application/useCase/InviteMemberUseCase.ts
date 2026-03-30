@@ -1,23 +1,24 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
-import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
-import { IHashService } from "../../infrastructure/interface/services/IHashService";
+import { IInviteRepo } from "../../application/interface/repositories/IInviteRepo";
+import { IEmailService } from "../../application/interface/services/IEmailService";
+import { IHashService } from "../../application/interface/services/IHashService";
 import { IInviteMemberUseCase } from "../interface/useCases/IInviteMemberUseCase";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { QuotaExceededError } from "../../domain/errors/CommonErrors";
 import {
   ConflictError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
-import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
 import { UserRole } from "../../domain/enums/UserRole";
+import { AppConfig } from "../../config/AppConfig";
+import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
 
 @injectable()
 export class InviteMemberUseCase implements IInviteMemberUseCase {
@@ -35,6 +36,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     private readonly _authValidationService: IAuthValidationService,
     @inject(TYPES.ISecurityService)
     private readonly _securityService: ISecurityService,
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
   ) {}
 
   public async execute(
@@ -42,7 +44,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     orgId: string,
     requesterId: string,
     role?: string,
-    expiresIn: number = 1,
+    expiresIn: number = this.config.invite.expiryDays,
   ): Promise<{
     invitationId: string;
     token: string;
@@ -138,7 +140,19 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
       const invitation = await this._inviteRepo.create(inviteData);
 
-      await this._sendInvitationEmail(email, token, organization.name);
+      const requester = await this._userRepo.findById(requesterId);
+      const inviterName = requester
+        ? `${requester.firstName || ""} ${requester.lastName || ""}`.trim() ||
+          requester.name ||
+          "A Manager"
+        : "A Manager";
+
+      await this._sendInvitationEmail(
+        email,
+        token,
+        organization.name,
+        inviterName,
+      );
 
       this._logger.info("Member invitation sent successfully", {
         email,
@@ -168,7 +182,7 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     orgId: string,
     requesterId: string,
     role?: string,
-    expiresIn?: number,
+    expiresIn: number = this.config.invite.expiryDays,
   ): Promise<{
     successful: Array<{ email: string; invitationId: string }>;
     failed: Array<{ email: string; error: string }>;
@@ -252,13 +266,14 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
     email: string,
     token: string,
     orgName: string,
+    inviterName: string,
   ): Promise<void> {
     try {
       await this._emailService.sendInviteEmail(
         email,
         token,
         orgName,
-        "Organization Manager",
+        inviterName,
       );
 
       this._logger.info("Invitation email sent", { email, orgName });

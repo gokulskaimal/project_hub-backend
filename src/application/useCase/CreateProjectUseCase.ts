@@ -1,10 +1,11 @@
 import { injectable, inject } from "inversify";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { TYPES } from "../../infrastructure/container/types";
-import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { UserRole } from "../../domain/enums/UserRole";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { NotificationType } from "../../domain/enums/NotificationType";
 import { ICreateProjectUseCase } from "../interface/useCases/ICreateProjectUseCase";
@@ -14,11 +15,11 @@ import {
   EntityNotFoundError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { PLAN_DEFAULTS } from "../../infrastructure/config/common.constants";
 
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
 export class CreateProjectUseCase implements ICreateProjectUseCase {
@@ -121,7 +122,7 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
     // 1. Notify Org Managers (Manager Dashboard Live Update)
     this._socketService.emitToRoleInOrg(
       orgId,
-      "ORG MANAGER",
+      UserRole.ORG_MANAGER,
       "project:created",
       project,
     );

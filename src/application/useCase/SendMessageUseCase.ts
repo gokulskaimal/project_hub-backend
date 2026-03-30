@@ -1,21 +1,21 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IChatRepo } from "../../infrastructure/interface/repositories/IChatRepo";
+import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ISendMessageUseCase } from "../interface/useCases/ISendMessageUseCase";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ChatMessage } from "../../domain/entities/ChatMessage";
 import {
   EntityNotFoundError,
   QuotaExceededError,
 } from "../../domain/errors/CommonErrors";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { NotificationType } from "../../domain/enums/NotificationType";
 
 @injectable()

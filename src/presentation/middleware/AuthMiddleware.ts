@@ -8,6 +8,9 @@ import UserModel from "../../infrastructure/models/UserModel";
 import OrgModel from "../../infrastructure/models/OrgModel";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { UserRole } from "../../domain/enums/UserRole";
+import { container } from "../../infrastructure/container/Container";
+import { TYPES } from "../../infrastructure/container/types";
+import { AppConfig } from "../../config/AppConfig";
 
 export async function authMiddleware(
   req: AuthenticatedRequest,
@@ -29,9 +32,10 @@ export async function authMiddleware(
   }
 
   try {
+    const config = container.get<AppConfig>(TYPES.AppConfig);
     const payload = jwt.verify(
       token,
-      process.env.JWT_ACCESS_SECRET!,
+      config.jwt.accessSecret,
     ) as AuthenticatedUser;
 
     // Allow super-admin tokens (synthetic user) to bypass DB checks

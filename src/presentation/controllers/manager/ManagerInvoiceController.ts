@@ -3,7 +3,7 @@ import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedReques
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IGetOrgInvoicesUseCase } from "../../../application/interface/useCases/IGetOrgInvoicesUseCase";
-import { IManagerInvoiceController } from "../../../application/interface/controllers/IManagerInvoiceController";
+import { IManagerInvoiceController } from "../../interfaces/controllers/IManagerInvoiceController";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { ValidationError } from "../../../domain/errors/CommonErrors";

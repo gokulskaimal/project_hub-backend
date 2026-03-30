@@ -5,20 +5,22 @@ import { ILoginUseCase } from "../../../application/interface/useCases/ILoginUse
 import { IGoogleSignInUseCase } from "../../../application/interface/useCases/IGoogleSignInUseCase";
 import { ITokenRefreshUseCase } from "../../../application/interface/useCases/ITokenRefreshUseCase";
 import { ILogoutUseCase } from "../../../application/interface/useCases/ILogoutUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { ValidationError } from "../../../domain/errors/CommonErrors";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 
+import { AppConfig } from "../../../config/AppConfig";
+
 @injectable()
 export class SessionController {
-  private readonly _refreshCookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  private readonly _refreshCookieOptions: {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: "lax" | "strict" | "none";
+    path: string;
+    maxAge: number;
   };
 
   constructor(
@@ -29,7 +31,16 @@ export class SessionController {
     @inject(TYPES.ITokenRefreshUseCase)
     private readonly _tokenRefreshUC: ITokenRefreshUseCase,
     @inject(TYPES.ILogoutUseCase) private readonly _logoutUC: ILogoutUseCase,
-  ) {}
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
+  ) {
+    this._refreshCookieOptions = {
+      httpOnly: true,
+      secure: this.config.nodeEnv === "production",
+      sameSite: "lax" as const,
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    };
+  }
 
   private sendSuccess(
     res: Response,
@@ -112,33 +123,25 @@ export class SessionController {
       orgName,
     });
 
-    try {
-      const result = await this._googleSignInUC.execute(
-        idToken,
-        inviteToken,
-        orgName,
+    const result = await this._googleSignInUC.execute(
+      idToken,
+      inviteToken,
+      orgName,
+    );
+    if (result.tokens.refreshToken) {
+      res.cookie(
+        "refreshToken",
+        result.tokens.refreshToken,
+        this._refreshCookieOptions,
       );
-      if (result.tokens.refreshToken) {
-        res.cookie(
-          "refreshToken",
-          result.tokens.refreshToken,
-          this._refreshCookieOptions,
-        );
-      }
-      this._logger.info("Google Sign-In successful", {
-        userId: result.user.id,
-      });
-      this.sendSuccess(
-        res,
-        { accessToken: result.tokens.accessToken, user: result.user },
-        COMMON_MESSAGES.LOGIN_SUCCESS,
-      );
-    } catch (error: unknown) {
-      const msg = (error as Error)?.message ?? String(error);
-      if (msg === "Organization Name Required") {
-        throw new ValidationError("Organization Name Required");
-      }
-      throw error;
     }
+    this._logger.info("Google Sign-In successful", {
+      userId: result.user.id,
+    });
+    this.sendSuccess(
+      res,
+      { accessToken: result.tokens.accessToken, user: result.user },
+      COMMON_MESSAGES.LOGIN_SUCCESS,
+    );
   });
 }

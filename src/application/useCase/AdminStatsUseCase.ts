@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IAnalyticsService } from "../../infrastructure/interface/services/IAnalyticsService";
+import { IAnalyticsService } from "../../application/interface/services/IAnalyticsService";
 import { IAdminStatsUseCase } from "../interface/useCases/IAdminStatsUseCase";
 
 @injectable()

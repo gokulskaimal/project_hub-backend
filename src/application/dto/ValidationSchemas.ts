@@ -14,7 +14,7 @@ export const TASK_STATUS = [
   "BACKLOG",
 ] as const;
 
-export const TaskCreateSchema = z.object({
+export const TaskBaseSchema = z.object({
   projectId: z.string().min(1, "Project ID is required"),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().nullable().optional(),
@@ -32,17 +32,29 @@ export const TaskCreateSchema = z.object({
     })
     .nullable()
     .optional(),
-  dueDate: z
-    .preprocess(
-      (val) => (val === "" || val === null ? undefined : val),
-      z.string().optional(),
-    )
-    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid due date"),
   assignedTo: z.string().nullable().optional(),
   parentTaskId: z.string().nullable().optional(),
 });
 
-export const TaskUpdateSchema = TaskCreateSchema.partial().extend({
+export const TaskCreateSchema = TaskBaseSchema.refine(
+  (data) => {
+    if (
+      data.type === "STORY" &&
+      (data.storyPoints === undefined ||
+        data.storyPoints === null ||
+        data.storyPoints === 0)
+    ) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "User Stories must have story points assigned (> 0)",
+    path: ["storyPoints"],
+  },
+);
+
+export const TaskUpdateSchema = TaskBaseSchema.partial().extend({
   status: z.enum(TASK_STATUS).optional(),
   sprintId: z.string().nullable().optional(),
   attachments: z
@@ -100,6 +112,7 @@ export const InviteMemberSchema = z.object({
   email: z.string().email("Invalid email address"),
   orgId: z.string().min(1, "Organization ID is required"),
   role: z.nativeEnum(UserRole).optional(),
+  expiresIn: z.number().min(1).max(365).optional(),
 });
 
 export const BulkInviteSchema = z.object({
@@ -108,64 +121,103 @@ export const BulkInviteSchema = z.object({
     .min(1, "At least one email is required"),
   orgId: z.string().min(1, "Organization ID is required"),
   role: z.nativeEnum(UserRole).optional(),
+  expiresIn: z.number().min(1).max(365).optional(),
 });
 
 // Project Validation
-export const ProjectCreateSchema = z.object({
-  name: z.string().min(3, "Project name must be at least 3 characters"),
-  description: z.string().optional(),
-  startDate: z
-    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
-    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid start date")
-    .transform((val) => (val ? new Date(val) : undefined)),
-  endDate: z
-    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
-    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid end date")
-    .transform((val) => (val ? new Date(val) : undefined)),
-  priority: z
-    .enum(PRIORITY_LEVELS, {
-      errorMap: () => ({ message: "Invalid priority level" }),
-    })
-    .optional(),
-  tasksPerWeek: z
-    .number()
-    .int()
-    .min(1, "Tasks per week must be at least 1")
-    .max(1000, "Tasks per week is too large")
-    .optional(),
-  tags: z.array(z.string()).optional(),
-  teamMemberIds: z.array(z.string()).optional(),
-});
+export const ProjectCreateSchema = z
+  .object({
+    name: z.string().min(3, "Project name must be at least 3 characters"),
+    description: z.string().optional(),
+    startDate: z
+      .preprocess(
+        (val) => (val === "" ? undefined : val),
+        z.string().optional(),
+      )
+      .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid start date")
+      .transform((val) => (val ? new Date(val) : undefined)),
+    endDate: z
+      .preprocess(
+        (val) => (val === "" ? undefined : val),
+        z.string().optional(),
+      )
+      .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid end date")
+      .transform((val) => (val ? new Date(val) : undefined)),
+    priority: z
+      .enum(PRIORITY_LEVELS, {
+        errorMap: () => ({ message: "Invalid priority level" }),
+      })
+      .optional(),
+    tasksPerWeek: z
+      .number()
+      .int()
+      .min(1, "Tasks per week must be at least 1")
+      .max(1000, "Tasks per week is too large")
+      .optional(),
+    tags: z.array(z.string()).optional(),
+    teamMemberIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: "End date must be after or equal to start date",
+      path: ["endDate"],
+    },
+  );
 
-export const ProjectUpdateSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Project name must be at least 3 characters")
-    .optional(),
-  description: z.string().optional(),
-  startDate: z
-    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
-    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid start date")
-    .transform((val) => (val ? new Date(val) : undefined)),
-  endDate: z
-    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
-    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid end date")
-    .transform((val) => (val ? new Date(val) : undefined)),
-  priority: z
-    .enum(PRIORITY_LEVELS, {
-      errorMap: () => ({ message: "Invalid priority level" }),
-    })
-    .optional(),
-  tasksPerWeek: z
-    .number()
-    .int()
-    .min(1, "Tasks per week must be at least 1")
-    .max(1000, "Tasks per week is too large")
-    .optional(),
-  tags: z.array(z.string()).optional(),
-  teamMemberIds: z.array(z.string()).optional(),
-  status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]).optional(),
-});
+export const ProjectUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(3, "Project name must be at least 3 characters")
+      .optional(),
+    description: z.string().optional(),
+    startDate: z
+      .preprocess(
+        (val) => (val === "" ? undefined : val),
+        z.string().optional(),
+      )
+      .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid start date")
+      .transform((val) => (val ? new Date(val) : undefined)),
+    endDate: z
+      .preprocess(
+        (val) => (val === "" ? undefined : val),
+        z.string().optional(),
+      )
+      .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid end date")
+      .transform((val) => (val ? new Date(val) : undefined)),
+    priority: z
+      .enum(PRIORITY_LEVELS, {
+        errorMap: () => ({ message: "Invalid priority level" }),
+      })
+      .optional(),
+    tasksPerWeek: z
+      .number()
+      .int()
+      .min(1, "Tasks per week must be at least 1")
+      .max(1000, "Tasks per week is too large")
+      .optional(),
+    tags: z.array(z.string()).optional(),
+    teamMemberIds: z.array(z.string()).optional(),
+    status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: "End date must be after or equal to start date",
+      path: ["endDate"],
+    },
+  );
 
 // User Validation
 export const UserUpdateProfileSchema = z.object({
@@ -175,7 +227,7 @@ export const UserUpdateProfileSchema = z.object({
   contactNumber: z.string().optional(),
   address: z.string().optional(),
   bio: z.string().optional(),
-  avatar: z.string().url("Invalid avatar URL").optional(),
+  avatar: z.string().url("Invalid avatar URL").nullable().optional(),
 });
 
 export const ChangePasswordSchema = z

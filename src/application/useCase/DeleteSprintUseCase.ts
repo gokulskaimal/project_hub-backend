@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { IDeleteSprintUseCase } from "../interface/useCases/IDeleteSprintUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 
 @injectable()
 export class DeleteSprintUseCase implements IDeleteSprintUseCase {

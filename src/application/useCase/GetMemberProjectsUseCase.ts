@@ -1,11 +1,11 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { IGetMemberProjectsUseCase } from "../interface/useCases/IGetMemberProjectsUseCase";
 import { Project } from "../../domain/entities/Project";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetMemberProjectsUseCase implements IGetMemberProjectsUseCase {

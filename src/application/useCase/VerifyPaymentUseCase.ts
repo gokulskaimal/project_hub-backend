@@ -1,15 +1,15 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IRazorpayService } from "../../infrastructure/interface/services/IRazorpayService";
+import { IRazorpayService } from "../../application/interface/services/IRazorpayService";
 import { IVerifyPaymentUseCase } from "../interface/useCases/IVerifyPaymentUseCase";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { IInvoiceRepo } from "../../infrastructure/interface/repositories/IInvoiceRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 
 @injectable()
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {

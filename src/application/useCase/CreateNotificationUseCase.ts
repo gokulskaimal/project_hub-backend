@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
-import { INotificationRepo } from "../../infrastructure/interface/repositories/INotificationRepo";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
 import { Notification } from "../../domain/entities/Notification";
 import { TYPES } from "../../infrastructure/container/types";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";

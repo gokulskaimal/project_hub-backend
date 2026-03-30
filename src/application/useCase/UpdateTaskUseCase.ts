@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { IUpdateTaskUseCase } from "../interface/useCases/IUpdateTaskUseCase";
 import { Task } from "../../domain/entities/Task";
 import {
@@ -8,18 +8,18 @@ import {
   ValidationError,
 } from "../../domain/errors/CommonErrors";
 
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ISocketService } from "../../application/interface/services/ISocketService";
 import { INotificationService } from "../../domain/interface/services/INotificationService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import { NotificationType } from "../../domain/enums/NotificationType";
 import { User } from "../../domain/entities/User";
 
-import { ITaskHistoryRepo } from "../../infrastructure/interface/repositories/ITaskHistoryRepo";
-import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { ITimeTrackingService } from "../../domain/interface/services/ITimeTrackingService";
 
@@ -56,6 +56,21 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       await this._securityService.validateOrgAccess(updaterId, task.orgId);
     }
 
+    // Sprint Immutability Check (Velocity Protection)
+    if (task.sprintId) {
+      const currentSprint = await this._sprintRepo.findById(task.sprintId);
+      if (currentSprint && currentSprint.status === "COMPLETED") {
+        const updater = updaterId
+          ? await this._userRepo.findById(updaterId)
+          : null;
+        if (updater?.role !== UserRole.SUPER_ADMIN) {
+          throw new ValidationError(
+            "Tasks in completed sprints are locked and cannot be modified.",
+          );
+        }
+      }
+    }
+
     // 1. Validation Logic
     if (updaterId) {
       const updater = await this._userRepo.findById(updaterId);
@@ -66,6 +81,19 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
           updater,
         );
       }
+    }
+
+    // [SCURM] Merged Task for Validation
+    const mergedTask = { ...task, ...data } as Task;
+
+    // [SCURM] Domain Rule: Assignment to Sprint (Must be estimated)
+    if (data.sprintId && data.sprintId !== task.sprintId) {
+      this._taskDomainService.validateAssignmentToSprint(mergedTask);
+    }
+
+    // [SCURM] Domain Rule: Definition of Done (Must have assignee)
+    if (data.status === "DONE" && task.status !== "DONE") {
+      this._taskDomainService.validateDefinitionOfDone(mergedTask);
     }
 
     if (data.dueDate !== undefined || data.sprintId !== undefined) {
@@ -89,6 +117,10 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
     if (data.sprintId && data.sprintId !== task.sprintId) {
       const sprint = await this._sprintRepo.findById(data.sprintId);
       if (!sprint) throw new ValidationError("Sprint not found");
+
+      if (sprint.status === "COMPLETED") {
+        throw new ValidationError(`Cannot assign tasks to a completed sprint.`);
+      }
 
       // Daily limit check
       const startOfDay = new Date();

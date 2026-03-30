@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Container } from "inversify";
 import { ManagerController } from "../controllers/manager/ManagerController";
-import { IManagerInvoiceController } from "../../application/interface/controllers/IManagerInvoiceController";
+import { IManagerInvoiceController } from "../interfaces/controllers/IManagerInvoiceController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";

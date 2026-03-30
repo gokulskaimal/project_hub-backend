@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { ITaskHistoryRepo } from "../interface/repositories/ITaskHistoryRepo";
+import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { TaskHistoryModel } from "../models/TaskHistoryModel";
 import { TaskHistory } from "../../domain/entities/TaskHistory";
 import { TaskModel } from "../models/TaskModel";

@@ -5,7 +5,7 @@ import { ICreatePlanUseCase } from "../../../application/interface/useCases/ICre
 import { IGetPlanUseCase } from "../../../application/interface/useCases/IGetPlanUseCase";
 import { IUpdatePlanUseCase } from "../../../application/interface/useCases/IUpdatePlanUseCase";
 import { IDeletePlanUseCase } from "../../../application/interface/useCases/IDeletePlanUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";

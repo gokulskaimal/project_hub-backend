@@ -18,6 +18,7 @@ export const TYPES = {
   ISecurityService: Symbol.for("ISecurityService"),
   ITimeTrackingService: Symbol.for("ITimeTrackingService"),
   INotificationService: Symbol.for("INotificationService"),
+  ISprintDomainService: Symbol.for("ISprintDomainService"),
 
   // ===== REPOSITORIES =====
   IUserRepo: Symbol.for("IUserRepo"),

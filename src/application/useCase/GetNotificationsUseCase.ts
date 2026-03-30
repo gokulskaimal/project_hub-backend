@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { INotificationRepo } from "../../infrastructure/interface/repositories/INotificationRepo";
+import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
 import { IGetNotificationsUseCase } from "../interface/useCases/IGetNotificationsUseCase";
 import { Notification } from "../../domain/entities/Notification";
 

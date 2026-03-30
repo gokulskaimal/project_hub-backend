@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ITokenRefreshUseCase } from "../interface/useCases/ITokenRefreshUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { AuthTokens } from "../interface/useCases/types";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
@@ -26,7 +26,7 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
 
   async execute(refreshToken: string): Promise<AuthTokens> {
     try {
-      const payload = this._jwtService.verifyRefreshToken(refreshToken);
+      const payload = await this._jwtService.verifyRefreshToken(refreshToken);
       if (!payload) throw new InvalidTokenError("Invalid refresh token");
 
       const user = await this._userRepo.findById(payload.id);
@@ -62,11 +62,16 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
       const newPayload = {
         id: user.id,
         email: user.email,
-        role: user.role,
-        orgId: user.orgId ?? null,
+        role: (user.role as string).replace(/\s+/g, "_"),
+        orgId: user.orgId ? user.orgId.toString() : "",
       };
       const accessToken = this._jwtService.generateAccessToken(newPayload);
       const newRefresh = this._jwtService.generateRefreshToken(newPayload);
+
+      // Strict Rotation: Revoke the old token after it has been used once
+      if (typeof this._jwtService.revokeRefreshToken === "function") {
+        await this._jwtService.revokeRefreshToken(refreshToken);
+      }
 
       return { accessToken, refreshToken: newRefresh, expiresIn: 3600 };
     } catch (error) {
@@ -82,4 +87,3 @@ export class TokenRefreshUseCase implements ITokenRefreshUseCase {
     }
   }
 }
-

@@ -1,14 +1,15 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { Sprint } from "../../domain/entities/Sprint";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { IUpdateSprintUseCase } from "../interface/useCases/IUpdateSprintUseCase";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
 
 @injectable()
 export class UpdateSprintUseCase implements IUpdateSprintUseCase {
@@ -20,6 +21,8 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     @inject(TYPES.IAuthValidationService)
     private _authValidationService: IAuthValidationService,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.ISprintDomainService)
+    private _sprintDomainService: ISprintDomainService,
   ) {}
 
   async execute(
@@ -40,6 +43,15 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
       requesterId,
       projectCheck.orgId,
     );
+
+    // [SCURM] Domain Rule: Immutability (Completed sprints are locked)
+    if (sprint.status === "COMPLETED") {
+      try {
+        await this._securityService.validateSuperAdmin(requesterId);
+      } catch {
+        throw new Error("Completed sprints are locked and cannot be modified.");
+      }
+    }
 
     if (updateData.startDate || updateData.endDate) {
       const project = await this._projectRepo.findById(sprint.projectId);
@@ -62,7 +74,18 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
           projectStart,
           projectEnd,
         );
+
+        // [SCURM] Domain Rule: Timebox (1-28 days)
+        this._sprintDomainService.validateTimebox(sprintStart, sprintEnd);
       }
+    }
+
+    // [SCURM] Domain Rule: Validate Sprint Start (Cannot start tanpa goal)
+    if (updateData.status === "ACTIVE" && sprint.status !== "ACTIVE") {
+      this._sprintDomainService.validateSprintStart({
+        ...sprint,
+        ...updateData,
+      } as Sprint);
     }
 
     const updatedSprint = await this._sprintRepo.update(id, updateData);

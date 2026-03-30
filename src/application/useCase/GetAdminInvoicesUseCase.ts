@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IInvoiceRepo } from "../../infrastructure/interface/repositories/IInvoiceRepo";
+import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 import { IGetAdminInvoicesUseCase } from "../interface/useCases/IGetAdminInvoicesUseCase";
 import { Invoice } from "../../domain/entities/Invoice";
 

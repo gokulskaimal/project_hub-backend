@@ -6,7 +6,7 @@ import { IOrganizationManagementUseCase } from "../../../application/interface/u
 import { IUserQueryUseCase } from "../../../application/interface/useCases/IUserQueryUseCase";
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
 import { IAdminStatsUseCase } from "../../../application/interface/useCases/IAdminStatsUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import {
   Organization,

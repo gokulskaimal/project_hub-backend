@@ -89,4 +89,20 @@ export class TaskDomainService implements ITaskDomainService {
     const weeks = Math.max(1, Math.ceil(ms / (7 * 24 * 60 * 60 * 1000)));
     return projectTasksPerWeek * weeks;
   }
+
+  public validateAssignmentToSprint(task: Task): void {
+    if (task.type === "STORY" && (!task.storyPoints || task.storyPoints <= 0)) {
+      throw new ValidationError(
+        "Scrum Rule Violation: User Stories must be estimated with Story Points before entering a Sprint.",
+      );
+    }
+  }
+
+  public validateDefinitionOfDone(task: Task): void {
+    if (!task.assignedTo) {
+      throw new ValidationError(
+        "Scrum Rule Violation: Task must be assigned to a user before reaching Definition of Done.",
+      );
+    }
+  }
 }

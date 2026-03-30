@@ -26,4 +26,14 @@ export interface ITaskDomainService {
    * Calculates the capacity of a sprint based on project settings.
    */
   calculateSprintCapacity(sprint: Sprint, projectTasksPerWeek?: number): number;
+
+  /**
+   * Enforces Scrum Rule: Tasks must be estimated before entering a Sprint
+   */
+  validateAssignmentToSprint(task: Task): void;
+
+  /**
+   * Enforces Scrum Rule: Tasks must have an assignee to reach Definition of Done
+   */
+  validateDefinitionOfDone(task: Task): void;
 }

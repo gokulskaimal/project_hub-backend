@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { Request, Response } from "express";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IResetPasswordUseCase } from "../../../application/interface/useCases/IResetPasswordUseCase";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { asyncHandler } from "../../../utils/asyncHandler";

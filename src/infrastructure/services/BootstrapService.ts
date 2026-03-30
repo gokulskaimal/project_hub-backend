@@ -1,12 +1,13 @@
 import { injectable, inject } from "inversify";
 import mongoose from "mongoose";
-import { ILogger } from "../interface/services/ILogger";
-import { IHashService } from "../interface/services/IHashService";
-import { IUserRepo } from "../interface/repositories/IUserRepo";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IHashService } from "../../application/interface/services/IHashService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { TYPES } from "../container/types";
-import { IBootstrapService } from "../interface/services/IBootstrapService";
+import { IBootstrapService } from "../../application/interface/services/IBootstrapService";
 import { UserRole } from "../../domain/enums/UserRole";
 import { User } from "../../domain/entities/User";
+import { AppConfig } from "../../config/AppConfig";
 
 @injectable()
 export class BootstrapService implements IBootstrapService {
@@ -14,12 +15,13 @@ export class BootstrapService implements IBootstrapService {
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
   ) {}
 
   public async run(): Promise<void> {
     try {
-      const email = process.env.SUPER_ADMIN_EMAIL?.trim();
-      const password = process.env.SUPER_ADMIN_PASSWORD;
+      const email = this.config.bootstrap.adminEmail;
+      const password = this.config.bootstrap.adminPassword;
 
       if (!email || !password) {
         this._logger?.warn?.(

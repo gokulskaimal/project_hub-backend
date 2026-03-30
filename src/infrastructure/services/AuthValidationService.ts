@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IAuthValidationService } from "../interface/services/IAuthValidationService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ValidationError } from "../../domain/errors/CommonErrors";
 
 @injectable()

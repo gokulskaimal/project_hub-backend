@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepo";
-import { IInviteRepo } from "../interface/repositories/IInviteRepo";
+import { IInviteRepo } from "../../application/interface/repositories/IInviteRepo";
 import { Invite } from "../../domain/entities/Invite";
 import InviteModel from "../models/InviteModel";
 import { Document, Model } from "mongoose";

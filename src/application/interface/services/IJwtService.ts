@@ -37,7 +37,9 @@ export interface IJwtService {
    * @param token - Token to verify
    * @returns Decoded payload or null if invalid
    */
-  verifyRefreshToken(token: string): JwtPayload | null;
+  verifyRefreshToken(
+    token: string,
+  ): Promise<JwtPayload | null> | JwtPayload | null;
 
   /**
    * Generate password reset token

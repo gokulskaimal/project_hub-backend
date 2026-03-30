@@ -1,9 +1,9 @@
 import { injectable, inject } from "inversify";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGetProjectUseCase } from "../interface/useCases/IGetProjectUseCase";
 import { Project } from "../../domain/entities/Project";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetProjectUseCase implements IGetProjectUseCase {

@@ -1,11 +1,16 @@
 import { injectable, inject } from "inversify";
-import { IJwtService, JwtPayload } from "../interface/services/IJwtService";
-import { IJwtProvider } from "../interface/services/IJwtProvider";
+import {
+  IJwtService,
+  JwtPayload,
+} from "../../application/interface/services/IJwtService";
+import { ICacheService } from "../../application/interface/services/ICacheService";
+import { IJwtProvider } from "../../application/interface/services/IJwtProvider";
 import { TYPES } from "../container/types";
+import { AppConfig } from "../../config/AppConfig";
 
 /**
  * JWT Service Implementation
- * Uses dependency injection to receive a JWT provider
+ * Uses dependency injection to receive a JWT provider and Cache service
  * Demonstrates the Open/Closed principle by depending on abstractions
  * Can be extended by injecting different JWT provider implementations
  */
@@ -20,49 +25,33 @@ export class JwtService implements IJwtService {
   private readonly _issuer: string;
   private readonly _audience: string;
 
-  private readonly _revokedRefreshedTokens = new Map<string, number>();
-  private readonly _revokeForAllUserMap = new Map<string, number>();
+  private readonly REVOCATION_PREFIX = "revoked_token:";
+  private readonly USER_REVOCATION_PREFIX = "user_revoked_at:";
 
   /**
-   * Constructor with dependency injection for JWT provider
+   * Constructor with dependency injection
    * @param jwtProvider Implementation of IJwtProvider interface
+   * @param cacheService Implementation of ICacheService for token revocation
+   * @param config Implementation of strictly-typed AppConfig
    */
   constructor(
     @inject(TYPES.IJwtProvider) private readonly jwtProvider: IJwtProvider,
+    @inject(TYPES.ICacheService) private readonly cacheService: ICacheService,
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
   ) {
-    // Get secrets from environment variables with fallbacks for development
-    this._accessTokenSecret =
-      process.env.JWT_ACCESS_SECRET ||
-      "your-access-secret-key-change-in-production";
-    this._refreshTokenSecret =
-      process.env.JWT_REFRESH_SECRET ||
-      "your-refresh-secret-key-change-in-production";
-    this._resetTokenSecret =
-      process.env.JWT_RESET_SECRET ||
-      "your-reset-secret-key-change-in-production";
+    // Get secrets from injected configuration
+    this._accessTokenSecret = this.config.jwt.accessSecret;
+    this._refreshTokenSecret = this.config.jwt.refreshSecret;
+    this._resetTokenSecret = this.config.jwt.resetSecret;
 
-    // Get token expiry times from environment variables with fallbacks
-    this._accessTokenExpiry = process.env.JWT_ACCESS_EXPIRY || "30m";
-    this._refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRY || "7d";
-    this._resetTokenExpiry = process.env.JWT_RESET_EXPIRY || "1h";
+    // Get token expiry times from injected configuration
+    this._accessTokenExpiry = this.config.jwt.accessTokenExpiry;
+    this._refreshTokenExpiry = this.config.jwt.refreshTokenExpiry;
+    this._resetTokenExpiry = this.config.jwt.resetTokenExpiry;
 
-    // Get issuer and audience from environment variables with fallbacks
-    this._issuer = process.env.JWT_ISSUER || "project-hub";
-    this._audience = process.env.JWT_AUDIENCE || "project-hub-users";
-
-    // Warn if using default secrets in production
-    if (process.env.NODE_ENV === "production") {
-      if (
-        !process.env.JWT_ACCESS_SECRET ||
-        !process.env.JWT_REFRESH_SECRET ||
-        !process.env.JWT_RESET_SECRET
-      ) {
-        console.error(
-          "❌ WARNING: JWT secrets not set in production environment!",
-        );
-        throw new Error("JWT secrets must be set in production");
-      }
-    }
+    // Get issuer and audience from injected configuration
+    this._issuer = this.config.jwt.issuer;
+    this._audience = this.config.jwt.audience;
   }
 
   /**
@@ -136,14 +125,14 @@ export class JwtService implements IJwtService {
    * @param token JWT token to verify
    * @returns Decoded payload or null if invalid
    */
-  verifyRefreshToken(token: string): JwtPayload | null {
-    const revokedExpiry = this._revokedRefreshedTokens.get(token);
-
-    if (revokedExpiry && revokedExpiry > Date.now()) {
-      return null;
-    }
-    if (revokedExpiry && revokedExpiry <= Date.now()) {
-      this._revokedRefreshedTokens.delete(token);
+  async verifyRefreshToken(token: string): Promise<JwtPayload | null> {
+    try {
+      const revoked = await this.cacheService.get(
+        `${this.REVOCATION_PREFIX}${token}`,
+      );
+      if (revoked) return null;
+    } catch {
+      // Catch cache errors to prevent auth failure on Redis issues
     }
 
     const options = {
@@ -158,13 +147,17 @@ export class JwtService implements IJwtService {
       ) as JwtPayload | null;
       if (!payload) return null;
 
-      if (payload.id && this._revokeForAllUserMap.has(payload.id)) {
-        const revokedAt = this._revokeForAllUserMap.get(payload.id);
-
-        if (payload.iat && typeof payload.iat == "number") {
-          const issuedAtMs = payload.iat * 1000;
-          if (revokedAt && issuedAtMs < revokedAt) {
-            return null;
+      if (payload.id) {
+        const revokedAtStr = await this.cacheService.get(
+          `${this.USER_REVOCATION_PREFIX}${payload.id}`,
+        );
+        if (revokedAtStr) {
+          const revokedAt = parseInt(revokedAtStr, 10);
+          if (payload.iat && typeof payload.iat == "number") {
+            const issuedAtMs = payload.iat * 1000;
+            if (revokedAt && issuedAtMs < revokedAt) {
+              return null;
+            }
           }
         }
       }
@@ -236,26 +229,18 @@ export class JwtService implements IJwtService {
   async revokeRefreshToken(token: string): Promise<void> {
     try {
       const decode = this.decodeToken(token);
+      let ttlSeconds = 7 * 24 * 60 * 60; // Fallback 7 days
+
       if (decode && decode.exp && typeof decode.exp == "number") {
         const expiryMs = decode.exp * 1000;
-        if (expiryMs > Date.now()) {
-          this._revokedRefreshedTokens.set(token, expiryMs);
-          const ttl = expiryMs - Date.now();
-          setTimeout(
-            () => {
-              this._revokedRefreshedTokens.delete(token);
-            },
-            Math.max(0, ttl),
-          );
-        }
-      } else {
-        const fallbackExpiry = Date.now() + 24 * 60 * 60 * 1000;
-        this._revokedRefreshedTokens.set(token, fallbackExpiry);
-        setTimeout(
-          () => {
-            this._revokedRefreshedTokens.delete(token);
-          },
-          24 * 60 * 60 * 1000,
+        ttlSeconds = Math.max(0, Math.ceil((expiryMs - Date.now()) / 1000));
+      }
+
+      if (ttlSeconds > 0) {
+        await this.cacheService.set(
+          `${this.REVOCATION_PREFIX}${token}`,
+          "revoked",
+          ttlSeconds,
         );
       }
     } catch (err) {
@@ -266,7 +251,11 @@ export class JwtService implements IJwtService {
   async revokeAllForUser(userId: string): Promise<void> {
     try {
       const now = Date.now();
-      this._revokeForAllUserMap.set(userId, now);
+      await this.cacheService.set(
+        `${this.USER_REVOCATION_PREFIX}${userId}`,
+        String(now),
+        30 * 24 * 60 * 60, // Keep revocation record for 30 days
+      );
     } catch (err) {
       console.warn(
         "Failed to revoke all tokens for user ",

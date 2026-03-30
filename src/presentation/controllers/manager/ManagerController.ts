@@ -1,11 +1,11 @@
 import { Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
-import { IUserRepo } from "../../../infrastructure/interface/repositories/IUserRepo";
-import { IInviteRepo } from "../../../infrastructure/interface/repositories/IInviteRepo";
+import { ILogger } from "../../../application/interface/services/ILogger";
+import { IUserRepo } from "../../../application/interface/repositories/IUserRepo";
+import { IInviteRepo } from "../../../application/interface/repositories/IInviteRepo";
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
-import { IOrgRepo } from "../../../infrastructure/interface/repositories/IOrgRepo";
+import { IOrgRepo } from "../../../application/interface/repositories/IOrgRepo";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import { toUserDTO } from "../../../application/dto/UserDTO";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
@@ -58,13 +58,20 @@ export class ManagerController {
         return;
       }
 
-      const { email } = validation.data;
-      this._logger.info("Manager inviting member", { orgId, email });
+      const { email, role, expiresIn } = validation.data;
+      this._logger.info("Manager inviting member", {
+        orgId,
+        email,
+        role,
+        expiresIn,
+      });
 
       const result = await this._inviteMemberUC.execute(
         email,
         orgId,
         req.user!.id,
+        role,
+        expiresIn,
       );
       const safeResult = {
         ...result,
@@ -88,10 +95,12 @@ export class ManagerController {
         return;
       }
 
-      const { emails } = validation.data;
+      const { emails, role, expiresIn } = validation.data;
       this._logger.info("Manager bulk inviting members", {
         orgId,
         count: emails?.length,
+        role,
+        expiresIn,
       });
 
       const results = [];
@@ -103,6 +112,8 @@ export class ManagerController {
             email,
             orgId,
             req.user!.id,
+            role,
+            expiresIn,
           );
           const safeResult = {
             ...result,

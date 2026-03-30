@@ -1,18 +1,18 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IInviteRepo } from "../../infrastructure/interface/repositories/IInviteRepo";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IInviteRepo } from "../../application/interface/repositories/IInviteRepo";
+import { ILogger } from "../../application/interface/services/ILogger";
 import {
   OrganizationStatus,
   Organization,
 } from "../../domain/entities/Organization";
 import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizationManagementUseCase";
 import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { IDeleteProjectUseCase } from "../interface/useCases/IDeleteProjectUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class OrganizationManagementUseCase implements IOrganizationManagementUseCase {

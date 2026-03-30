@@ -1,9 +1,9 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IVerifyEmailUseCase } from "../interface/useCases/IVerifyEmailUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { InvalidTokenError } from "../../domain/errors/AuthErrors";
 
@@ -38,4 +38,3 @@ export class VerifyEmailUseCase implements IVerifyEmailUseCase {
     }
   }
 }
-

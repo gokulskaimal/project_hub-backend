@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IValidateTokenUseCase } from "../interface/useCases/IValidateTokenUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { toUserDTO, UserDTO } from "../dto/UserDTO";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
@@ -48,4 +48,3 @@ export class ValidateTokenUseCase implements IValidateTokenUseCase {
     }
   }
 }
-

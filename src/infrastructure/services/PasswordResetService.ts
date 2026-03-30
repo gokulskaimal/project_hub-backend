@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
-import { IPasswordResetService } from "../interface/services/IPasswordResetService";
-import { IUserRepo } from "../interface/repositories/IUserRepo";
+import { IPasswordResetService } from "../../application/interface/services/IPasswordResetService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { TYPES } from "../container/types";
 import { User } from "../../domain/entities/User";
 

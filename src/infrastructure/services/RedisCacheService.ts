@@ -1,13 +1,15 @@
-import { injectable } from "inversify";
-import { ICacheService } from "../interface/services/ICacheService";
+import { injectable, inject } from "inversify";
+import { ICacheService } from "../../application/interface/services/ICacheService";
 import Redis from "ioredis";
+import { TYPES } from "../container/types";
+import { AppConfig } from "../../config/AppConfig";
 
 @injectable()
 export class RedisCacheService implements ICacheService {
   private client: Redis;
 
-  constructor() {
-    const url = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+  constructor(@inject(TYPES.AppConfig) private readonly config: AppConfig) {
+    const url = this.config.redis.url;
     this.client = new Redis(url, {
       lazyConnect: true,
       maxRetriesPerRequest: 1,

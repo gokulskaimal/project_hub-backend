@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { INotificationService } from "../interface/services/INotificationService";
-import { INotificationRepo } from "../../infrastructure/interface/repositories/INotificationRepo";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
 import { TYPES } from "../../infrastructure/container/types";
 import { NotificationType } from "../enums/NotificationType";
 import { Task } from "../entities/Task";

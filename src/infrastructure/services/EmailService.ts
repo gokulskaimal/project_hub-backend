@@ -2,9 +2,10 @@ import nodemailer, { Transporter } from "nodemailer";
 import fs from "fs";
 import path from "path";
 import { injectable, inject } from "inversify";
-import { IEmailService } from "../interface/services/IEmailService";
+import { IEmailService } from "../../application/interface/services/IEmailService";
 import { TYPES } from "../container/types";
-import { ILogger } from "../interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { AppConfig } from "../../config/AppConfig";
 
 /**
  * Email Service Implementation
@@ -14,13 +15,15 @@ import { ILogger } from "../interface/services/ILogger";
 export class EmailService implements IEmailService {
   private transporter: Transporter;
 
-  constructor(@inject(TYPES.ILogger) private readonly _logger: ILogger) {
-    const host = process.env.SMTP_HOST;
-    const port = Number(process.env.SMTP_PORT) || 587;
-    const secure =
-      process.env.SMTP_SECURE?.toLowerCase() === "true" || port === 465;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
+  constructor(
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
+  ) {
+    const host = this.config.email.host;
+    const port = this.config.email.port;
+    const secure = this.config.email.secure;
+    const user = this.config.email.user;
+    const pass = this.config.email.password;
 
     if (!host || !user || !pass) {
       this._logger.warn(
@@ -64,14 +67,14 @@ export class EmailService implements IEmailService {
     try {
       await this.transporter.sendMail({
         from:
-          process.env.FROM_EMAIL ?? '"Project Hub" <projecthub.new@gmail.com>',
+          this.config.email.from || '"Project Hub" <projecthub.new@gmail.com>',
         to: payload.to,
         subject: payload.subject,
         text: payload.text,
         html: payload.html,
       });
       this._logger.info(`Email sent to ${payload.to}`);
-      if (process.env.NODE_ENV !== "production" && payload.text) {
+      if (this.config.nodeEnv !== "production" && payload.text) {
         this._logger.debug(payload.text);
       }
     } catch (err: unknown) {
@@ -88,7 +91,7 @@ export class EmailService implements IEmailService {
     const variables = {
       NAME: name,
       VERIFICATION_CODE: verificationCode || "",
-      BASE_URL: process.env.BASE_URL || "http://localhost:3000",
+      BASE_URL: this.config.frontend.url,
     };
 
     const html = this.renderTemplate("welcome.html", variables);
@@ -105,7 +108,7 @@ export class EmailService implements IEmailService {
     email: string,
     resetToken: string,
   ): Promise<void> {
-    const resetUrl = `${process.env.BASE_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
+    const resetUrl = `${this.config.frontend.url}/reset-password?token=${resetToken}`;
 
     const variables = {
       RESET_URL: resetUrl,
@@ -129,26 +132,28 @@ export class EmailService implements IEmailService {
     orgName: string,
     inviterName: string,
   ): Promise<void> {
-    const inviteUrl = `${process.env.BASE_URL || "http://localhost:3000"}/invite/accept/${inviteToken}`;
+    const inviteUrl = `${this.config.frontend.url}/invite/accept/${inviteToken}`;
+
+    const expiryDays = this.config.invite.expiryDays;
+    const expiryText = `${expiryDays} ${expiryDays === 1 ? "day" : "days"}`;
 
     const variables = {
       INVITE_URL: inviteUrl,
       TOKEN: inviteToken,
       ORG_NAME: orgName,
       INVITER_NAME: inviterName,
-      EXPIRY: "7 days",
+      EXPIRY: expiryText,
     };
 
     const html = this.renderTemplate("inviteMember.html", variables);
 
-    const text = `${inviterName} has invited you to join ${orgName}. Click this link to accept: ${inviteUrl}\n\nThis invitation expires in 7 days.`;
+    const text = `${inviterName} has invited you to join ${orgName}. Click this link to accept: ${inviteUrl}\n\nThis invitation expires in ${expiryText}.`;
 
     // [TESTING-ONLY] Write to file for automated verification
-    if (process.env.NODE_ENV !== "production") {
+    if (this.config.nodeEnv !== "production") {
       try {
-        // Hardcoded path to artifacts dir for reliability in this specific env
-        const tempPath =
-          "c:/Users/gokul/.gemini/antigravity/brain/5dd41adf-753e-4b17-9d06-9543aaf15df8/temp_invite_link.txt";
+        // Dynamic path for development verification
+        const tempPath = path.join(process.cwd(), "temp_invite_link.txt");
         fs.writeFileSync(tempPath, inviteUrl);
         this._logger.info(`[Testing] Invite link written to ${tempPath}`);
       } catch (error) {
@@ -181,11 +186,10 @@ export class EmailService implements IEmailService {
     const html = this.renderTemplate("otp.html", variables);
 
     // [TESTING-ONLY] Write to file for automated verification
-    if (process.env.NODE_ENV !== "production") {
+    if (this.config.nodeEnv !== "production") {
       try {
-        // Hardcoded path to artifacts dir
-        const tempPath =
-          "c:/Users/gokul/.gemini/antigravity/brain/5dd41adf-753e-4b17-9d06-9543aaf15df8/temp_otp.txt";
+        // Dynamic path for development verification
+        const tempPath = path.join(process.cwd(), "temp_otp.txt");
         fs.writeFileSync(tempPath, otp);
         this._logger.info(`[Testing] OTP written to ${tempPath}`);
       } catch (error) {
@@ -209,7 +213,7 @@ export class EmailService implements IEmailService {
     name: string,
     verificationCode: string,
   ): Promise<void> {
-    const verifyUrl = `${process.env.BASE_URL || "http://localhost:3000"}/verify-email?code=${verificationCode}`;
+    const verifyUrl = `${this.config.frontend.url}/verify-email?code=${verificationCode}`;
 
     const variables = {
       NAME: name,

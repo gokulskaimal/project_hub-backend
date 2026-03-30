@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { ICacheService } from "../interface/services/ICacheService";
+import { ICacheService } from "../../application/interface/services/ICacheService";
 
 interface Entry {
   value: string;

@@ -1,13 +1,14 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IProjectRepo } from "../../infrastructure/interface/repositories/IProjectRepo";
-import { ISprintRepo } from "../../infrastructure/interface/repositories/ISprintRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { Sprint } from "../../domain/entities/Sprint";
 import { ValidationError } from "../../domain/errors/CommonErrors";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ICreateSprintUseCase } from "../interface/useCases/ICreateSprintUseCase";
+import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
 
 @injectable()
 export class CreateSprintUseCase implements ICreateSprintUseCase {
@@ -18,6 +19,8 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
     @inject(TYPES.IAuthValidationService)
     private _authValidationService: IAuthValidationService,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.ISprintDomainService)
+    private _sprintDomainService: ISprintDomainService,
   ) {}
 
   async execute(data: Partial<Sprint>, requesterId: string): Promise<Sprint> {
@@ -48,6 +51,9 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
       projectStart,
       projectEnd,
     );
+
+    // [SCURM] Domain Rule: Timebox (1-28 days)
+    this._sprintDomainService.validateTimebox(sprintStart, sprintEnd);
 
     const getWeekRangeLocal = (): { start: Date; end: Date } => {
       const now = new Date();

@@ -4,15 +4,16 @@ import { TYPES } from "../../infrastructure/container/types";
 import {
   IRazorpayService,
   RazorpaySubscription,
-} from "../../infrastructure/interface/services/IRazorpayService";
-import { ISubscriptionRepo } from "../../infrastructure/interface/repositories/ISubscriptionRepo";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IPlanRepo } from "../../infrastructure/interface/repositories/IPlanRepo";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+} from "../../application/interface/services/IRazorpayService";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { asyncHandler } from "../../utils/asyncHandler";
 import crypto from "crypto";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { AppConfig } from "../../config/AppConfig";
 
 @injectable()
 export class WebhookController {
@@ -24,10 +25,11 @@ export class WebhookController {
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
     @inject(TYPES.ILogger) private logger: ILogger,
+    @inject(TYPES.AppConfig) private config: AppConfig,
   ) {}
 
   handleWebhook = asyncHandler(async (req: Request, res: Response) => {
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const secret = this.config.razorpay.webhookSecret;
     if (!secret) {
       throw new Error("RAZORPAY_WEBHOOK_SECRET is not defined");
     }

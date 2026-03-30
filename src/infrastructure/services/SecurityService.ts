@@ -1,8 +1,8 @@
 import { injectable, inject } from "inversify";
-import { ISecurityService } from "../interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { TYPES } from "../container/types";
-import { IUserRepo } from "../interface/repositories/IUserRepo";
-import { IProjectRepo } from "../interface/repositories/IProjectRepo";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import {
   ForbiddenError,

@@ -2,15 +2,15 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
-import { IOtpService } from "../../infrastructure/interface/services/IOtpService";
-import { IEmailService } from "../../infrastructure/interface/services/IEmailService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IOtpService } from "../../application/interface/services/IOtpService";
+import { IEmailService } from "../../application/interface/services/IEmailService";
 import { IRegisterManagerUseCase } from "../interface/useCases/IRegisterManagerUseCase";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { IOrgRepo } from "../../infrastructure/interface/repositories/IOrgRepo";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 import { OrganizationStatus } from "../../domain/entities/Organization";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ConflictError } from "../../domain/errors/CommonErrors";
 
 @injectable()

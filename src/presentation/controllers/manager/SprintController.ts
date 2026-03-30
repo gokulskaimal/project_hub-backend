@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
-import { ISprintRepo } from "../../../infrastructure/interface/repositories/ISprintRepo";
-import { ITaskRepo } from "../../../infrastructure/interface/repositories/ITaskRepo";
+import { ISprintRepo } from "../../../application/interface/repositories/ISprintRepo";
+import { ITaskRepo } from "../../../application/interface/repositories/ITaskRepo";
 import { ICreateSprintUseCase } from "../../../application/interface/useCases/ICreateSprintUseCase";
 import { IUpdateSprintUseCase } from "../../../application/interface/useCases/IUpdateSprintUseCase";
 import { IDeleteSprintUseCase } from "../../../application/interface/useCases/IDeleteSprintUseCase";
@@ -11,7 +11,7 @@ import { Sprint } from "../../../domain/entities/Sprint";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 
-import { ILogger } from "../../../infrastructure/interface/services/ILogger";
+import { ILogger } from "../../../application/interface/services/ILogger";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import { UserRole } from "../../../domain/enums/UserRole";
 import { SprintCreateSchema } from "../../../application/dto/ValidationSchemas";

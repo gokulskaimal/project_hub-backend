@@ -1,5 +1,5 @@
 import { Document, Model, FilterQuery } from "mongoose";
-import { IBaseRepository } from "../interface/repositories/IBaseRepo";
+import { IBaseRepository } from "../../application/interface/repositories/IBaseRepo";
 
 /**
  * Base Repository Abstract Class
@@ -12,9 +12,10 @@ import { IBaseRepository } from "../interface/repositories/IBaseRepo";
  * @template TDoc - The Mongoose document type extending Document
  */
 
-export abstract class BaseRepository<TDomain, TDoc extends Document>
-  implements IBaseRepository<TDomain, string>
-{
+export abstract class BaseRepository<
+  TDomain,
+  TDoc extends Document,
+> implements IBaseRepository<TDomain, string> {
   /**
    * Creates a new BaseRepository instance
    *
@@ -80,7 +81,7 @@ export abstract class BaseRepository<TDomain, TDoc extends Document>
       ...(data as unknown as Record<string, unknown>),
       updatedAt: new Date(),
     };
-    
+
     const doc = await this.model.findByIdAndUpdate(
       id,
       updatePayload as unknown as Partial<TDoc>,

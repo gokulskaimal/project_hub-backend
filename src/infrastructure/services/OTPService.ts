@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
-import { IOtpService } from "../interface/services/IOtpService";
-import { IUserRepo } from "../interface/repositories/IUserRepo";
+import { IOtpService } from "../../application/interface/services/IOtpService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { TYPES } from "../container/types";
 
 /**

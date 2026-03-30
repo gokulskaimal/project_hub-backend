@@ -1,11 +1,11 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IVerifyOtpUseCase } from "../interface/useCases/IVerifyOtpUseCase";
-import { IUserRepo } from "../../infrastructure/interface/repositories/IUserRepo";
-import { IOtpService } from "../../infrastructure/interface/services/IOtpService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { ICacheService } from "../../infrastructure/interface/services/ICacheService";
-import { IAuthValidationService } from "../../infrastructure/interface/services/IAuthValidationService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOtpService } from "../../application/interface/services/IOtpService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ICacheService } from "../../application/interface/services/ICacheService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { InvalidCredentialsError } from "../../domain/errors/AuthErrors";
 
 @injectable()

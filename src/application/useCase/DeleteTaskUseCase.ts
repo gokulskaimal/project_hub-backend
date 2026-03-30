@@ -1,13 +1,14 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
-import { ITaskHistoryRepo } from "../../infrastructure/interface/repositories/ITaskHistoryRepo";
+import { UserRole } from "../../domain/enums/UserRole";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
+import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { IDeleteTaskUseCase } from "../interface/useCases/IDeleteTaskUseCase";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
-import { ISocketService } from "../../infrastructure/interface/services/ISocketService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ISocketService } from "../../application/interface/services/ISocketService";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class DeleteTaskUseCase implements IDeleteTaskUseCase {
@@ -45,7 +46,7 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
       this._socketService.emitToProject(task.projectId, "task:deleted", id);
       this._socketService.emitToRoleInOrg(
         task.orgId,
-        "ORG MANAGER",
+        UserRole.ORG_MANAGER,
         "task:deleted",
         id,
       );

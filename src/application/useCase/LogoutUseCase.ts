@@ -1,8 +1,8 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ILogoutUseCase } from "../interface/useCases/ILogoutUseCase";
-import { IJwtService } from "../../infrastructure/interface/services/IJwtService";
-import { ILogger } from "../../infrastructure/interface/services/ILogger";
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
 export class LogoutUseCase implements ILogoutUseCase {

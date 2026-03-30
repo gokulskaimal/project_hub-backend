@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { injectable } from "inversify";
-import { IHashService } from "../interface/services/IHashService";
+import { IHashService } from "../../application/interface/services/IHashService";
 import crypto from "crypto";
 /**
  * Hash Service Implementation
@@ -97,6 +97,6 @@ export class HashService implements IHashService {
   }
 
   hashToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex');
+    return crypto.createHash("sha256").update(token).digest("hex");
   }
 }

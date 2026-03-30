@@ -1,10 +1,10 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IGetTaskByIdUseCase } from "../interface/useCases/IGetTaskUseCase";
-import { ITaskRepo } from "../../infrastructure/interface/repositories/ITaskRepo";
+import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ISecurityService } from "../../infrastructure/interface/services/ISecurityService";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 @injectable()
 export class GetTaskByIdUseCase implements IGetTaskByIdUseCase {

@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "./BaseRepo";
 import { Plan } from "../../domain/entities/Plan";
-import { IPlanRepo } from "../interface/repositories/IPlanRepo";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
 import PlanModel, { IPlanDoc } from "../models/PlanModel";
 import { Model } from "mongoose";
 

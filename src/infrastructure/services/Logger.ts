@@ -1,8 +1,9 @@
 import winston from "winston";
 import path from "path";
 import { injectable } from "inversify";
-import { ILogger } from "../interface/services/ILogger";
+import { ILogger } from "../../application/interface/services/ILogger";
 import DailyRotateFile from "winston-daily-rotate-file";
+import { config } from "../../config/AppConfig";
 
 @injectable()
 export class Logger implements ILogger {
@@ -78,8 +79,8 @@ export class Logger implements ILogger {
    */
   private _createLogger(): winston.Logger {
     const logDir = path.join(__dirname, "../../logs");
-    const maxAge = process.env.LOG_MAX_AGE || "14d";
-    const maxSize = process.env.LOG_MAX_SIZE || "20m";
+    const maxAge = config.logging.maxFiles + "d";
+    const maxSize = config.logging.maxSize;
 
     const logFormat = winston.format.combine(
       winston.format.timestamp(),
@@ -88,7 +89,7 @@ export class Logger implements ILogger {
     );
 
     const logger = winston.createLogger({
-      level: process.env.LOG_LEVEL || "info",
+      level: config.logging.level,
       format: logFormat,
       transports: [
         new DailyRotateFile({
@@ -109,7 +110,7 @@ export class Logger implements ILogger {
       ],
     });
 
-    if (process.env.NODE_ENV !== "production") {
+    if (config.nodeEnv !== "production") {
       logger.add(
         new winston.transports.Console({
           format: winston.format.combine(
