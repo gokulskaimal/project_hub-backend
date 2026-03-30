@@ -1,51 +1,123 @@
-import { IUserRepo } from "../../domain/interface/IUserRepo";
-import { EmailService } from "../../infrastructure/sevices/EmailService";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../infrastructure/container/types";
+import { ISendOtpUseCase } from "../interface/useCases/ISendOtpUseCase";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOtpService } from "../../application/interface/services/IOtpService";
+import { IEmailService } from "../../application/interface/services/IEmailService";
+import { ILogger } from "../../application/interface/services/ILogger";
+import { ICacheService } from "../../application/interface/services/ICacheService";
+import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
+import {
+  TooManyRequestsError,
+  InvalidOperationError,
+} from "../../domain/errors/CommonErrors";
 
-const otpStore = new Map<string , {otp : string , expiresAt : number}>()
+@injectable()
+export class SendOtpUseCase implements ISendOtpUseCase {
+  constructor(
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IOtpService) private readonly _otpService: IOtpService,
+    @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.ICacheService) private readonly _cache: ICacheService,
+    @inject(TYPES.IAuthValidationService)
+    private readonly _authValidationService: IAuthValidationService,
+  ) {}
 
-export class SendOtpUseCase{
-    private OTP_VALIDITY = 10 * 60 *1000
-    constructor(
-        private userRepo : IUserRepo,
-        private emailService : EmailService
-    ){}
+  /**
+   * Send OTP
+   */
+  public async execute(email: string): Promise<{
+    message: string;
+    expiresAt: Date;
+    attemptsRemaining: number;
+  }> {
+    this._logger.info("Sending OTP", { email });
 
-    async execute(email : string) : Promise<void>{
-        const existingUser = await this.userRepo.findByEmail(email)
-        if(existingUser && existingUser.emailVerified){
-            throw new Error('User already registered')
-        }
+    try {
+      // Business Rule: Validate email format
+      this._authValidationService.validateEmail(email);
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString()
-        const expiresAt = Date.now() + this.OTP_VALIDITY
-        otpStore.set(email, {otp,expiresAt})
+      // Business Rule: Check rate limiting
+      const attemptsRemaining = await this._checkRateLimit(email);
+      if (attemptsRemaining <= 0) {
+        throw new TooManyRequestsError(
+          "Too many OTP requests. Please wait before requesting again.",
+        );
+      }
 
-        await this.userRepo.ensureUserWithOtp(
-            email,
-            otp,
-            new Date(expiresAt)
-        )
+      const otp = this._otpService.generateOtp(6); // 6-digit OTP
+      const expiresAt = this._otpService.generateExpiry(1); // 1 minute from now
 
-        const subject = 'Your OTP Code'
-        const text = `Your OTP code is ${otp}. It is valid for 10 minutes.`
+      await this._otpService.ensureUserWithOtp(email, otp, expiresAt);
 
-        await this.emailService.sendEmail({
-            to : email,
-            subject,
-            text
-        })
+      // Send OTP via email
+      await this._emailService.sendOtpEmail(email, otp, "Email verification");
+
+      this._logger.info("OTP sent successfully", { email, expiresAt });
+
+      return {
+        message: "OTP sent successfully to your email",
+        expiresAt,
+        attemptsRemaining: attemptsRemaining - 1,
+      };
+    } catch (error) {
+      this._logger.error("Failed to send OTP", error as Error, { email });
+      throw error;
     }
+  }
 
-    isOtpvalid(email : string , otp : string) : boolean{
-        const record = otpStore.get(email)
-        if(!record) return false
-        if(record.expiresAt < Date.now()){
-            otpStore.delete(email)
-            return false
-        }
-        if(record.otp !== otp) return false
+  /**
+   * Resend OTP if previous one expired
+   */
+  public async resendOtp(email: string): Promise<{
+    message: string;
+    expiresAt: Date;
+    attemptsRemaining: number;
+  }> {
+    this._logger.info("Resending OTP", { email });
 
-        otpStore.delete(email)
-        return true
+    try {
+      // Business Rule: Check if previous OTP is still valid
+      const existingOtp = await this._otpService.getOtp(email);
+      if (existingOtp && existingOtp.expiresAt > new Date()) {
+        const remainingTime = Math.ceil(
+          (existingOtp.expiresAt.getTime() - Date.now()) / 1000 / 60,
+        );
+        throw new InvalidOperationError(
+          `OTP is still valid. Please wait ${remainingTime} minutes before requesting a new one.`,
+        );
+      }
+
+      // Use the same logic as execute
+      return this.execute(email);
+    } catch (error) {
+      this._logger.error("Failed to resend OTP", error as Error, { email });
+      throw error;
     }
+  }
+
+  /**
+   * Check rate limiting for OTP requests
+   * @param email - User email
+   * @returns Number of attempts remaining
+   */
+  private async _checkRateLimit(email: string): Promise<number> {
+    try {
+      const MAX_ATTEMPTS_PER_HOUR = 5;
+      const key = `otp:reqs:${email}`;
+      const ttlSeconds = 60 * 60;
+
+      const current = await this._cache.incr(key);
+      if (current === 1) {
+        await this._cache.expire(key, ttlSeconds);
+      }
+
+      const attemptsRemaining = Math.max(0, MAX_ATTEMPTS_PER_HOUR - current);
+      return attemptsRemaining;
+    } catch (error) {
+      this._logger.error("Rate limit check failed", error as Error, { email });
+      return 0;
+    }
+  }
 }

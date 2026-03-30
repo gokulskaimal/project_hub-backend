@@ -1,5 +1,5 @@
-export enum UserRole{
-    SUPER_ADMIN = 'SUPER ADMIN',
-    ORG_MANAGER = 'ORG MANAGER',
-    TEAM_MEMBER = 'TEAM MEMBER'
+export enum UserRole {
+  SUPER_ADMIN = "SUPER_ADMIN",
+  ORG_MANAGER = "ORG_MANAGER",
+  TEAM_MEMBER = "TEAM_MEMBER",
 }

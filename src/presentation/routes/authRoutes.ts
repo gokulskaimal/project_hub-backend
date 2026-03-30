@@ -1,46 +1,89 @@
-import express from 'express'
-import { AuthController } from '../controllers/AuthController'
-import { UserRepo } from '../../infrastructure/repositories/UserRepo'
-import { OTPService } from '../../infrastructure/sevices/OTPService'
-import { EmailService } from '../../infrastructure/sevices/EmailService'
-import { InviteRepo } from '../../infrastructure/repositories/InviteRepo'
-import { RegisterManagerUseCase } from '../../application/useCase/RegisterManagerUseCase'
-import { SendOtpUseCase } from '../../application/useCase/SendOtpUseCase'
-import { VerifyOtpUseCase } from '../../application/useCase/VerifyOtpUseCase'
-import { CompleteSignupUseCase } from '../../application/useCase/CompleteSignupUseCase'
-import { InviteMemberUseCase } from '../../application/useCase/InviteMemberUseCase'
-import { AcceptUseCase } from '../../application/useCase/AcceptUseCase'
-import { AuthUseCases } from '../../application/useCase/AuthUseCase'
-import { authMiddleware } from '../../middleware/AuthMiddleware'
+import { Router } from "express";
+import { Container } from "inversify";
+import { SessionController } from "../controllers/auth/SessionController";
+import { RegistrationController } from "../controllers/auth/RegistrationController";
+import { InviteController } from "../controllers/auth/InviteController";
+import { PasswordController } from "../controllers/auth/PasswordController";
+import { TYPES } from "../../infrastructure/container/types";
+import { validate } from "../middleware/ValidationMiddleware";
+import { API_ROUTES } from "../../infrastructure/config/apiRoutes.constant"; // Update import path
 
-const userRepo = new UserRepo()
-const otpService = new OTPService()
-const emailService = new EmailService()
-const inviteRepo = new InviteRepo()
-const authUseCase = new AuthUseCases(userRepo)
+// Import Schemas
+import {
+  loginSchema,
+  registerSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+  completeSignupSchema,
+} from "../validation/authSchemas";
 
-const registerManagerUC = new RegisterManagerUseCase(userRepo, otpService, emailService)
-const sendOtpUC = new SendOtpUseCase(userRepo, emailService)
-const verifyOtpUC = new VerifyOtpUseCase(userRepo)
-const completeSignupUC = new CompleteSignupUseCase(userRepo)
-const inviteMemberUC = new InviteMemberUseCase(inviteRepo, emailService)
-const acceptUC = new AcceptUseCase(inviteRepo, userRepo)
+export function createAuthRoutes(container: Container): Router {
+  const router = Router();
 
-const authController = new AuthController(registerManagerUC, sendOtpUC, verifyOtpUC, inviteMemberUC, acceptUC, authUseCase , completeSignupUC)
+  const sessionCtrl = container.get<SessionController>(TYPES.SessionController);
+  const regCtrl = container.get<RegistrationController>(
+    TYPES.RegistrationController,
+  );
+  const inviteCtrl = container.get<InviteController>(TYPES.InviteController);
+  const pwdCtrl = container.get<PasswordController>(TYPES.PasswordController);
 
-const router = express.Router()
+  router.post(API_ROUTES.AUTH.LOGIN, validate(loginSchema), (req, res, next) =>
+    sessionCtrl.login(req, res, next),
+  );
+  router.post(
+    API_ROUTES.AUTH.REGISTER,
+    validate(registerSchema),
+    (req, res, next) => regCtrl.register(req, res, next),
+  );
+  router.post(
+    API_ROUTES.AUTH.SIGNUP_MANAGER,
+    validate(registerSchema),
+    (req, res, next) => regCtrl.registerManager(req, res, next),
+  );
 
-router.post('/login' , (req , res) => authController.login(req,res))
-router.post('/refresh-token' , (req,res) => authController.refreshToken(req,res))
-router.post('/reset-password-request' , (req,res) => authController.resetPasswordReq(req,res))
-router.post('/reset-password',(req,res) => authController.resetPassword(req,res))
-router.post('/verify-email', authMiddleware, (req, res) => authController.verifyEmail(req, res))
+  router.post(
+    API_ROUTES.AUTH.SEND_OTP,
+    validate(sendOtpSchema),
+    (req, res, next) => regCtrl.sendOtp(req, res, next),
+  );
+  router.post(
+    API_ROUTES.AUTH.VERIFY_OTP,
+    validate(verifyOtpSchema),
+    (req, res, next) => regCtrl.verifyOtp(req, res, next),
+  );
+  router.post(API_ROUTES.AUTH.VERIFY_EMAIL, (req, res, next) =>
+    regCtrl.verifyEmail(req, res, next),
+  );
 
-router.post('/register-manager', (req, res) => authController.registerManager(req, res))
-router.post('/send-otp', (req, res) => authController.sendOtp(req, res))
-router.post('/verify-otp', (req, res) => authController.verifyOtp(req, res))
-router.post('/complete-signup', (req, res) => authController.completeSignup(req, res))
-router.post('/invite-member', (req, res) => authController.inviteMember(req, res))
-router.post('/accept-invite', (req, res) => authController.acceptInvite(req, res))
+  router.post(
+    API_ROUTES.AUTH.COMPLETE_SIGNUP,
+    validate(completeSignupSchema),
+    (req, res, next) => regCtrl.completeSignup(req, res, next),
+  );
 
-export default router
+  router.post(API_ROUTES.AUTH.RESET_PASSWORD_REQUEST, (req, res, next) =>
+    pwdCtrl.resetPasswordReq(req, res, next),
+  );
+  router.post(API_ROUTES.AUTH.RESET_PASSWORD, (req, res, next) =>
+    pwdCtrl.resetPassword(req, res, next),
+  );
+
+  router.post(API_ROUTES.AUTH.ACCEPT_INVITE, (req, res, next) =>
+    inviteCtrl.acceptInvite(req, res, next),
+  );
+  router.get(API_ROUTES.AUTH.VALIDATE_INVITE(":token"), (req, res, next) =>
+    inviteCtrl.validateInviteToken(req, res, next),
+  );
+
+  router.post(API_ROUTES.AUTH.GOOGLE_SIGNIN, (req, res, next) =>
+    sessionCtrl.googleSignIn(req, res, next),
+  );
+  router.post(API_ROUTES.AUTH.REFRESH, (req, res, next) =>
+    sessionCtrl.refreshToken(req, res, next),
+  );
+  router.post(API_ROUTES.AUTH.LOGOUT, (req, res, next) =>
+    sessionCtrl.logout(req, res, next),
+  );
+
+  return router;
+}

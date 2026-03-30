@@ -1,0 +1,200 @@
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../infrastructure/container/types";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { IInviteRepo } from "../../application/interface/repositories/IInviteRepo";
+import { ILogger } from "../../application/interface/services/ILogger";
+import {
+  OrganizationStatus,
+  Organization,
+} from "../../domain/entities/Organization";
+import { IOrganizationManagementUseCase } from "../interface/useCases/IOrganizationManagementUseCase";
+import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+import { IDeleteProjectUseCase } from "../interface/useCases/IDeleteProjectUseCase";
+import { ISecurityService } from "../../application/interface/services/ISecurityService";
+
+@injectable()
+export class OrganizationManagementUseCase implements IOrganizationManagementUseCase {
+  constructor(
+    @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
+    @inject(TYPES.IOrgRepo) private readonly _orgRepo: IOrgRepo,
+    @inject(TYPES.IInviteRepo) private readonly _inviteRepo: IInviteRepo,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IProjectRepo) private readonly _projectRepo: IProjectRepo,
+    @inject(TYPES.IDeleteProjectUseCase)
+    private readonly _deleteProjectUseCase: IDeleteProjectUseCase,
+    @inject(TYPES.ISecurityService)
+    private readonly _securityService: ISecurityService,
+  ) {}
+
+  /**
+   * Delete organization with cascading deletion of all users
+   *
+   * @param orgId - Organization ID to delete
+   */
+  async deleteOrganizationCascade(
+    orgId: string,
+    requesterId: string,
+  ): Promise<void> {
+    try {
+      await this._securityService.validateSuperAdmin(requesterId);
+      this._logger.info("Deleting organization with cascading deletion", {
+        orgId,
+      });
+
+      // Get all users in this organization
+      const usersInOrg = await this._userRepo.findByOrg(orgId);
+
+      if (usersInOrg && usersInOrg.length > 0) {
+        // Delete all users in the organization
+        for (const user of usersInOrg) {
+          await this._userRepo.delete(user.id);
+          this._logger.info("User deleted due to organization deletion", {
+            userId: user.id,
+            orgId,
+            email: user.email,
+          });
+        }
+      }
+
+      // Delete all invitations for this organization
+      const deletedInvites = await this._inviteRepo.deleteByOrganization(orgId);
+      this._logger.info("Deleted invitations for organization", {
+        orgId,
+        count: deletedInvites,
+      });
+
+      // Find all projects in the org deletes tasks, sprints, chats
+      const projectsInOrg = await this._projectRepo.findByOrg(orgId);
+      if (projectsInOrg && projectsInOrg.length > 0) {
+        let deletedProjects = 0;
+        for (const project of projectsInOrg) {
+          await this._deleteProjectUseCase.execute(project.id, requesterId);
+          deletedProjects++;
+        }
+        this._logger.info(
+          `Deleted ${deletedProjects} projects from organization`,
+          { orgId },
+        );
+      }
+
+      // Delete the organization
+      await this._orgRepo.hardDelete(orgId);
+
+      this._logger.info(
+        "Organization deleted successfully with all users and invites",
+        {
+          orgId,
+          deletedUsers: usersInOrg?.length || 0,
+          deletedInvites,
+        },
+      );
+    } catch (error) {
+      this._logger.error(
+        "Failed to delete organization cascade",
+        error as Error,
+        { orgId },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Update organization status with cascading effects to users
+   *
+   * @param orgId - Organization ID to update
+   * @param newStatus - New status (ACTIVE, BLOCKED, INACTIVE)
+   * @returns Updated organization
+   */
+  async updateOrganizationStatus(
+    orgId: string,
+    newStatus: OrganizationStatus,
+    requesterId: string,
+  ): Promise<Organization> {
+    try {
+      await this._securityService.validateSuperAdmin(requesterId);
+      this._logger.info("Updating organization status with cascading effects", {
+        orgId,
+        newStatus,
+      });
+
+      // Update the organization
+      const updatedOrg = await this._orgRepo.update(orgId, {
+        status: newStatus,
+      });
+
+      if (!updatedOrg) {
+        throw new OrganizationNotFoundError();
+      }
+
+      // Get all users in this organization
+      const usersInOrg = await this._userRepo.findByOrg(orgId);
+
+      if (usersInOrg && usersInOrg.length > 0) {
+        // Update all users based on organization status
+        if (newStatus === OrganizationStatus.SUSPENDED) {
+          // Suspend all users in the organization
+          for (const user of usersInOrg) {
+            await this._userRepo.updateStatus(user.id, "SUSPENDED");
+            this._logger.info("User suspended due to organization suspension", {
+              userId: user.id,
+              orgId,
+              email: user.email,
+            });
+          }
+        } else if (newStatus === OrganizationStatus.ACTIVE) {
+          for (const user of usersInOrg) {
+            if (user.status === "SUSPENDED") {
+              await this._userRepo.updateStatus(user.id, "ACTIVE");
+              this._logger.info(
+                "User reactivated due to organization activation",
+                {
+                  userId: user.id,
+                  orgId,
+                  email: user.email,
+                },
+              );
+            }
+          }
+        }
+      }
+
+      this._logger.info("Organization status updated successfully", {
+        orgId,
+        newStatus,
+        affectedUsers: usersInOrg?.length || 0,
+      });
+
+      return updatedOrg;
+    } catch (error) {
+      this._logger.error(
+        "Failed to update organization status",
+        error as Error,
+        { orgId, newStatus },
+      );
+      throw error;
+    }
+  }
+
+  async createOrganization(
+    data: Partial<Organization>,
+    requesterId: string,
+  ): Promise<Organization> {
+    await this._securityService.validateSuperAdmin(requesterId);
+    return this._orgRepo.create(data);
+  }
+
+  async updateOrganization(
+    orgId: string,
+    data: Partial<Organization>,
+    requesterId: string,
+  ): Promise<Organization> {
+    await this._securityService.validateOrgManager(requesterId, orgId);
+    const updatedOrg = await this._orgRepo.update(orgId, data);
+    if (!updatedOrg) {
+      throw new OrganizationNotFoundError();
+    }
+    return updatedOrg;
+  }
+}

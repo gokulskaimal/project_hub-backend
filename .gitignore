@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/dist
+/coverage
 /.pnp
 .pnp.*
 .yarn/*
@@ -29,6 +31,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# logs
+/src/logs
 
 # env files (can opt-in for committing if needed)
 .env*
