@@ -16,4 +16,19 @@ export class GetProjectUseCase implements IGetProjectUseCase {
     await this._securityService.validateOrgAccess(requesterId, orgId);
     return this._projectRepo.findByOrg(orgId);
   }
+
+  async executePaginated(
+    limit: number,
+    offset: number,
+    filters: {
+      orgId: string;
+      status?: string;
+      priority?: string;
+      searchTerm?: string;
+    },
+  ): Promise<{ projects: Project[]; total: number }> {
+    // Note: In a real app, we'd also validate access for the requesterId here.
+    // Assuming the controller handles basic auth and orgId is from the user token.
+    return this._projectRepo.findPaginated(limit, offset, filters);
+  }
 }

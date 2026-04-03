@@ -93,28 +93,53 @@ export class ProjectController {
 
   getAllProjects = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
-    if (!authReq.user || !authReq.user.orgId)
-      throw new ValidationError("Unauthorized: Missing user context");
-    this._logger.info(`Fetching projects for Org ${authReq.user.orgId}`);
-    const projects = await this._getProjectUC.execute(
-      authReq.user.orgId,
-      authReq.user.id,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
+    const { search = "", status = "ALL", priority = "ALL" } = req.query;
+    const { projects, total } = await this._getProjectUC.executePaginated(
+      limit,
+      offset,
+      {
+        orgId: authReq.user!.orgId!,
+        searchTerm: search as string,
+        status: status as string,
+        priority: priority as string,
+      },
     );
-    this.sendSuccess(res, projects.map(toProjectDTO));
+
+    this.sendSuccess(
+      res,
+      {
+        items: projects.map(toProjectDTO),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      "Projects fetched successfully",
+    );
   });
 
   getMyProjects = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
     const userId = authReq.user?.id;
-    if (!userId)
-      throw new ValidationError("Unauthorized: Missing user context");
 
-    this._logger.info(`Fetching projects for user ${userId}`);
-    const projects = await this._getMemberProjectsUC.execute(
-      userId,
-      authReq.user!.id,
-    );
-    this.sendSuccess(res, projects.map(toProjectDTO));
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
+
+    this._logger.info(`Fetching paginated projects for member ${userId}`);
+    const { projects, total } =
+      await this._getMemberProjectsUC.executePaginated(userId!, limit, offset);
+
+    this.sendSuccess(res, {
+      items: projects.map(toProjectDTO),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   });
 
   getProjectById = asyncHandler(async (req: Request, res: Response) => {

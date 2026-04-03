@@ -118,6 +118,27 @@ export interface IInviteRepo {
   deleteById(id: string): Promise<boolean>;
 
   /**
+   * Find invitations with pagination
+   * @param limit - Number of invitations to return
+   * @param offset - Number of invitations to skip
+   * @param searchTerm - Optional search term
+   * @param filters - Optional filters (orgId, status)
+   * @returns Paginated invitations
+   */
+  findPaginated(
+    limit: number,
+    offset: number,
+    searchTerm?: string,
+    filters?: {
+      orgId?: string;
+      status?: string;
+    },
+  ): Promise<{
+    invites: Invite[];
+    total: number;
+  }>;
+
+  /**
    * Delete all invitations for an organization
    * @param orgId - Organization ID
    * @returns Number of deleted invitations

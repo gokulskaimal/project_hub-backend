@@ -1,25 +1,30 @@
 import { injectable } from "inversify";
 import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
-import { TaskHistoryModel } from "../models/TaskHistoryModel";
+import { ITaskHistoryDoc, TaskHistoryModel } from "../models/TaskHistoryModel";
 import { TaskHistory } from "../../domain/entities/TaskHistory";
-import { TaskModel } from "../models/TaskModel";
+import { BaseRepository } from "./BaseRepo";
 
 @injectable()
-export class TaskHistoryRepo implements ITaskHistoryRepo {
-  async create(history: TaskHistory): Promise<TaskHistory> {
-    const newHistory = await TaskHistoryModel.create(history);
-    return newHistory.toObject({ virtuals: true });
+export class TaskHistoryRepo
+  extends BaseRepository<TaskHistory, ITaskHistoryDoc>
+  implements ITaskHistoryRepo
+{
+  constructor() {
+    super(TaskHistoryModel);
+  }
+
+  protected toDomain(doc: ITaskHistoryDoc): TaskHistory {
+    return doc.toObject({ virtuals: true }) as TaskHistory;
   }
 
   async findByTaskId(taskId: string): Promise<TaskHistory[]> {
     const historyLogs = await TaskHistoryModel.find({ taskId }).sort({
       createdAt: -1,
     });
-    return historyLogs.map((log) => log.toObject({ virtuals: true }));
+    return historyLogs.map((log) => this.toDomain(log));
   }
 
   async deleteByTaskId(taskId: string): Promise<boolean> {
-    await TaskModel.deleteMany({ taskId });
-    return true;
+    return await this.deleteMany({ taskId: taskId });
   }
 }

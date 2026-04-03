@@ -140,27 +140,37 @@ export class TaskController {
   getMemberTasks = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
     const userId = authReq.user?.id;
-    if (!userId)
-      throw new ValidationError("Unauthorized: Missing user context");
+    const orgId = authReq.user?.orgId;
+    const role = authReq.user?.role;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
 
-    const userRole = authReq.user?.role;
-    let tasks: Task[] = [];
+    let result;
 
-    if (
-      userRole === UserRole.ORG_MANAGER ||
-      userRole === UserRole.SUPER_ADMIN
-    ) {
-      const orgId = authReq.user?.orgId;
-      if (!orgId)
-        throw new ValidationError("Unauthorized: Missing org context");
-      this._logger.info(`Fetching tasks for org ${orgId}`);
-      tasks = await this._getOrgTasksUC.execute(orgId, userId);
+    if (role === UserRole.ORG_MANAGER || role === UserRole.SUPER_ADMIN) {
+      result = await this._getOrgTasksUC.executePaginated(
+        orgId!,
+        limit,
+        offset,
+      );
     } else {
-      this._logger.info(`Fetching tasks for member ${userId}`);
-      tasks = await this._getMemberTasksUC.execute(userId, userId);
+      result = await this._getMemberTasksUC.executePaginated(
+        userId!,
+        limit,
+        offset,
+      );
     }
 
-    this.sendSuccess(res, tasks.map(toTaskDTO));
+    const { tasks, total } = result;
+
+    this.sendSuccess(res, {
+      items: tasks.map(toTaskDTO),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   });
 
   updateTask = asyncHandler(async (req: Request, res: Response) => {
@@ -178,18 +188,28 @@ export class TaskController {
       return;
     }
 
-    const { dueDate, parentTaskId, status, sprintId, ...rest } =
-      validation.data;
-    const taskInput: Partial<Task> = {
-      ...rest,
-      status: status as Task["status"],
-      sprintId: sprintId ?? undefined,
-      parentTaskId: parentTaskId ?? undefined,
-      description: rest.description ?? undefined,
-      storyPoints: rest.storyPoints ?? undefined,
-      assignedTo: rest.assignedTo ?? undefined,
-      ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
-    };
+    const taskInput: Partial<Task> = {};
+    const data = validation.data;
+
+    if (data.status) taskInput.status = data.status as Task["status"];
+    if (data.title !== undefined) taskInput.title = data.title;
+    if (data.description !== undefined)
+      taskInput.description = data.description ?? undefined;
+    if (data.priority !== undefined) taskInput.priority = data.priority;
+    if (data.type !== undefined) taskInput.type = data.type;
+    if (data.storyPoints !== undefined)
+      taskInput.storyPoints = data.storyPoints ?? undefined;
+    if (data.assignedTo !== undefined)
+      taskInput.assignedTo = data.assignedTo ?? undefined;
+    if (data.sprintId !== undefined)
+      taskInput.sprintId = data.sprintId ?? undefined;
+    if (data.parentTaskId !== undefined)
+      taskInput.parentTaskId = data.parentTaskId ?? undefined;
+    if (data.dueDate !== undefined)
+      taskInput.dueDate = data.dueDate ? new Date(data.dueDate) : undefined;
+    if (data.attachments !== undefined)
+      taskInput.attachments = data.attachments;
+    if (data.comments !== undefined) taskInput.comments = data.comments;
 
     this._logger.info(`Updating task ${id} by user ${authReq.user.id}`);
     const task = await this._updateTaskUC.execute(

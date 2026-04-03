@@ -4,7 +4,9 @@ import { ILogger } from "../../../application/interface/services/ILogger";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IUserProfileUseCase } from "../../../application/interface/useCases/IUserProfileUseCase";
 import { IGetUserVelocityUseCase } from "../../../application/interface/useCases/IGetUserVelocityUseCase";
+import { IGetMemberAnalyticsUseCase } from "../../../application/interface/useCases/IGetMemberAnalyticsUseCase";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
+import { TimeFrame } from "../../../utils/DateUtils";
 
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
@@ -24,6 +26,8 @@ export class UserController {
     private userProfileUseCase: IUserProfileUseCase,
     @inject(TYPES.IGetUserVelocityUseCase)
     private _getUserVelocityUC: IGetUserVelocityUseCase,
+    @inject(TYPES.IGetMemberAnalyticsUseCase)
+    private _getMemberAnalyticsUC: IGetMemberAnalyticsUseCase,
   ) {}
 
   private sendSuccess<T>(
@@ -166,6 +170,19 @@ export class UserController {
         },
         "Velocity retrieved",
       );
+    },
+  );
+
+  getAnalytics = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const userId = req.user!.id;
+      const { filter } = req.query;
+      this._logger.info("Fetching member analytics", { userId, filter });
+      const analytics = await this._getMemberAnalyticsUC.execute(
+        userId,
+        filter as TimeFrame,
+      );
+      this.sendSuccess(res, analytics, "Analytics retrieved");
     },
   );
 }

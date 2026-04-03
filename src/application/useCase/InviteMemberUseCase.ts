@@ -95,8 +95,11 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
         if (limit !== -1) {
           const currentMembers = await this._userRepo.countByOrg(orgId);
           if (currentMembers >= limit) {
+            this._logger.warn(
+              `[QUOTA_EXCEEDED] Invitation blocked for Org ${orgId}. Current member count: ${currentMembers}, Plan limit: ${limit}`,
+            );
             throw new QuotaExceededError(
-              `Member capacity limit of ${limit} reached. Please upgrade your plan.`,
+              `Member capacity limit of ${limit} reached for your current plan. Please upgrade to invite more members.`,
             );
           }
         }

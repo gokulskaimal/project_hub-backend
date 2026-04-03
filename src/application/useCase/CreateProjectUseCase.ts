@@ -88,9 +88,11 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
       const count = await this._projectRepo.countByOrg(orgId);
       if (count >= limit) {
         this._logger.warn(
-          `Project creation failed: Limit reached for Org ${orgId} (Limit: ${limit}, Current: ${count})`,
+          `[QUOTA_EXCEEDED] Project creation blocked for Org ${orgId}. Current count: ${count}, Limit: ${limit}. Plan fallback: ${!subscription}`,
         );
-        throw new QuotaExceededError("Project Limit reached for this plan");
+        throw new QuotaExceededError(
+          `Project Limit reached (${limit}) for your current plan. Please upgrade to create more projects.`,
+        );
       }
     }
 

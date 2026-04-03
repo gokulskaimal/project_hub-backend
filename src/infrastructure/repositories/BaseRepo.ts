@@ -104,6 +104,15 @@ export abstract class BaseRepository<
   }
 
   /**
+   * Deletes multiple documents matching a filter
+   * @param filter - The Mongoose filter query
+   */
+  async deleteMany(filter: FilterQuery<TDomain>): Promise<boolean> {
+    const result = await this.model.deleteMany(filter);
+    return result.acknowledged;
+  }
+
+  /**
    * Counts documents matching the filter
    *
    * @param filter - The filter to apply to the query

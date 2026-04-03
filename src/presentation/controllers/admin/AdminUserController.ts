@@ -38,37 +38,73 @@ export class AdminUserController {
     });
   }
 
+  // listUsers = asyncHandler(async (req: Request, res: Response) => {
+  //   const { limit = 50, offset = 0, search, orgId, role, status } = req.query;
+  //   this.logger.info("Listing users", {
+  //     limit,
+  //     offset,
+  //     search,
+  //     orgId,
+  //     role,
+  //     status,
+  //   });
+
+  //   const filters = {
+  //     orgId: typeof orgId === "string" ? orgId : undefined,
+  //     role: typeof role === "string" ? role : undefined,
+  //     status: typeof status === "string" ? status : undefined,
+  //   };
+
+  //   const authReq = req as AuthenticatedRequest;
+  //   const result = await this._userQueryUseCase.listUsers(
+  //     Number(limit),
+  //     Number(offset),
+  //     authReq.user!.id,
+  //     search as string,
+  //     filters,
+  //   );
+
+  //   const safeResult = {
+  //     ...result,
+  //     users: result.users.map(toUserDTO),
+  //   };
+  //   this.sendSuccess(res, safeResult);
+  // });
+
   listUsers = asyncHandler(async (req: Request, res: Response) => {
-    const { limit = 50, offset = 0, search, orgId, role, status } = req.query;
-    this.logger.info("Listing users", {
-      limit,
-      offset,
-      search,
-      orgId,
-      role,
-      status,
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+    const { search, orgId, role, status } = req.query;
+
+    this.logger.info("Listing User", { limit, page, offset });
 
     const filters = {
-      orgId: typeof orgId === "string" ? orgId : undefined,
-      role: typeof role === "string" ? role : undefined,
-      status: typeof status === "string" ? status : undefined,
+      orgId: typeof orgId == "string" ? orgId : undefined,
+      role: typeof role == "string" ? role : undefined,
+      status: typeof status == "string" ? status : undefined,
     };
 
     const authReq = req as AuthenticatedRequest;
     const result = await this._userQueryUseCase.listUsers(
-      Number(limit),
-      Number(offset),
+      limit,
+      offset,
       authReq.user!.id,
       search as string,
       filters,
     );
 
-    const safeResult = {
-      ...result,
-      users: result.users.map(toUserDTO),
-    };
-    this.sendSuccess(res, safeResult);
+    this.sendSuccess(
+      res,
+      {
+        items: result.users.map(toUserDTO),
+        total: result.total,
+        page,
+        limit,
+        totalPages: Math.ceil(result.total / limit),
+      },
+      "Users lisited successfully",
+    );
   });
 
   getUserById = asyncHandler(async (req: Request, res: Response) => {

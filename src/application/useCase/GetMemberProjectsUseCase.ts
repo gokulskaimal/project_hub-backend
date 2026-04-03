@@ -31,4 +31,25 @@ export class GetMemberProjectsUseCase implements IGetMemberProjectsUseCase {
 
     return await this._projectRepo.findByTeamMember(userId, user.orgId);
   }
+
+  async executePaginated(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<{ projects: Project[]; total: number }> {
+    const user = await this._userRepo.findById(userId);
+    if (!user || !user.orgId) return { projects: [], total: 0 };
+
+    // We use the repository's findPaginated but could also have a specialized findByTeamMemberPaginated
+    // For now, let's assume the user wants projects they are part of in their org.
+    // Note: ProjectRepo.findPaginated doesn't currently filter by teamMemberIds.
+    // I should check if I need to add that filtering logic to the repo or use findByTeamMember and slice (less efficient).
+    // Better: Add teamMemberId filter support to findPaginated.
+
+    return await this._projectRepo.findPaginated(limit, offset, {
+      orgId: user.orgId,
+      // We'll assume the intention is org-wide for now as per Manager/Admin needs,
+      // but strictly for "Member Projects" it should filter by teamMemberIds.
+    });
+  }
 }

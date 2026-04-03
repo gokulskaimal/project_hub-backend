@@ -45,6 +45,11 @@ export interface IBaseRepository<T, ID = string> {
    */
   delete(id: ID): Promise<boolean>;
   /**
+   * Deletes multiple documents matching a filter
+   * @param filter - The filter query
+   */
+  deleteMany(filter: Record<string, unknown>): Promise<boolean>;
+  /**
    * Counts entities matching the filter
    *
    * @param filter - The filter to apply to the query

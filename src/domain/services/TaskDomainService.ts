@@ -23,17 +23,25 @@ export class TaskDomainService implements ITaskDomainService {
       throw new ValidationError("Task is Completed and cannot be modified.");
     }
 
-    const isManager = user.role === UserRole.ORG_MANAGER;
+    const isManager =
+      user.role === UserRole.ORG_MANAGER || user.role === UserRole.SUPER_ADMIN;
 
     if (!isManager) {
+      if (task.assignedTo && task.assignedTo !== user.id) {
+        throw new ValidationError(
+          "Access Denied: You are only authorized to update tasks assigned to you.",
+        );
+      }
       if (newStatus === "DONE") {
         throw new ValidationError("Only Managers can mark a task as Done.");
       }
-      if (task.status === "REVIEW") {
+
+      if (task.status === "REVIEW" && newStatus !== "IN_PROGRESS") {
         throw new ValidationError(
-          "Task is under Review. Only Manager can update status.",
+          "Task is under Review. Only Managers can finalize or revert to Todo.",
         );
       }
+
       if (task.status === "IN_PROGRESS" && newStatus === "TODO") {
         throw new ValidationError(
           "Tasks currently In Progress cannot be moved back to Todo.",
@@ -99,7 +107,9 @@ export class TaskDomainService implements ITaskDomainService {
   }
 
   public validateDefinitionOfDone(task: Task): void {
-    if (!task.assignedTo) {
+    const isAssigned =
+      !!task.assignedTo && String(task.assignedTo).trim() !== "";
+    if (!isAssigned) {
       throw new ValidationError(
         "Scrum Rule Violation: Task must be assigned to a user before reaching Definition of Done.",
       );

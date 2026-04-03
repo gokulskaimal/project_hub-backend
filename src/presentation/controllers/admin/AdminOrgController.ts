@@ -6,7 +6,9 @@ import { IOrganizationManagementUseCase } from "../../../application/interface/u
 import { IUserQueryUseCase } from "../../../application/interface/useCases/IUserQueryUseCase";
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
 import { IAdminStatsUseCase } from "../../../application/interface/useCases/IAdminStatsUseCase";
+import { IGetAdminAnalyticsUseCase } from "../../../application/interface/useCases/IGetAdminAnalyticsUseCase";
 import { ILogger } from "../../../application/interface/services/ILogger";
+import { TimeFrame } from "../../../utils/DateUtils";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import {
   Organization,
@@ -40,6 +42,8 @@ export class AdminOrgController {
     private _inviteMemberUseCase: IInviteMemberUseCase,
     @inject(TYPES.IAdminStatsUseCase)
     private _adminStatsUseCase: IAdminStatsUseCase,
+    @inject(TYPES.IGetAdminAnalyticsUseCase)
+    private _adminAnalyticsUseCase: IGetAdminAnalyticsUseCase,
     @inject(TYPES.ILogger) private logger: ILogger,
   ) {}
 
@@ -58,19 +62,30 @@ export class AdminOrgController {
   }
 
   listOrganizations = asyncHandler(async (req: Request, res: Response) => {
-    const { limit = 50, offset = 0, search } = req.query;
-    this.logger.info("Listing organizations", { limit, offset, search });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
+    const { search, status } = req.query;
 
+    this.logger.info("Listing Organizations", { limit, page, offset, status });
     const result = await this._orgQueryUseCase.listOrganizations(
-      Number(limit),
-      Number(offset),
+      limit,
+      offset,
       search as string,
+      status as string,
     );
-    const safeResult = {
-      ...result,
-      organizations: result.organizations.map(toOrgDTO),
-    };
-    this.sendSuccess(res, safeResult);
+
+    this.sendSuccess(
+      res,
+      {
+        items: result.organizations.map(toOrgDTO),
+        total: result.total,
+        page,
+        limit,
+        totalPages: Math.ceil(result.total / limit),
+      },
+      "Organizations fetched successfully",
+    );
   });
 
   createOrganization = asyncHandler(async (req: Request, res: Response) => {
@@ -260,5 +275,14 @@ export class AdminOrgController {
     this.logger.info("Fetching dashboard stats");
     const stats = await this._adminStatsUseCase.getDashboardStats();
     this.sendSuccess(res, stats);
+  });
+
+  getAnalytics = asyncHandler(async (req: Request, res: Response) => {
+    const { filter } = req.query;
+    this.logger.info("Fetching admin analytics", { filter });
+    const analytics = await this._adminAnalyticsUseCase.execute(
+      filter as TimeFrame,
+    );
+    this.sendSuccess(res, analytics);
   });
 }

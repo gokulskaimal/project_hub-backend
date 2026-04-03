@@ -6,6 +6,7 @@ import { Task } from "../../domain/entities/Task";
 import {
   EntityNotFoundError,
   ValidationError,
+  ForbiddenError,
 } from "../../domain/errors/CommonErrors";
 
 import { ILogger } from "../../application/interface/services/ILogger";
@@ -71,10 +72,38 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
     }
 
-    // 1. Validation Logic
+    // 1. Validation
     if (updaterId) {
       const updater = await this._userRepo.findById(updaterId);
       if (updater) {
+        //Strict Role Control
+        if (
+          updater.role !== UserRole.ORG_MANAGER &&
+          updater.role !== UserRole.SUPER_ADMIN
+        ) {
+          // If NOT a manager
+          const allowedFields = [
+            "status",
+            "timeLogs",
+            "totalTimeSpent",
+            "completedAt",
+            "comments",
+            "attachments",
+          ];
+          const attemptedFields = Object.keys(data).filter(
+            (key) => data[key as keyof Partial<Task>] !== undefined,
+          );
+          const hasUnauthorizedFields = attemptedFields.some(
+            (field) => !allowedFields.includes(field),
+          );
+
+          if (hasUnauthorizedFields) {
+            throw new ForbiddenError(
+              "Members can only update task status, comments, and attachments. Core details are reserved for Managers.",
+            );
+          }
+        }
+
         this._taskDomainService.validateStatusTransition(
           task,
           data.status,
@@ -83,15 +112,20 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
     }
 
-    // [SCURM] Merged Task for Validation
-    const mergedTask = { ...task, ...data } as Task;
+    // Filter out undefined values to prevent accidental overwrites of existing data
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined),
+    );
 
-    // [SCURM] Domain Rule: Assignment to Sprint (Must be estimated)
+    // Merged Task for Validation
+    const mergedTask = { ...task, ...filteredData } as Task;
+
+    // Domain Rule: Assignment to Sprint (Must be estimated)
     if (data.sprintId && data.sprintId !== task.sprintId) {
       this._taskDomainService.validateAssignmentToSprint(mergedTask);
     }
 
-    // [SCURM] Domain Rule: Definition of Done (Must have assignee)
+    // Domain Rule: Definition of Done (Must have assignee)
     if (data.status === "DONE" && task.status !== "DONE") {
       this._taskDomainService.validateDefinitionOfDone(mergedTask);
     }

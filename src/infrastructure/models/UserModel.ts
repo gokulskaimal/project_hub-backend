@@ -19,6 +19,8 @@ export interface IUserDoc extends Document {
   otpExpiry: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
   status?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING_VERIFICATION";
   lastLoginAt?: Date;
 }
@@ -41,6 +43,8 @@ const UserSchema = new mongoose.Schema<IUserDoc>(
     otpExpiry: { type: Date },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: { type: Date },
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE", "BLOCKED", "PENDING_VERIFICATION"],
@@ -62,6 +66,8 @@ UserSchema.index({ status: 1 });
 
 // Optimize "Find by Verification Token"
 UserSchema.index({ otp: 1 });
+
+UserSchema.index({ emailVerificationToken: 1 });
 
 export type UserDocument = IUserDoc;
 

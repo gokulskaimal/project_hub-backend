@@ -34,6 +34,10 @@ export const TaskBaseSchema = z.object({
     .optional(),
   assignedTo: z.string().nullable().optional(),
   parentTaskId: z.string().nullable().optional(),
+  dueDate: z
+    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
+    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid due date")
+    .optional(),
 });
 
 export const TaskCreateSchema = TaskBaseSchema.refine(
@@ -54,22 +58,40 @@ export const TaskCreateSchema = TaskBaseSchema.refine(
   },
 );
 
-export const TaskUpdateSchema = TaskBaseSchema.partial().extend({
-  status: z.enum(TASK_STATUS).optional(),
-  sprintId: z.string().nullable().optional(),
-  attachments: z
-    .array(
-      z.object({
-        name: z.string(),
-        url: z.string().url(),
-        size: z.number().optional(),
-        type: z.string().optional(),
-      }),
-    )
-    .optional(),
-  comments: z.array(z.any()).optional(),
-  parentTaskId: z.string().optional(),
-});
+export const TaskUpdateSchema = TaskBaseSchema.partial()
+  .extend({
+    status: z.enum(TASK_STATUS).optional(),
+    sprintId: z.string().nullable().optional(),
+    attachments: z
+      .array(
+        z.object({
+          name: z.string(),
+          url: z.string().url(),
+          size: z.number().optional(),
+          type: z.string().optional(),
+        }),
+      )
+      .optional(),
+    comments: z.array(z.any()).optional(),
+    parentTaskId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.type === "STORY" &&
+        (data.storyPoints === undefined ||
+          data.storyPoints === null ||
+          data.storyPoints === 0)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "User Stories must have story points assigned (> 0)",
+      path: ["storyPoints"],
+    },
+  );
 
 export const TaskCommentCreateSchema = z.object({
   text: z

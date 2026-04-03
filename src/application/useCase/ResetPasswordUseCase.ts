@@ -3,7 +3,6 @@ import { TYPES } from "../../infrastructure/container/types";
 import { IResetPasswordUseCase } from "../interface/useCases/IResetPasswordUseCase";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { IHashService } from "../../application/interface/services/IHashService";
-import { IJwtService } from "../../application/interface/services/IJwtService";
 import { IEmailService } from "../../application/interface/services/IEmailService";
 import { ILogger } from "../../application/interface/services/ILogger";
 import { InvalidTokenError } from "../../domain/errors/AuthErrors";
@@ -15,7 +14,6 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
   constructor(
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
-    @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
     @inject(TYPES.IEmailService) private readonly _emailService: IEmailService,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.IPasswordResetService)
@@ -23,6 +21,20 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     @inject(TYPES.IAuthValidationService)
     private readonly _authValidationService: IAuthValidationService,
   ) {}
+
+  /**
+   * Generates a random opaque token without using external libraries.
+   * This prevents information leakage (User ID/Email) in the reset URL.
+   */
+  private _generateOpaqueToken(length: number = 64): string {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let token = "";
+    for (let i = 0; i < length; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  }
 
   /**
    * Request password reset (send email with reset link)
@@ -40,16 +52,13 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         return { message: "If the email exists, a reset link has been sent" };
       }
 
-      // Business Rule: Generate reset token
-      const resetToken = this._jwtService.generateResetToken({
-        id: user.id,
-        email: user.email,
-        type: "password_reset",
-      });
+      // Business Rule: Generate opaque reset token (Opaque token for security)
+      // This prevents information leakage (User ID/Email) in the reset URL.
+      const resetToken = this._generateOpaqueToken(64);
 
       // Business Rule: Set token expiry (1 hour)
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-      const hashedToken = await this._hashService.hashToken(resetToken);
+      const hashedToken = this._hashService.hashToken(resetToken);
 
       // Store reset token using dedicated service
       await this._passwordResetService.setResetToken(
@@ -58,7 +67,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
         expiresAt,
       );
 
-      // Use sendResetPasswordEmail instead of sendPasswordResetEmail
+      // Use sendResetPasswordEmail
       await this._emailService.sendResetPasswordEmail(email, resetToken);
 
       this._logger.info("Password reset email sent", {
@@ -88,13 +97,10 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     this._logger.info("Processing password reset with token");
 
     try {
-      // Business Rule: Verify reset token
-      const payload = this._jwtService.verifyResetToken(token);
-      if (!payload) {
-        throw new InvalidTokenError("Invalid or expired reset token");
-      }
-      const hashedToken = await this._hashService.hashToken(token);
+      const hashedToken = this._hashService.hashToken(token);
+
       // Business Rule: Find user by reset token using dedicated service
+      // findByToken already verifies existence and expiry date in the database.
       const user = await this._passwordResetService.findByToken(hashedToken);
       if (!user) {
         throw new InvalidTokenError("Invalid or expired reset token");
@@ -134,14 +140,8 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
    */
   public async validateResetToken(token: string): Promise<boolean> {
     try {
-      // Verify token signature and expiry
-      const payload = this._jwtService.verifyResetToken(token);
-      if (!payload) {
-        return false;
-      }
-
       // Check if token exists using dedicated service
-      const hashedToken = await this._hashService.hashToken(token);
+      const hashedToken = this._hashService.hashToken(token);
       const user = await this._passwordResetService.findByToken(hashedToken);
       return !!user;
     } catch (error) {

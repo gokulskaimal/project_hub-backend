@@ -41,7 +41,7 @@ export class ToggleTimerUseCase implements IToggleTimerUseCase {
 
     if (action == "start") {
       if (activityLogsIndex !== -1) {
-        throw new Error("Timer is already running for this task");
+        return task; // Already started, just return
       }
       task.timeLogs.push({
         userId,
@@ -49,7 +49,7 @@ export class ToggleTimerUseCase implements IToggleTimerUseCase {
       });
     } else if (action == "stop") {
       if (activityLogsIndex == -1) {
-        throw new Error("Timer is not running for this task");
+        return task; // Already stopped, just return
       }
 
       const activityLog = task.timeLogs[activityLogsIndex];

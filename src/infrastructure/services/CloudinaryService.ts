@@ -37,9 +37,12 @@ export class CloudinaryService implements IFileService {
 
   async deleteFile(fileUrl: string): Promise<void> {
     try {
-      const publicId = fileUrl.split("/").pop()?.split(".")[0];
-      if (publicId)
-        await cloudinary.uploader.destroy(`project-hub/chat/${publicId}`);
+      const regex = /\/upload\/v\d+\/(.+)\.[a-z]+$/;
+      const match = fileUrl.match(regex);
+      const publicId = match ? match[1] : null;
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
     } catch (error) {
       console.error("Error deleting file from Cloudinary", error);
     }

@@ -70,6 +70,7 @@ export interface IOrgRepo {
     limit: number,
     offset: number,
     searchTerm?: string,
+    status?: string,
   ): Promise<{
     organizations: Organization[];
     total: number;
@@ -99,5 +100,10 @@ export interface IOrgRepo {
    * Get distribution of organizations by status
    * @returns Array of status counts
    */
-  getStatusDistribution(): Promise<Array<{ _id: string; count: number }>>;
+  getStatusDistribution(): Promise<Array<{ status: string; count: number }>>;
+  /**
+   * Get distribution of organizations by plan
+   * @returns Array of plan names and organization counts
+   */
+  getPlanPerformance(): Promise<Array<{ planName: string; count: number }>>;
 }

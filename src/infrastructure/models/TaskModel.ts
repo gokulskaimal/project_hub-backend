@@ -71,6 +71,10 @@ const TaskSchema = new Schema<ITaskDoc>(
   { timestamps: true },
 );
 
+TaskSchema.index({ orgId: 1, createdAt: -1 });
+TaskSchema.index({ orgId: 1, status: 1 });
+TaskSchema.index({ assignedTo: 1, status: 1 });
+
 TaskSchema.virtual("project", {
   ref: "Project",
   localField: "projectId",

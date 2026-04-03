@@ -9,6 +9,7 @@ import { ILogger } from "../../application/interface/services/ILogger";
 import { ISocketService } from "../../application/interface/services/ISocketService";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { IFileService } from "../../application/interface/services/IFileService";
 
 @injectable()
 export class DeleteTaskUseCase implements IDeleteTaskUseCase {
@@ -20,6 +21,7 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     @inject(TYPES.ICreateNotificationUseCase)
     private _createNotificationUC: ICreateNotificationUseCase,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.IFileService) private _fileService: IFileService,
   ) {}
 
   async execute(id: string, requesterId: string): Promise<boolean> {
@@ -28,9 +30,18 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     const task = await this._taskRepo.findById(id);
     if (!task) throw new EntityNotFoundError("Task Not Found", id);
 
-    // RBAC Check
+    // RBAC Check (Strict: Manager only for deletion)
     if (task.orgId) {
-      await this._securityService.validateOrgAccess(requesterId, task.orgId);
+      await this._securityService.validateOrgManager(requesterId, task.orgId);
+    }
+
+    if (task.attachments && task.attachments.length > 0) {
+      this._logger.info(
+        `Cleaning up ${task.attachments.length} attachments for task ${id}`,
+      );
+      await Promise.all(
+        task.attachments.map((attr) => this._fileService.deleteFile(attr.url)),
+      );
     }
 
     // 2. Delete task

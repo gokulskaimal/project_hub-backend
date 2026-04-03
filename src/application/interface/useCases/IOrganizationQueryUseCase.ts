@@ -5,6 +5,7 @@ export interface IOrganizationQueryUseCase {
     limit: number,
     offset: number,
     search?: string,
+    status?: string,
   ): Promise<{ organizations: Organization[]; total: number }>;
 
   getOrganizationById(orgId: string): Promise<Organization | null>;

@@ -9,6 +9,10 @@ import { IAuthValidationService } from "../../application/interface/services/IAu
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ICreateSprintUseCase } from "../interface/useCases/ICreateSprintUseCase";
 import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { INotificationService } from "../../domain/interface/services/INotificationService";
+import { NotificationType } from "../../domain/enums/NotificationType";
+import { UserRole } from "../../domain/enums/UserRole";
 
 @injectable()
 export class CreateSprintUseCase implements ICreateSprintUseCase {
@@ -21,6 +25,9 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ISprintDomainService)
     private _sprintDomainService: ISprintDomainService,
+    @inject(TYPES.ISocketService) private _socketService: ISocketService,
+    @inject(TYPES.INotificationService)
+    private _notificationService: INotificationService,
   ) {}
 
   async execute(data: Partial<Sprint>, requesterId: string): Promise<Sprint> {
@@ -89,6 +96,38 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
       status: data.status || "PLANNED",
     };
 
-    return await this._sprintRepo.create(sprintData);
+    const newSprint = await this._sprintRepo.create(sprintData);
+
+    // 1. Notify Managers in Org
+    this._socketService.emitToRoleInOrg(
+      project.orgId,
+      UserRole.ORG_MANAGER,
+      "sprint:created",
+      newSprint,
+    );
+
+    // 2. Notify Members of the Project
+    if (project.teamMemberIds && project.teamMemberIds.length > 0) {
+      this._socketService.emitToProject(
+        project.id,
+        "sprint:created",
+        newSprint,
+      );
+
+      // (Optional) Systematic Notification for serious planning
+      for (const memberId of project.teamMemberIds) {
+        if (memberId === requesterId) continue;
+        await this._notificationService.sendSystemNotification(
+          memberId,
+          "New Sprint Planned",
+          `A new sprint '${newSprint.name}' has been created in project ${project.name}`,
+          NotificationType.INFO,
+          project.orgId,
+          `/member/projects/${project.id}`,
+        );
+      }
+    }
+
+    return newSprint;
   }
 }

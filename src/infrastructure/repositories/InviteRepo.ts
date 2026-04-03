@@ -153,7 +153,7 @@ export class InviteRepo
     cancelled: number;
   }> {
     const stats = await this.model.aggregate([
-      { $match: { orgId } },
+      { $match: { orgId: String(orgId) } },
       {
         $group: {
           _id: "$status",
@@ -180,5 +180,30 @@ export class InviteRepo
     });
 
     return result;
+  }
+
+  async findPaginated(
+    limit: number,
+    offset: number,
+    searchTerm?: string,
+    filters?: { orgId?: string; status?: string },
+  ): Promise<{ invites: Invite[]; total: number }> {
+    const query: Record<string, unknown> = {};
+    if (filters?.orgId) query.orgId = filters.orgId;
+    if (filters?.status && filters.status !== "ALL")
+      query.status = filters.status;
+    if (searchTerm) {
+      query.email = { $regex: searchTerm, $options: "i" };
+    }
+
+    const [docs, total] = await Promise.all([
+      this.model.find(query).sort({ createdAt: -1 }).skip(offset).limit(limit),
+      this.model.countDocuments(query),
+    ]);
+
+    return {
+      invites: docs.map((d) => this.toDomain(d)),
+      total,
+    };
   }
 }

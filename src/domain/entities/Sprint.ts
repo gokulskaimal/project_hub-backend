@@ -5,7 +5,7 @@ export interface Sprint {
   description: string;
   startDate: Date;
   endDate: Date;
-  status: "PLANNED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+  status: "PLANNED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "PLANNING";
   goal?: string;
   createdAt: Date;
   updatedAt: Date;

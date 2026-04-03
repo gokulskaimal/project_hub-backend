@@ -55,8 +55,10 @@ export function createProjectRoutes(container: Container): Router {
   );
 
   // Tasks
-  router.post(API_ROUTES.PROJECTS.TASKS(":projectId"), (req, res, next) =>
-    taskCtrl.createTask(req, res, next),
+  router.post(
+    API_ROUTES.PROJECTS.TASKS(":projectId"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => taskCtrl.createTask(req, res, next),
   );
   router.get(API_ROUTES.PROJECTS.TASKS(":projectId"), (req, res, next) =>
     taskCtrl.getAllTasks(req, res, next),
@@ -68,8 +70,10 @@ export function createProjectRoutes(container: Container): Router {
   router.put(API_ROUTES.PROJECTS.TASK_UPDATE(":id"), (req, res, next) =>
     taskCtrl.updateTask(req, res, next),
   );
-  router.delete(API_ROUTES.PROJECTS.TASK_DELETE(":id"), (req, res, next) =>
-    taskCtrl.deleteTask(req, res, next),
+  router.delete(
+    API_ROUTES.PROJECTS.TASK_DELETE(":id"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => taskCtrl.deleteTask(req, res, next),
   );
   router.post(API_ROUTES.PROJECTS.TASK_TIMER(":id"), (req, res, next) =>
     taskCtrl.toggleTimer(req, res, next),

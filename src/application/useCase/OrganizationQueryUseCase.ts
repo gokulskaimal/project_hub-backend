@@ -12,8 +12,9 @@ export class OrganizationQueryUseCase implements IOrganizationQueryUseCase {
     limit: number,
     offset: number,
     search?: string,
+    status?: string,
   ): Promise<{ organizations: Organization[]; total: number }> {
-    return this._orgRepo.findPaginated(limit, offset, search || "");
+    return this._orgRepo.findPaginated(limit, offset, search || "", status);
   }
 
   async getOrganizationById(orgId: string): Promise<Organization | null> {

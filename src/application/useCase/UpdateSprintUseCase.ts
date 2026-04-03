@@ -10,6 +10,10 @@ import { IUpdateSprintUseCase } from "../interface/useCases/IUpdateSprintUseCase
 import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
+import { ISocketService } from "../../application/interface/services/ISocketService";
+import { INotificationService } from "../../domain/interface/services/INotificationService";
+import { NotificationType } from "../../domain/enums/NotificationType";
+import { UserRole } from "../../domain/enums/UserRole";
 
 @injectable()
 export class UpdateSprintUseCase implements IUpdateSprintUseCase {
@@ -23,6 +27,9 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ISprintDomainService)
     private _sprintDomainService: ISprintDomainService,
+    @inject(TYPES.ISocketService) private _socketService: ISocketService,
+    @inject(TYPES.INotificationService)
+    private _notificationService: INotificationService,
   ) {}
 
   async execute(
@@ -81,15 +88,63 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     }
 
     // [SCURM] Domain Rule: Validate Sprint Start (Cannot start tanpa goal)
-    if (updateData.status === "ACTIVE" && sprint.status !== "ACTIVE") {
-      this._sprintDomainService.validateSprintStart({
-        ...sprint,
-        ...updateData,
-      } as Sprint);
+    if (updateData.status === "ACTIVE") {
+      this._logger.info(
+        `Sprint ${id} activation attempt. Current status: ${sprint.status}, Target status: ${updateData.status}`,
+      );
+
+      if (sprint.status !== "ACTIVE") {
+        this._sprintDomainService.validateSprintStart({
+          ...sprint,
+          ...updateData,
+        } as Sprint);
+      }
     }
 
     const updatedSprint = await this._sprintRepo.update(id, updateData);
     if (!updatedSprint) throw new EntityNotFoundError("Sprint", id);
+
+    if (updateData.status && updateData.status !== sprint.status) {
+      const project = projectCheck;
+
+      // 1. Notify Managers in Org
+      this._socketService.emitToRoleInOrg(
+        project.orgId,
+        UserRole.ORG_MANAGER,
+        `sprint:${updateData.status.toLowerCase()}`,
+        updatedSprint,
+      );
+
+      // 2. Notify Members of the Project
+      if (project.teamMemberIds && project.teamMemberIds.length > 0) {
+        // Emit to project room for UI refresh
+        this._socketService.emitToProject(
+          project.id,
+          `sprint:${updateData.status.toLowerCase()}`,
+          updatedSprint,
+        );
+
+        // Persistent System Notification
+        const statusVerb =
+          updateData.status === "ACTIVE"
+            ? "started"
+            : updateData.status === "COMPLETED"
+              ? "completed"
+              : "updated";
+
+        for (const memberId of project.teamMemberIds) {
+          if (memberId === requesterId) continue;
+          await this._notificationService.sendSystemNotification(
+            memberId,
+            `Sprint ${updateData.status}`,
+            `Sprint '${updatedSprint.name}' in project ${project.name} has been ${statusVerb}`,
+            NotificationType.INFO,
+            project.orgId,
+            `/member/projects/${project.id}`,
+          );
+        }
+      }
+    }
 
     if (updateData.status === "COMPLETED") {
       const tasks = await this._taskRepo.findAll({ sprintId: id });

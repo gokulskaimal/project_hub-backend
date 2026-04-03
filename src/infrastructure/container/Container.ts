@@ -66,6 +66,8 @@ import { IUserQueryUseCase } from "../../application/interface/useCases/IUserQue
 import { IUserManagementUseCase } from "../../application/interface/useCases/IUserManagementUseCase";
 import { IAdminStatsUseCase } from "../../application/interface/useCases/IAdminStatsUseCase";
 import { IGetAdminInvoicesUseCase } from "../../application/interface/useCases/IGetAdminInvoicesUseCase";
+import { IGetAdminAnalyticsUseCase } from "../../application/interface/useCases/IGetAdminAnalyticsUseCase";
+import { IGetMemberAnalyticsUseCase } from "../../application/interface/useCases/IGetMemberAnalyticsUseCase";
 import { IGetOrgInvoicesUseCase } from "../../application/interface/useCases/IGetOrgInvoicesUseCase";
 
 import { ICreateProjectUseCase } from "../../application/interface/useCases/ICreateProjectUseCase";
@@ -78,7 +80,7 @@ import { IGetOrgTasksUseCase } from "../../application/interface/useCases/IGetOr
 import { IGetUserVelocityUseCase } from "../../application/interface/useCases/IGetUserVelocityUseCase";
 import { IGetProjectByIdUseCase } from "../../application/interface/useCases/IGetProjectByIdUseCase";
 import { IGetProjectVelocityUseCase } from "../../application/interface/useCases/IGetProjectVelocityUseCase";
-
+import { IGetManagerAnalyticsUseCase } from "../../application/interface/useCases/IGetManagerAnalyticsUseCase";
 import { ICreateTaskUseCase } from "../../application/interface/useCases/ICreateTaskUseCase";
 import {
   IGetTaskUseCase,
@@ -164,6 +166,8 @@ import { UserQueryUseCase } from "../../application/useCase/UserQueryUseCase";
 import { UserManagementUseCase } from "../../application/useCase/UserManagementUseCase";
 import { AdminStatsUseCase } from "../../application/useCase/AdminStatsUseCase";
 import { GetAdminInvoicesUseCase } from "../../application/useCase/GetAdminInvoicesUseCase";
+import { GetAdminAnalyticsUseCase } from "../../application/useCase/GetAdminAnalyticsUseCase";
+import { GetMemberAnalyticsUseCase } from "../../application/useCase/GetMemberAnalyticsUseCase";
 import { GetOrgInvoicesUseCase } from "../../application/useCase/GetOrgInvoicesUseCase";
 
 import { CreateTaskUseCase } from "../../application/useCase/CreateTaskUseCase";
@@ -233,6 +237,7 @@ import { IEditMessageUseCase } from "../../application/interface/useCases/IEditM
 import { IDeleteMessageUseCase } from "../../application/interface/useCases/IDeleteMessageUseCase";
 import { EditMessageUseCase } from "../../application/useCase/EditMessageUseCase";
 import { DeleteMessageUseCase } from "../../application/useCase/DeleteMessageUseCase";
+import { GetManagerAnalyticsUseCase } from "../../application/useCase/GetManagerAnalyticsUseCase";
 
 /**
  * Service interface for async initialization/cleanup
@@ -539,6 +544,11 @@ class DIContainer {
       .inTransientScope();
 
     this._container
+      .bind<IGetAdminAnalyticsUseCase>(TYPES.IGetAdminAnalyticsUseCase)
+      .to(GetAdminAnalyticsUseCase)
+      .inTransientScope();
+
+    this._container
       .bind<IGetAdminInvoicesUseCase>(TYPES.IGetAdminInvoicesUseCase)
       .to(GetAdminInvoicesUseCase)
       .inTransientScope();
@@ -589,13 +599,25 @@ class DIContainer {
       .bind<IGetProjectVelocityUseCase>(TYPES.IGetProjectVelocityUseCase)
       .to(GetProjectVelocityUseCase)
       .inTransientScope();
+
+    this._container
+      .bind<IGetManagerAnalyticsUseCase>(TYPES.IGetManagerAnalyticsUseCase)
+      .to(GetManagerAnalyticsUseCase)
+      .inTransientScope();
+
     this._container
       .bind<IUpdateProjectUseCase>(TYPES.IUpdateProjectUseCase)
       .to(UpdateProjectUseCase)
       .inTransientScope();
+
     this._container
       .bind<IDeleteProjectUseCase>(TYPES.IDeleteProjectUseCase)
       .to(DeleteProjectUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetMemberAnalyticsUseCase>(TYPES.IGetMemberAnalyticsUseCase)
+      .to(GetMemberAnalyticsUseCase)
       .inTransientScope();
 
     this._container

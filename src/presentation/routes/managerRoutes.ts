@@ -54,5 +54,21 @@ export function createManagerRoutes(container: Container): Router {
     invoiceController.getInvoices(req as AuthenticatedRequest, res, next),
   );
 
+  router.get(`${API_ROUTES.MANAGER.MEMBERS}/stats`, (req, res, next) =>
+    controller.getMemberStats(req as AuthenticatedRequest, res, next),
+  );
+
+  router.get(`${API_ROUTES.MANAGER.INVITATIONS}/stats`, (req, res, next) =>
+    controller.getInvitationStats(req as AuthenticatedRequest, res, next),
+  );
+
+  router.get(API_ROUTES.MANAGER.DASHBOARD_STATS, (req, res, next) =>
+    controller.getDashboardStats(req as AuthenticatedRequest, res, next),
+  );
+
+  router.get(API_ROUTES.MANAGER.ANALYTICS, (req, res, next) =>
+    controller.getAnalytics(req as AuthenticatedRequest, res, next),
+  );
+
   return router;
 }

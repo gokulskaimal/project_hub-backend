@@ -117,6 +117,7 @@ export class OrgRepo implements IOrgRepo {
     limit: number,
     offset: number,
     searchTerm?: string,
+    status?: string,
   ): Promise<{
     organizations: Organization[];
     total: number;
@@ -126,6 +127,10 @@ export class OrgRepo implements IOrgRepo {
     if (searchTerm) {
       query.name = { $regex: searchTerm, $options: "i" };
     }
+    if (status && status !== "ALL") {
+      query.status = status;
+    }
+
     const [docs, total] = await Promise.all([
       OrgModel.find(query).skip(offset).limit(limit).sort({ createdAt: -1 }),
       OrgModel.countDocuments(query),
@@ -175,10 +180,35 @@ export class OrgRepo implements IOrgRepo {
   }
 
   async getStatusDistribution(): Promise<
-    Array<{ _id: string; count: number }>
+    Array<{ status: string; count: number }>
   > {
     return await OrgModel.aggregate([
       { $group: { _id: "$status", count: { $sum: 1 } } },
+      { $project: { status: "$_id", count: 1, _id: 0 } },
+    ]);
+  }
+
+  async getPlanPerformance(): Promise<
+    Array<{ planName: string; count: number }>
+  > {
+    return await OrgModel.aggregate([
+      { $group: { _id: "$planId", count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: "plans",
+          localField: "_id",
+          foreignField: "_id",
+          as: "plan",
+        },
+      },
+      { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          planName: { $ifNull: ["$plan.name", "No Plan"] },
+          count: 1,
+          _id: 0,
+        },
+      },
     ]);
   }
 }

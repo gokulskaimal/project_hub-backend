@@ -8,6 +8,7 @@ import { UserRole } from "../../domain/enums/UserRole";
 import OrgModel from "../models/OrgModel";
 import { TYPES } from "../container/types";
 import { ILogger } from "../../application/interface/services/ILogger";
+import mongoose from "mongoose";
 
 @injectable()
 export class UserRepo
@@ -19,7 +20,10 @@ export class UserRepo
   }
 
   protected toDomain(doc: IUserDoc): User {
-    const plain = doc.toObject();
+    const plain =
+      typeof doc.toObject === "function"
+        ? doc.toObject()
+        : (doc as unknown as User);
     return {
       id: doc.id,
       email: plain.email,
@@ -28,7 +32,8 @@ export class UserRepo
       lastName: plain.lastName,
       password: plain.password,
       role: plain.role,
-      orgId: plain.orgId?.toString(),
+      orgId:
+        plain.orgId?._id?.toString() || plain.orgId?.toString() || undefined,
       otp: plain.otp,
       otpExpiry: plain.otpExpiry,
       emailVerified: plain.emailVerified,
@@ -39,6 +44,8 @@ export class UserRepo
       lastLoginAt: plain.lastLoginAt,
       resetPasswordToken: plain.resetPasswordToken,
       resetPasswordExpires: plain.resetPasswordExpires,
+      emailVerificationToken: plain.emailVerificationToken,
+      emailVerificationExpires: plain.emailVerificationExpires,
       avatar: plain.avatar,
       provider: plain.provider,
       googleId: plain.googleId,
@@ -371,12 +378,23 @@ export class UserRepo
       }
 
       const [docs, total] = await Promise.all([
-        UserModel.find(query).skip(offset).limit(limit).sort({ createdAt: -1 }),
+        UserModel.find(query)
+          .populate("orgId", "name")
+          .skip(offset)
+          .limit(limit)
+          .sort({ createdAt: -1 }),
         UserModel.countDocuments(query),
       ]);
 
       return {
-        users: docs.map((d) => this.toDomainUser(d)),
+        users: docs.map((d) => {
+          const user = this.toDomainUser(d);
+          const orgDoc = d.orgId as unknown as { name?: string };
+          return {
+            ...user,
+            organizationName: orgDoc?.name,
+          };
+        }),
         total,
         hasMore: offset + limit < total,
       };
@@ -443,5 +461,64 @@ export class UserRepo
       });
       throw error;
     }
+  }
+
+  async updateVerificationToken(
+    email: string,
+    token: string,
+    expiry: Date,
+  ): Promise<void> {
+    await UserModel.findOneAndUpdate(
+      { email },
+      {
+        $set: {
+          emailVerificationToken: token,
+          emailVerificationExpires: expiry,
+        },
+      },
+    );
+  }
+
+  async findByVerificationToken(token: string): Promise<User | null> {
+    const user = await UserModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+    return user ? this.toDomain(user) : null;
+  }
+
+  async getOrgMemberStats(
+    orgId: string,
+  ): Promise<{ total: number; active: number; inactive: number }> {
+    const results = await UserModel.aggregate([
+      {
+        $match: {
+          orgId: new mongoose.Types.ObjectId(orgId),
+          role: { $nin: [UserRole.SUPER_ADMIN, UserRole.ORG_MANAGER] },
+        },
+      },
+      {
+        $facet: {
+          total: [{ $count: "count" }],
+          statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+        },
+      },
+    ]);
+    const facet = results[0];
+    const stats = {
+      total: facet.total[0]?.count || 0,
+      active: 0,
+      inactive: 0,
+    };
+    facet.statusCounts.forEach((s: { _id: string; count: number }) => {
+      if (s._id === "ACTIVE") stats.active = s.count;
+      if (
+        s._id === "INACTIVE" ||
+        s._id === "BLOCKED" ||
+        s._id === "PENDING_VERIFICATION"
+      )
+        stats.inactive += s.count;
+    });
+    return stats;
   }
 }

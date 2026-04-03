@@ -6,6 +6,7 @@ import { IUserRepo } from "../../../application/interface/repositories/IUserRepo
 import { IInviteRepo } from "../../../application/interface/repositories/IInviteRepo";
 import { IInviteMemberUseCase } from "../../../application/interface/useCases/IInviteMemberUseCase";
 import { IOrgRepo } from "../../../application/interface/repositories/IOrgRepo";
+import { IProjectRepo } from "../../../application/interface/repositories/IProjectRepo";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
 import { toUserDTO } from "../../../application/dto/UserDTO";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
@@ -13,6 +14,8 @@ import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
 import { toOrgDTO } from "../../../application/dto/OrgDTO";
 import { toInviteDTO } from "../../../application/dto/InviteDTO";
+import { IGetManagerAnalyticsUseCase } from "../../../application/interface/useCases/IGetManagerAnalyticsUseCase";
+import { TimeFrame } from "../../../utils/DateUtils";
 import {
   InviteMemberSchema,
   BulkInviteSchema,
@@ -28,6 +31,9 @@ export class ManagerController {
     @inject(TYPES.IInviteMemberUseCase)
     private _inviteMemberUC: IInviteMemberUseCase,
     @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
+    @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+    @inject(TYPES.IGetManagerAnalyticsUseCase)
+    private _getManagerAnalyticsUC: IGetManagerAnalyticsUseCase,
   ) {}
 
   private sendSuccess<T>(
@@ -152,12 +158,36 @@ export class ManagerController {
   listInvitations = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const orgId = req.user!.orgId!;
-      this._logger.info("Listing invitations", { orgId });
-      const invitations =
-        (await this._inviteRepo.findPendingByOrganization?.(orgId)) || [];
+      const { limit = 10, page = 1, search = "", status = "ALL" } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      this._logger.info("Listing invitations with pagination", {
+        orgId,
+        limit,
+        page,
+        search,
+        status,
+      });
+
+      const { invites, total } = await this._inviteRepo.findPaginated(
+        Number(limit),
+        offset,
+        search as string,
+        {
+          orgId,
+          status: status !== "ALL" ? (status as string) : undefined,
+        },
+      );
+
       this.sendSuccess(
         res,
-        invitations.map(toInviteDTO),
+        {
+          items: invites.map(toInviteDTO),
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(total / Number(limit)),
+        },
         COMMON_MESSAGES.INVITATIONS_RETRIEVED,
       );
     },
@@ -185,15 +215,37 @@ export class ManagerController {
 
   listMembers = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
-      const orgId = req.user!.orgId!;
+      const orgId = req.user!.orgId;
       const managerId = req.user!.id;
-      this._logger.info("Listing members", { orgId, managerId });
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 12;
+      const offset = (page - 1) * limit;
+      const { search = "", role = "ALL", status = "ALL" } = req.query;
+      const { users, total } = await this._userRepo.findPaginated(
+        limit,
+        offset,
+        search as string,
+        {
+          orgId,
+          role: role !== "ALL" ? (role as string) : undefined,
+          status: status !== "ALL" ? (status as string) : undefined,
+        },
+      );
 
-      const users = (await this._userRepo.findByOrg?.(orgId)) || [];
       const filtered = users.filter((u) => u.id !== managerId);
-      const memberDTOs = filtered.map((user) => toUserDTO(user));
+      const itemsCount = total > 0 ? total - 1 : 0;
 
-      this.sendSuccess(res, memberDTOs, COMMON_MESSAGES.MEMBERS_RETRIEVED);
+      this.sendSuccess(
+        res,
+        {
+          items: filtered.map((user) => toUserDTO(user)),
+          total: itemsCount,
+          page,
+          limit,
+          totalPages: Math.ceil(itemsCount / limit),
+        },
+        COMMON_MESSAGES.MEMBERS_RETRIEVED,
+      );
     },
   );
 
@@ -290,6 +342,56 @@ export class ManagerController {
         };
 
       this.sendSuccess(res, toOrgDTO(org), "Organization details retrieved");
+    },
+  );
+
+  getMemberStats = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const orgId = req.user!.orgId!;
+      const stats = await this._userRepo.getOrgMemberStats(orgId);
+      this.sendSuccess(res, stats, "Member Statistics");
+    },
+  );
+
+  getInvitationStats = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const orgId = req.user!.orgId;
+      const stats = await this._inviteRepo.getInvitationStats(orgId);
+      this.sendSuccess(res, stats, "Invitation Statistics");
+    },
+  );
+
+  getDashboardStats = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const orgId = req.user!.orgId!;
+      const [members, invites, projects] = await Promise.all([
+        this._userRepo.getOrgMemberStats(orgId),
+        this._inviteRepo.getInvitationStats(orgId),
+        this._projectRepo.getProjectStats(orgId),
+      ]);
+
+      this.sendSuccess(
+        res,
+        {
+          members,
+          invites,
+          projects,
+        },
+        "Dashboard Statistics",
+      );
+    },
+  );
+  getAnalytics = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const orgId = req.user!.orgId!;
+      const { filter } = req.query;
+      this._logger.info("Getting manager analytics", { orgId, filter });
+
+      const analytics = await this._getManagerAnalyticsUC.execute(
+        orgId,
+        filter as TimeFrame,
+      );
+      this.sendSuccess(res, analytics, "Manager Analytics");
     },
   );
 }

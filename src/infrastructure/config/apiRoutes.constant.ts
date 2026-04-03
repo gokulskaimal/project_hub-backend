@@ -25,15 +25,20 @@ export const API_ROUTES = {
     INVITE_MEMBER: "/admin/invite-member",
     BULK_INVITE: "/admin/bulk-invite",
     INVOICES: "/admin/invoices",
+    ANALYTICS: "/admin/analytics",
   },
   MANAGER: {
     BASE: "/manager",
     MEMBERS: "/manager/members",
     INVITATIONS: "/manager/invitations",
+    MEMBERS_STATS: "/manager/members/stats",
+    INVITATIONS_STATS: "/manager/invitations/stats",
     INVITE: "/manager/invite-member",
     BULK_INVITE: "/manager/bulk-invite",
     ORGANIZATION: "/manager/organization",
     INVOICES: "/manager/invoices",
+    DASHBOARD_STATS: "/manager/dashboard/stats",
+    ANALYTICS: "/manager/analytics",
   },
   PROJECTS: {
     BASE: "/projects",
@@ -64,6 +69,7 @@ export const API_ROUTES = {
     CHANGE_PASSWORD: "/user/change-password",
     DELETE_ACCOUNT: "/user/account",
     VELOCITY: "/user/velocity",
+    ANALYTICS: "/user/analytics",
   },
   ORG: {
     BASE: "/organization",
