@@ -3,6 +3,7 @@ import logger from "../../infrastructure/services/Logger";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
 import { AppError } from "../../domain/errors/AppError";
+import { ResponseHandler } from "../utils/ResponseHandler";
 import {
   EntityNotFoundError,
   ValidationError,
@@ -26,13 +27,7 @@ export interface HttpError extends Error {
 }
 
 export function notFoundHandler(_req: Request, res: Response): void {
-  res.status(StatusCodes.NOT_FOUND).json({
-    success: false,
-    error: {
-      code: "NOT_FOUND",
-      message: COMMON_MESSAGES.NOT_FOUND,
-    },
-  });
+  ResponseHandler.notFound(res, COMMON_MESSAGES.NOT_FOUND);
 }
 
 export const asyncHandler =
@@ -49,7 +44,8 @@ export function errorHandler(
   err: Error | HttpError | AppError,
   req: Request,
   res: Response,
-  _next: NextFunction, // eslint-disable-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _next: NextFunction,
 ): void {
   // 1. Default fallback
   let status = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -164,11 +160,10 @@ export function errorHandler(
   }
 
   // 6. Send Strict JSON Response
-  res.status(status).json({
-    success: false,
-    error: {
-      code,
-      message,
-    },
-  });
+  ResponseHandler.error(
+    res,
+    message,
+    status,
+    isValidationError ? (err as unknown as { details: unknown }).details : null,
+  );
 }

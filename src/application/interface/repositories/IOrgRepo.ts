@@ -89,21 +89,4 @@ export interface IOrgRepo {
    * @returns Organization count
    */
   countByStatus(status: string): Promise<number>;
-
-  /**
-   * Check if organization name exists
-   * @param name - Organization name to check
-   * @param excludeId - Organization ID to exclude from check
-   * @returns Whether name exists
-   */
-  /**
-   * Get distribution of organizations by status
-   * @returns Array of status counts
-   */
-  getStatusDistribution(): Promise<Array<{ status: string; count: number }>>;
-  /**
-   * Get distribution of organizations by plan
-   * @returns Array of plan names and organization counts
-   */
-  getPlanPerformance(): Promise<Array<{ planName: string; count: number }>>;
 }

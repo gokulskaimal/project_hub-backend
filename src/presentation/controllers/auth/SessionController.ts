@@ -6,10 +6,9 @@ import { IGoogleSignInUseCase } from "../../../application/interface/useCases/IG
 import { ITokenRefreshUseCase } from "../../../application/interface/useCases/ITokenRefreshUseCase";
 import { ILogoutUseCase } from "../../../application/interface/useCases/ILogoutUseCase";
 import { ILogger } from "../../../application/interface/services/ILogger";
-import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
-import { ValidationError } from "../../../domain/errors/CommonErrors";
-import { asyncHandler } from "../../middleware/ErrorMiddleware";
+import { ResponseHandler } from "../../utils/ResponseHandler";
+import { asyncHandler } from "../../../utils/asyncHandler";
 
 import { AppConfig } from "../../../config/AppConfig";
 
@@ -42,20 +41,6 @@ export class SessionController {
     };
   }
 
-  private sendSuccess(
-    res: Response,
-    data: unknown,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ) {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   login = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
     this._logger.info("Login attempt", { email });
@@ -71,7 +56,7 @@ export class SessionController {
     this._logger.info("User logged in successfully", {
       userId: result.user.id,
     });
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       { accessToken: result.tokens.accessToken, user: result.user },
       COMMON_MESSAGES.LOGIN_SUCCESS,
@@ -83,7 +68,7 @@ export class SessionController {
     this._logger.info("Refresh token attempt");
     if (!refreshToken) {
       this._logger.warn("Refresh token missing");
-      throw new ValidationError("Missing refresh token");
+      return ResponseHandler.validationError(res, "Missing refresh token");
     }
     const tokens = await this._tokenRefreshUC.execute(refreshToken);
     if (tokens.refreshToken) {
@@ -93,7 +78,7 @@ export class SessionController {
         this._refreshCookieOptions,
       );
     }
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       { accessToken: tokens.accessToken },
       COMMON_MESSAGES.TOKEN_REFRESHED,
@@ -113,7 +98,7 @@ export class SessionController {
       }
     }
     res.clearCookie("refreshToken", { path: "/" });
-    this.sendSuccess(res, null, COMMON_MESSAGES.LOGOUT_SUCCESS);
+    ResponseHandler.success(res, null, COMMON_MESSAGES.LOGOUT_SUCCESS);
   });
 
   googleSignIn = asyncHandler(async (req: Request, res: Response) => {
@@ -138,7 +123,7 @@ export class SessionController {
     this._logger.info("Google Sign-In successful", {
       userId: result.user.id,
     });
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       { accessToken: result.tokens.accessToken, user: result.user },
       COMMON_MESSAGES.LOGIN_SUCCESS,

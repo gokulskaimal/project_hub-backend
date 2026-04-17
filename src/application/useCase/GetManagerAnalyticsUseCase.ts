@@ -1,7 +1,6 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITaskRepo } from "../interface/repositories/ITaskRepo";
-import { IProjectRepo } from "../interface/repositories/IProjectRepo";
+import { IAnalyticsRepo } from "../interface/repositories/IAnalyticsRepo";
 import { ILogger } from "../interface/services/ILogger";
 import { IGetManagerAnalyticsUseCase } from "../interface/useCases/IGetManagerAnalyticsUseCase";
 import { TimeFrame } from "../../utils/DateUtils";
@@ -9,8 +8,7 @@ import { TimeFrame } from "../../utils/DateUtils";
 @injectable()
 export class GetManagerAnalyticsUseCase implements IGetManagerAnalyticsUseCase {
   constructor(
-    @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
-    @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+    @inject(TYPES.IAnalyticsRepo) private _analyticsRepo: IAnalyticsRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
   ) {}
 
@@ -21,10 +19,14 @@ export class GetManagerAnalyticsUseCase implements IGetManagerAnalyticsUseCase {
 
     const [topPerformers, taskDistribution, projectStatus, monthlyVelocity] =
       await Promise.all([
-        this._taskRepo.getTopPerformers(orgId, 5, timeFrame),
-        this._taskRepo.getTasksStatusDistribution(orgId, undefined, timeFrame),
-        this._projectRepo.getProjectStats(orgId),
-        this._taskRepo.getMonthlyVelocity(orgId, undefined, timeFrame),
+        this._analyticsRepo.getTopPerformers(orgId, 5, timeFrame),
+        this._analyticsRepo.getTaskStatusDistribution(
+          orgId,
+          undefined,
+          timeFrame,
+        ),
+        this._analyticsRepo.getProjectStats(orgId),
+        this._analyticsRepo.getMonthlyVelocity(orgId, undefined, timeFrame),
       ]);
 
     return {

@@ -1,0 +1,9 @@
+﻿src/application/useCase/GetAdminInvoicesUseCase.ts(39,28): error TS2339: Property 'totalRevenue' does not exist on type '{ items: Invoice[]; total: number; }'.
+src/application/useCase/GetManagerAnalyticsUseCase.ts(24,24): error TS2339: Property 'getTopPerformers' does not exist on type 'ITaskRepo'.
+src/application/useCase/GetManagerAnalyticsUseCase.ts(25,24): error TS2339: Property 'getTasksStatusDistribution' does not exist on type 'ITaskRepo'.
+src/application/useCase/GetManagerAnalyticsUseCase.ts(26,27): error TS2339: Property 'getProjectStats' does not exist on type 'IProjectRepo'.
+src/application/useCase/GetManagerAnalyticsUseCase.ts(27,24): error TS2339: Property 'getMonthlyVelocity' does not exist on type 'ITaskRepo'.
+src/application/useCase/GetMemberAnalyticsUseCase.ts(17,22): error TS2339: Property 'getTasksStatusDistribution' does not exist on type 'ITaskRepo'.
+src/application/useCase/GetMemberAnalyticsUseCase.ts(18,22): error TS2339: Property 'getMonthlyVelocity' does not exist on type 'ITaskRepo'.
+src/application/useCase/GetProjectVelocityUseCase.ts(36,46): error TS2339: Property 'sumDonePointsByProjectInRange' does not exist on type 'ITaskRepo'.
+src/application/useCase/GetUserVelocityUseCase.ts(36,46): error TS2339: Property 'sumDonePointsByUserInRange' does not exist on type 'ITaskRepo'.

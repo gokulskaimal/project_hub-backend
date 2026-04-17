@@ -9,7 +9,7 @@ import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedReques
 import { TimeFrame } from "../../../utils/DateUtils";
 
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
-import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
+import { ResponseHandler } from "../../utils/ResponseHandler";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import {
   UserUpdateProfileSchema,
@@ -23,33 +23,19 @@ export class UserController {
   constructor(
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IUserProfileUseCase)
-    private userProfileUseCase: IUserProfileUseCase,
+    private _userProfileUseCase: IUserProfileUseCase,
     @inject(TYPES.IGetUserVelocityUseCase)
     private _getUserVelocityUC: IGetUserVelocityUseCase,
     @inject(TYPES.IGetMemberAnalyticsUseCase)
     private _getMemberAnalyticsUC: IGetMemberAnalyticsUseCase,
   ) {}
 
-  private sendSuccess<T>(
-    res: Response,
-    data: T,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ): void {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   getProfile = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
       this._logger.info("Fetching user profile", { userId });
-      const profile = await this.userProfileUseCase.getProfile(userId, userId);
-      this.sendSuccess(res, profile, COMMON_MESSAGES.PROFILE_RETRIEVED);
+      const profile = await this._userProfileUseCase.getProfile(userId, userId);
+      ResponseHandler.success(res, profile, COMMON_MESSAGES.PROFILE_RETRIEVED);
     },
   );
 
@@ -59,12 +45,7 @@ export class UserController {
 
       const validation = UserUpdateProfileSchema.safeParse(req.body);
       if (!validation.success) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: "Validation Error",
-          errors: validation.error.format(),
-        });
-        return;
+        return ResponseHandler.validationError(res, validation.error.format());
       }
       const updateData = validation.data;
 
@@ -74,18 +55,22 @@ export class UserController {
       });
 
       if (Object.keys(updateData).length === 0) {
-        throw {
-          status: StatusCodes.BAD_REQUEST,
-          message: COMMON_MESSAGES.REQUIRED_FIELD,
-        };
+        return ResponseHandler.validationError(
+          res,
+          COMMON_MESSAGES.REQUIRED_FIELD,
+        );
       }
 
-      const updatedProfile = await this.userProfileUseCase.updateProfile(
+      const updatedProfile = await this._userProfileUseCase.updateProfile(
         userId,
         updateData,
         userId,
       );
-      this.sendSuccess(res, updatedProfile, COMMON_MESSAGES.PROFILE_UPDATED);
+      ResponseHandler.success(
+        res,
+        updatedProfile,
+        COMMON_MESSAGES.PROFILE_UPDATED,
+      );
     },
   );
 
@@ -96,23 +81,18 @@ export class UserController {
 
       const validation = ChangePasswordSchema.safeParse(req.body);
       if (!validation.success) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: "Validation Error",
-          errors: validation.error.format(),
-        });
-        return;
+        return ResponseHandler.validationError(res, validation.error.format());
       }
 
       const { currentPassword, newPassword } = validation.data;
 
-      await this.userProfileUseCase.changePassword(
+      await this._userProfileUseCase.changePassword(
         userId,
         currentPassword,
         newPassword,
         userId,
       );
-      this.sendSuccess(res, null, COMMON_MESSAGES.PASSWORD_CHANGED);
+      ResponseHandler.success(res, null, COMMON_MESSAGES.PASSWORD_CHANGED);
     },
   );
 
@@ -123,17 +103,12 @@ export class UserController {
 
       const validation = DeleteAccountSchema.safeParse(req.body);
       if (!validation.success) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: "Validation Error",
-          errors: validation.error.format(),
-        });
-        return;
+        return ResponseHandler.validationError(res, validation.error.format());
       }
 
       const { password } = validation.data;
-      await this.userProfileUseCase.deleteAccount(userId, password, userId);
-      this.sendSuccess(res, null, COMMON_MESSAGES.USER_DELETED);
+      await this._userProfileUseCase.deleteAccount(userId, password, userId);
+      ResponseHandler.success(res, null, COMMON_MESSAGES.USER_DELETED);
     },
   );
 
@@ -145,12 +120,7 @@ export class UserController {
       });
       const parsed = schema.safeParse(req.query);
       if (!parsed.success) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: "Validation Error",
-          errors: parsed.error.format(),
-        });
-        return;
+        return ResponseHandler.validationError(res, parsed.error.format());
       }
 
       const days = parsed.data.days ?? 7;
@@ -160,7 +130,7 @@ export class UserController {
         userId,
       );
 
-      this.sendSuccess(
+      ResponseHandler.success(
         res,
         {
           totalPoints: result.totalPoints,
@@ -182,7 +152,7 @@ export class UserController {
         userId,
         filter as TimeFrame,
       );
-      this.sendSuccess(res, analytics, "Analytics retrieved");
+      ResponseHandler.success(res, analytics, "Analytics retrieved");
     },
   );
 }

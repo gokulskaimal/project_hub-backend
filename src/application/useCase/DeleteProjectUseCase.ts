@@ -10,6 +10,9 @@ import { ITaskHistoryRepo } from "../../application/interface/repositories/ITask
 import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { IFileService } from "../../application/interface/services/IFileService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { PROJECT_EVENTS } from "../events/ProjectEvents";
+import { Task } from "../../domain/entities/Task";
 
 @injectable()
 export class DeleteProjectUseCase implements IDeleteProjectUseCase {
@@ -22,6 +25,7 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     @inject(TYPES.IChatRepo) private _chatRepo: IChatRepo,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.IFileService) private _fileService: IFileService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(id: string, requesterId: string): Promise<boolean> {
@@ -40,9 +44,9 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     );
 
     const projectTasks = await this._taskRepo.findByProject(id);
-    const taskIds = projectTasks.map((t) => t.id);
+    const taskIds = projectTasks.map((t: Task) => t.id);
     const attachmentUrls = projectTasks.flatMap(
-      (t) => t.attachments?.map((a) => a.url) || [],
+      (t: Task) => t.attachments?.map((a) => a.url) || [],
     );
 
     await Promise.all([
@@ -50,11 +54,19 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
       this._taskHistoryRepo.deleteMany({ taskId: { $in: taskIds } }),
       this._sprintRepo.deleteMany({ projectId: id }),
       this._chatRepo.deleteByProject(id),
-      ...attachmentUrls.map((url) => this._fileService.deleteFile(url)),
+      ...attachmentUrls.map((url: string) => this._fileService.deleteFile(url)),
     ]);
 
     const success = await this._projectRepo.delete(id);
     if (!success) throw new EntityNotFoundError("Project", id);
+
+    // DISPATCH EVENT
+    this._eventDispatcher.dispatch(PROJECT_EVENTS.DELETED, {
+      projectId: id,
+      orgId: project.orgId,
+      deleterId: requesterId,
+      projectTitle: project.name,
+    });
 
     return true;
   }

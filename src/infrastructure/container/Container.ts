@@ -24,6 +24,7 @@ import { ISecurityService } from "../../application/interface/services/ISecurity
 import { ITimeTrackingService } from "../../domain/interface/services/ITimeTrackingService";
 import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
+import { IEventDispatcher } from "../../application/interface/services/IEventDispatcher";
 
 //Interfaces - Repositories
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
@@ -34,6 +35,7 @@ import { IProjectRepo } from "../../application/interface/repositories/IProjectR
 import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
 import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
+import { IAnalyticsRepo } from "../../application/interface/repositories/IAnalyticsRepo";
 
 //Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
@@ -55,6 +57,7 @@ import { IResetPasswordUseCase } from "../../application/interface/useCases/IRes
 import { IUserProfileUseCase } from "../../application/interface/useCases/IUserProfileUseCase";
 import { IOrganizationManagementUseCase } from "../../application/interface/useCases/IOrganizationManagementUseCase";
 import { ICreateSubscriptionUseCase } from "../../application/interface/useCases/ICreateSubscriptionUseCase";
+import { IHandleRazorpayWebhookUseCase } from "../../application/interface/useCases/IHandleRazorpayWebhookUseCase";
 import { IVerifyPaymentUseCase } from "../../application/interface/useCases/IVerifyPaymentUseCase";
 import { IGetPlanUseCase } from "../../application/interface/useCases/IGetPlanUseCase";
 import { ICreatePlanUseCase } from "../../application/interface/useCases/ICreatePlanUseCase";
@@ -94,8 +97,10 @@ import { IGetProjectSprintsUseCase } from "../../application/interface/useCases/
 import { ICreateSprintUseCase } from "../../application/interface/useCases/ICreateSprintUseCase";
 import { IUpdateSprintUseCase } from "../../application/interface/useCases/IUpdateSprintUseCase";
 import { IDeleteSprintUseCase } from "../../application/interface/useCases/IDeleteSprintUseCase";
-
 import { ICreateNotificationUseCase } from "../../application/interface/useCases/ICreateNotificationUseCase";
+import { IGetProjectMembersUseCase } from "../../application/interface/useCases/IGetProjectMembersUseCase";
+import { IInvitationQueryUseCase } from "../../application/interface/useCases/IInvitationQueryUseCase";
+import { IGetOrgAnalyticsUseCase } from "../../application/interface/useCases/IGetOrgAnalyticsUseCase";
 
 // Infrastructure Implementations - Services
 import { Logger } from "../services/Logger";
@@ -120,9 +125,14 @@ import { SecurityService } from "../services/SecurityService";
 import { TimeTrackingService } from "../../domain/services/TimeTrackingService";
 import { NotificationService } from "../../domain/services/NotificationService";
 import { SprintDomainService } from "../../domain/services/SprintDomainService";
+import { EventDispatcher } from "../services/EventDispatcher";
 
 // Domain Interfaces - Providers
 import { IJwtProvider } from "../../application/interface/services/IJwtProvider";
+import { TaskEventSubscriber } from "../subscribers/TaskEventSubscriber";
+import { ProjectEventSubscriber } from "../subscribers/ProjectEventSubscriber";
+import { SprintEventSubscriber } from "../subscribers/SprintEventSubscriber";
+import { ChatEventSubscriber } from "../subscribers/ChatEventSubscriber";
 
 // Infrastructure Implementations - Repositories
 import { UserRepo } from "../repositories/UserRepo";
@@ -137,6 +147,7 @@ import { SprintRepo } from "../repositories/SprintRepo";
 import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { TaskHistoryRepo } from "../repositories/TaskHistoryRepo";
 import { InvoiceRepo } from "../repositories/InvoiceRepo";
+import { AnalyticsRepo } from "../repositories/AnalyticsRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -158,6 +169,7 @@ import { OrganizationManagementUseCase } from "../../application/useCase/Organiz
 import { CreatePlanUseCase } from "../../application/useCase/CreatePlanUseCase";
 import { GetPlansUseCase } from "../../application/useCase/GetPlansUseCase";
 import { CreateSubscriptionUseCase } from "../../application/useCase/CreateSubscriptionUseCase";
+import { HandleRazorpayWebhookUseCase } from "../../application/useCase/HandleRazorpayWebhookUseCase";
 import { VerifyPaymentUseCase } from "../../application/useCase/VerifyPaymentUseCase";
 import { UpdatePlanUseCase } from "../../application/useCase/UpdatePlanUseCase";
 import { DeletePlanUseCase } from "../../application/useCase/DeletePlanUseCase";
@@ -199,6 +211,7 @@ import { GetMemberTasksUseCase } from "../../application/useCase/GetMemberTasksU
 import { GetOrgTasksUseCase } from "../../application/useCase/GetOrgTasksUseCase";
 import { GetUserVelocityUseCase } from "../../application/useCase/GetUserVelocityUseCase";
 import { ToggleTimerUseCase } from "../../application/useCase/ToggleTimerUseCase";
+import { GetProjectMembersUseCase } from "../../application/useCase/GetProjectMembersUseCase";
 
 // Presentation Controllers
 import { SessionController } from "../../presentation/controllers/auth/SessionController";
@@ -228,7 +241,8 @@ import { SprintController } from "../../presentation/controllers/manager/SprintC
 import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ISendMessageUseCase } from "../../application/interface/useCases/ISendMessageUseCase";
 import { IGetProjectMessagesUseCase } from "../../application/interface/useCases/IGetProjectMessagesUseCase";
-
+import { IAddCommentUseCase } from "../../application/interface/useCases/IAddCommentUseCase";
+import { IAddAttachmentUseCase } from "../../application/interface/useCases/IAddAttachmentUseCase";
 // Chat Implementations
 import { ChatRepo } from "../repositories/ChatRepo";
 import { SendMessageUseCase } from "../../application/useCase/SendMessageUseCase";
@@ -238,7 +252,10 @@ import { IDeleteMessageUseCase } from "../../application/interface/useCases/IDel
 import { EditMessageUseCase } from "../../application/useCase/EditMessageUseCase";
 import { DeleteMessageUseCase } from "../../application/useCase/DeleteMessageUseCase";
 import { GetManagerAnalyticsUseCase } from "../../application/useCase/GetManagerAnalyticsUseCase";
-
+import { InvitationQueryUseCase } from "../../application/useCase/InvitationQueryUseCase";
+import { GetOrgAnalyticsUseCase } from "../../application/useCase/GetOrgAnalyticsUseCase";
+import { AddCommentUseCase } from "../../application/useCase/AddCommentUseCase";
+import { AddAttachmentUseCase } from "../../application/useCase/AddAttachmentUseCase";
 /**
  * Service interface for async initialization/cleanup
  * Used to safely check for optional connect/init/disconnect/close methods
@@ -365,6 +382,11 @@ class DIContainer {
       .to(SprintDomainService)
       .inSingletonScope();
 
+    this._container
+      .bind<IEventDispatcher>(TYPES.IEventDispatcher)
+      .to(EventDispatcher)
+      .inSingletonScope();
+
     const useRedis =
       String(process.env.USE_REDIS || "").toLowerCase() === "true";
     if (useRedis) {
@@ -378,6 +400,26 @@ class DIContainer {
         .to(InMemoryCacheService)
         .inSingletonScope();
     }
+
+    this._container
+      .bind<TaskEventSubscriber>(TYPES.TaskEventSubscriber)
+      .to(TaskEventSubscriber)
+      .inSingletonScope();
+
+    this._container
+      .bind<ProjectEventSubscriber>(TYPES.ProjectEventSubscriber)
+      .to(ProjectEventSubscriber)
+      .inSingletonScope();
+
+    this._container
+      .bind<SprintEventSubscriber>(TYPES.SprintEventSubscriber)
+      .to(SprintEventSubscriber)
+      .inSingletonScope();
+
+    this._container
+      .bind<ChatEventSubscriber>(TYPES.ChatEventSubscriber)
+      .to(ChatEventSubscriber)
+      .inSingletonScope();
   }
 
   private _bindRepositories(): void {
@@ -424,6 +466,12 @@ class DIContainer {
       .bind<ISprintRepo>(TYPES.ISprintRepo)
       .to(SprintRepo)
       .inSingletonScope();
+
+    this._container
+      .bind<IAnalyticsRepo>(TYPES.IAnalyticsRepo)
+      .to(AnalyticsRepo)
+      .inSingletonScope();
+
     this._container
       .bind<ITaskHistoryRepo>(TYPES.ITaskHistoryRepo)
       .to(TaskHistoryRepo)
@@ -519,6 +567,10 @@ class DIContainer {
       .to(VerifyPaymentUseCase)
       .inTransientScope();
     this._container
+      .bind<IHandleRazorpayWebhookUseCase>(TYPES.IHandleRazorpayWebhookUseCase)
+      .to(HandleRazorpayWebhookUseCase)
+      .inTransientScope();
+    this._container
       .bind<IUpdatePlanUseCase>(TYPES.IUpdatePlanUseCase)
       .to(UpdatePlanUseCase)
       .inTransientScope();
@@ -590,6 +642,11 @@ class DIContainer {
       .bind<IGetProjectUseCase>(TYPES.IGetProjectUseCase)
       .to(GetProjectUseCase)
       .inTransientScope();
+    this._container
+      .bind<IGetProjectMembersUseCase>(TYPES.IGetProjectMembersUseCase)
+      .to(GetProjectMembersUseCase)
+      .inTransientScope();
+
     this._container
       .bind<IGetProjectByIdUseCase>(TYPES.IGetProjectByIdUseCase)
       .to(GetProjectByIdUseCase)
@@ -668,6 +725,16 @@ class DIContainer {
       .inTransientScope();
 
     this._container
+      .bind<IAddCommentUseCase>(TYPES.IAddCommentUseCase)
+      .to(AddCommentUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IAddAttachmentUseCase>(TYPES.IAddAttachmentUseCase)
+      .to(AddAttachmentUseCase)
+      .inTransientScope();
+
+    this._container
       .bind<IGetProjectMessagesUseCase>(TYPES.IGetProjectMessagesUseCase)
       .to(GetProjectMessagesUseCase)
       .inTransientScope();
@@ -705,6 +772,16 @@ class DIContainer {
     this._container
       .bind<IGetTaskHistoryUseCase>(TYPES.IGetTaskHistoryUseCase)
       .to(GetTaskHistoryUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IInvitationQueryUseCase>(TYPES.IInvitationQueryUseCase)
+      .to(InvitationQueryUseCase)
+      .inTransientScope();
+
+    this._container
+      .bind<IGetOrgAnalyticsUseCase>(TYPES.IGetOrgAnalyticsUseCase)
+      .to(GetOrgAnalyticsUseCase)
       .inTransientScope();
   }
 

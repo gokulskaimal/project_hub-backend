@@ -3,7 +3,7 @@ import { Plan } from "../../domain/entities/Plan";
 export interface PlanDTO {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   currency: string;
   features: string[];

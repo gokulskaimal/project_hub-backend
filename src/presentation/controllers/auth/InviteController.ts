@@ -6,8 +6,13 @@ import { IAcceptUseCase } from "../../../application/interface/useCases/IAcceptU
 import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
+import { ResponseHandler } from "../../utils/ResponseHandler";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
+import {
+  AcceptInviteSchema,
+  InviteMemberSchema,
+} from "../../../application/dto/ValidationSchemas";
 
 @injectable()
 export class InviteController {
@@ -18,32 +23,20 @@ export class InviteController {
     @inject(TYPES.IAcceptUseCase) private readonly _acceptUC: IAcceptUseCase,
   ) {}
 
-  private sendSuccess(
-    res: Response,
-    data: unknown,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ) {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   inviteMember = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
-    const { email, orgId, role, expiresIn } = req.body;
-    this._logger.info("Inviting member", { email, orgId, role, expiresIn });
+    const validation = InviteMemberSchema.safeParse(req.body);
+    if (!validation.success) {
+      return ResponseHandler.validationError(res, validation.error.format());
+    }
     const result = await this._inviteMemberUC.execute(
-      email,
-      orgId,
+      validation.data.email,
+      validation.data.orgId,
       authReq.user!.id,
-      role,
-      expiresIn,
+      validation.data.role,
+      validation.data.expiresIn,
     );
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       result,
       COMMON_MESSAGES.INVITATION_SENT,
@@ -52,20 +45,24 @@ export class InviteController {
   });
 
   acceptInvite = asyncHandler(async (req: Request, res: Response) => {
-    const { token, password, firstName, lastName } = req.body;
+    const validation = AcceptInviteSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return ResponseHandler.validationError(res, validation.error.format());
+    }
     this._logger.info("Accepting invite", {
       token: "REDACTED",
-      firstName,
-      lastName,
+      firstName: validation.data.firstName,
+      lastName: validation.data.lastName,
     });
     res.setHeader("Referrer-Policy", "no-referrer");
     const result = await this._acceptUC.execute(
-      token,
-      password,
-      firstName,
-      lastName,
+      validation.data.token,
+      validation.data.password,
+      validation.data.firstName,
+      validation.data.lastName,
     );
-    this.sendSuccess(res, result, COMMON_MESSAGES.ACCEPTED);
+    ResponseHandler.success(res, result, COMMON_MESSAGES.ACCEPTED);
   });
 
   validateInviteToken = asyncHandler(async (req: Request, res: Response) => {
@@ -73,6 +70,6 @@ export class InviteController {
     this._logger.info("Validating invite token", { token: "REDACTED" });
     res.setHeader("Referrer-Policy", "no-referrer");
     const result = await this._acceptUC.validateInvitationToken(token);
-    this.sendSuccess(res, result, "Token validation result");
+    ResponseHandler.success(res, result, "Token validation result");
   });
 }

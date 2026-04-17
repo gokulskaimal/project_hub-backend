@@ -145,43 +145,6 @@ export class InviteRepo
     return true;
   }
 
-  async getInvitationStats(orgId: string): Promise<{
-    total: number;
-    pending: number;
-    accepted: number;
-    expired: number;
-    cancelled: number;
-  }> {
-    const stats = await this.model.aggregate([
-      { $match: { orgId: String(orgId) } },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // Convert array of {_id: "PENDING", count: 5} to object
-    const result = {
-      total: 0,
-      pending: 0,
-      accepted: 0,
-      expired: 0,
-      cancelled: 0,
-    };
-
-    stats.forEach((s) => {
-      const status = s._id.toLowerCase() as keyof typeof result;
-      if (status in result) {
-        result[status] = s.count;
-      }
-      result.total += s.count;
-    });
-
-    return result;
-  }
-
   async findPaginated(
     limit: number,
     offset: number,

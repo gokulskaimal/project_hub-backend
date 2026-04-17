@@ -8,6 +8,7 @@ import { IBootstrapService } from "../../application/interface/services/IBootstr
 import { UserRole } from "../../domain/enums/UserRole";
 import { User } from "../../domain/entities/User";
 import { AppConfig } from "../../config/AppConfig";
+import { IEventSubscriber } from "../../application/interface/services/IEventSubscriber";
 
 @injectable()
 export class BootstrapService implements IBootstrapService {
@@ -16,9 +17,23 @@ export class BootstrapService implements IBootstrapService {
     @inject(TYPES.IUserRepo) private readonly _userRepo: IUserRepo,
     @inject(TYPES.IHashService) private readonly _hashService: IHashService,
     @inject(TYPES.AppConfig) private readonly config: AppConfig,
+    @inject(TYPES.TaskEventSubscriber)
+    private readonly _taskSubscriber: IEventSubscriber,
+    @inject(TYPES.ProjectEventSubscriber)
+    private readonly _projectSubscriber: IEventSubscriber,
+    @inject(TYPES.SprintEventSubscriber)
+    private readonly _sprintSubscriber: IEventSubscriber,
+    @inject(TYPES.ChatEventSubscriber)
+    private readonly _chatSubscriber: IEventSubscriber,
   ) {}
 
   public async run(): Promise<void> {
+    // Initialize Event Listeners
+    this._taskSubscriber.init();
+    this._projectSubscriber.init();
+    this._sprintSubscriber.init();
+    this._chatSubscriber.init();
+
     try {
       const email = this.config.bootstrap.adminEmail;
       const password = this.config.bootstrap.adminPassword;

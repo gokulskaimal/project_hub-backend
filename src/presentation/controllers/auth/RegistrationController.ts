@@ -10,6 +10,7 @@ import { ICompleteSignupUseCase } from "../../../application/interface/useCases/
 import { ILogger } from "../../../application/interface/services/ILogger";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../../infrastructure/config/common.constants";
+import { ResponseHandler } from "../../utils/ResponseHandler";
 import { asyncHandler } from "../../../utils/asyncHandler";
 
 @injectable()
@@ -29,26 +30,11 @@ export class RegistrationController {
     private readonly _completeSignupUC: ICompleteSignupUseCase,
   ) {}
 
-  private sendSuccess(
-    res: Response,
-    data: unknown,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ) {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   register = asyncHandler(async (req: Request, res: Response) => {
-    // Input already validated by middleware
     const { email, password, name } = req.body;
     this._logger.info("Registering new user", { email, name });
     const created = await this._registerUC.execute(email, password, name);
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       created,
       COMMON_MESSAGES.SIGNUP_COMPLETE,
@@ -63,7 +49,7 @@ export class RegistrationController {
       email,
       organizationName,
     );
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       result,
       "Manager registration initiated",
@@ -75,14 +61,14 @@ export class RegistrationController {
     const { email } = req.body;
     this._logger.info("Sending OTP", { email });
     const result = await this._sendOtpUC.execute(email);
-    this.sendSuccess(res, result, COMMON_MESSAGES.OTP_SENT);
+    ResponseHandler.success(res, result, COMMON_MESSAGES.OTP_SENT);
   });
 
   verifyOtp = asyncHandler(async (req: Request, res: Response) => {
     const { email, otp } = req.body;
     this._logger.info("Verifying OTP", { email });
     const result = await this._verifyOtpUC.execute(email, otp);
-    this.sendSuccess(res, result, COMMON_MESSAGES.OTP_VERIFIED);
+    ResponseHandler.success(res, result, COMMON_MESSAGES.OTP_VERIFIED);
   });
 
   completeSignup = asyncHandler(async (req: Request, res: Response) => {
@@ -94,13 +80,13 @@ export class RegistrationController {
       firstName,
       lastName,
     );
-    this.sendSuccess(res, result, COMMON_MESSAGES.SIGNUP_COMPLETE);
+    ResponseHandler.success(res, result, COMMON_MESSAGES.SIGNUP_COMPLETE);
   });
 
   verifyEmail = asyncHandler(async (req: Request, res: Response) => {
     const token = req.body?.token || req.headers["x-verification-token"];
     this._logger.info("Verifying email", { token: "REDACTED" });
     const result = await this._verifyEmailUC.execute(String(token));
-    this.sendSuccess(res, result, COMMON_MESSAGES.EMAIL_VERIFIED);
+    ResponseHandler.success(res, result, COMMON_MESSAGES.EMAIL_VERIFIED);
   });
 }

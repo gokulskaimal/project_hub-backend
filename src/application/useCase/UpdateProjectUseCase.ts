@@ -1,21 +1,21 @@
 import { injectable, inject } from "inversify";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { TYPES } from "../../infrastructure/container/types";
-import { UserRole } from "../../domain/enums/UserRole";
 import { IUpdateProjectUseCase } from "../interface/useCases/IUpdateProjectUseCase";
 import { Project } from "../../domain/entities/Project";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
-import { ISocketService } from "../../application/interface/services/ISocketService";
 import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ILogger } from "../../application/interface/services/ILogger";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { PROJECT_EVENTS } from "../events/ProjectEvents";
 
 @injectable()
 export class UpdateProjectUseCase implements IUpdateProjectUseCase {
   constructor(
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
     @inject(TYPES.IAuthValidationService)
     private _authValidationService: IAuthValidationService,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
@@ -29,18 +29,21 @@ export class UpdateProjectUseCase implements IUpdateProjectUseCase {
     if (data.name) {
       this._authValidationService.validateProjectName(data.name);
     }
-    const project = await this._projectRepo.findById(id);
+    const oldProject = await this._projectRepo.findById(id);
 
-    if (!project) {
+    if (!oldProject) {
       this._logger.warn(`Update failed: Project ${id} not found`);
       throw new EntityNotFoundError("Project Not Found", id);
     }
 
     // RBAC Check
-    await this._securityService.validateOrgManager(requesterId, project.orgId);
+    await this._securityService.validateOrgManager(
+      requesterId,
+      oldProject.orgId,
+    );
 
     // [SCURM] Domain Rule: Immutability (Completed projects are locked)
-    if (project.status === "COMPLETED") {
+    if (oldProject.status === "COMPLETED") {
       try {
         await this._securityService.validateSuperAdmin(requesterId);
       } catch {
@@ -54,7 +57,7 @@ export class UpdateProjectUseCase implements IUpdateProjectUseCase {
     if (data.teamMemberIds && data.teamMemberIds.length > 0) {
       await this._securityService.validateMembersBelongToOrg(
         data.teamMemberIds,
-        project.orgId,
+        oldProject.orgId,
       );
     }
 
@@ -64,15 +67,13 @@ export class UpdateProjectUseCase implements IUpdateProjectUseCase {
       throw new EntityNotFoundError("Project Not Found", id);
     }
 
-    // [NEW] Emit Real-time Update (Targeted at Managers)
-    if (updated.orgId) {
-      this._socketService.emitToRoleInOrg(
-        updated.orgId,
-        UserRole.ORG_MANAGER,
-        "project:updated",
-        updated,
-      );
-    }
+    // DISPATCH EVENT
+    this._eventDispatcher.dispatch(PROJECT_EVENTS.UPDATED, {
+      oldProject,
+      updatedProject: updated,
+      updaterId: requesterId,
+      changes: data,
+    });
 
     return updated;
   }

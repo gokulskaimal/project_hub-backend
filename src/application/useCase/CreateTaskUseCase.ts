@@ -4,20 +4,19 @@ import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { ICreateTaskUseCase } from "../interface/useCases/ICreateTaskUseCase";
-import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { Task } from "../../domain/entities/Task";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
-import { UserRole } from "../../domain/enums/UserRole";
 import {
   EntityNotFoundError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
-import { User } from "../../domain/entities/User";
+
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 import { ILogger } from "../../application/interface/services/ILogger";
-import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { TASK_EVENTS } from "../events/TaskEvents";
 
 @injectable()
 export class CreateTaskUseCase implements ICreateTaskUseCase {
@@ -26,9 +25,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.INotificationService)
-    private _notificationService: INotificationService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
     @inject(TYPES.ITaskDomainService)
     private _taskDomainService: ITaskDomainService,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
@@ -45,6 +42,15 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       throw new EntityNotFoundError("Project Not Found", data.projectId);
     if (project.orgId !== data.orgId)
       throw new ValidationError("Project does not belong to this organization");
+
+    let parentTask = null;
+    if (data.parentTaskId) {
+      parentTask = await this._taskRepo.findById(data.parentTaskId);
+      if (!parentTask)
+        throw new EntityNotFoundError("Parent Task", data.parentTaskId);
+    }
+
+    this._taskDomainService.validateHierarchy(data as Task, parentTask);
 
     if (data.dueDate) {
       const sprint = data.sprintId
@@ -142,48 +148,12 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
 
     const newTask = await this._taskRepo.create(taskData);
 
-    // [NEW] Targeted Real-time Alerts
-    // 1. Project Room (Project Details Live Update)
-    this._socketService.emitToProject(
-      newTask.projectId,
-      "task:created",
-      newTask,
-    );
-
-    // 2. Org Managers (Manager Dashboard Live Update)
-    this._socketService.emitToRoleInOrg(
-      data.orgId!,
-      UserRole.ORG_MANAGER,
-      "task:created",
-      newTask,
-    );
-
-    if (newTask.assignedTo) {
-      // Validate that the assignee belongs to this organization
-      await this._securityService.validateUserBelongsToOrg(
-        newTask.assignedTo,
-        data.orgId!,
-      );
-
-      this._socketService.emitToUser(
-        newTask.assignedTo,
-        "task:assigned",
-        newTask,
-      );
-
-      const creator = await this._userRepo.findById(creatorId);
-      if (creator) {
-        await this._notificationService.notifyTaskAssignment(newTask, creator);
-      }
-    }
+    // Dispatch Domain Event for side effects (Sockets, Notifications, History)
+    await this._eventDispatcher.dispatch(TASK_EVENTS.CREATED, {
+      task: newTask,
+      creatorId,
+    });
 
     return newTask;
-  }
-
-  private formatUserName(user: User): string {
-    if (user.firstName) {
-      return `${user.firstName} ${user.lastName || ""}`.trim();
-    }
-    return user.name || "User";
   }
 }

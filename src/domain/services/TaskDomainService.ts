@@ -115,4 +115,59 @@ export class TaskDomainService implements ITaskDomainService {
       );
     }
   }
+
+  public validateHierarchy(
+    task: Partial<Task>,
+    parentTask?: Task | null,
+  ): void {
+    // Rule 1: Epics are top-level only
+    if (task.type === "EPIC") {
+      if (task.parentTaskId || parentTask) {
+        throw new ValidationError(
+          "Hierarchy Violation: Epics cannot have a parent task.",
+        );
+      }
+      if (task.sprintId) {
+        throw new ValidationError(
+          "Hierarchy Violation: Epics cannot be assigned to a Sprint. They span multiple sprints.",
+        );
+      }
+    }
+
+    // Rule 2: Subtasks (Tasks with parents)
+    if (task.parentTaskId || parentTask) {
+      if (task.type === "EPIC") {
+        throw new ValidationError(
+          "Hierarchy Violation: A subtask cannot be an Epic.",
+        );
+      }
+      // Optional: Ensure subtasks inherit project/org context from parent
+      if (
+        parentTask &&
+        task.projectId &&
+        task.projectId !== parentTask.projectId
+      ) {
+        throw new ValidationError(
+          "Hierarchy Violation: Subtask must belong to the same project as its parent.",
+        );
+      }
+    }
+
+    // Rule 3: Stories & Epics
+    if (task.type === "STORY" && task.parentTaskId) {
+      // In Jira, Stories can have parents (Epics), but we use epicId for that.
+      // parentTaskId is reserved for Sub-tasks of a Story.
+    }
+  }
+
+  async validateCompletionGuard(task: Task, children: Task[]): Promise<void> {
+    if (task.status === "DONE") {
+      const unfinishedChildren = children.filter((c) => c.status !== "DONE");
+      if (unfinishedChildren.length > 0) {
+        throw new ValidationError(
+          `Cannot mark ${task.type} as DONE: There are ${unfinishedChildren.length} unfinished subtasks. Please complete them first.`,
+        );
+      }
+    }
+  }
 }

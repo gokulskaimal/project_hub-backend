@@ -4,9 +4,8 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../../infrastructure/container/types";
 import { IGetOrgInvoicesUseCase } from "../../../application/interface/useCases/IGetOrgInvoicesUseCase";
 import { IManagerInvoiceController } from "../../interfaces/controllers/IManagerInvoiceController";
+import { ResponseHandler } from "../../utils/ResponseHandler";
 import { asyncHandler } from "../../middleware/ErrorMiddleware";
-import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
-import { ValidationError } from "../../../domain/errors/CommonErrors";
 
 @injectable()
 export class ManagerInvoiceController implements IManagerInvoiceController {
@@ -15,25 +14,14 @@ export class ManagerInvoiceController implements IManagerInvoiceController {
     private _getOrgInvoicesUC: IGetOrgInvoicesUseCase,
   ) {}
 
-  private sendSuccess<T>(
-    res: Response,
-    data: T,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ): void {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   getInvoices = asyncHandler(
     async (req: AuthenticatedRequest, res: Response): Promise<void> => {
       const orgId = req.user?.orgId;
       if (!orgId) {
-        throw new ValidationError("No organization associated with user.");
+        return ResponseHandler.validationError(
+          res,
+          "No organization associated with user.",
+        );
       }
 
       const page = parseInt(req.query.page as string) || 1;
@@ -45,7 +33,7 @@ export class ManagerInvoiceController implements IManagerInvoiceController {
         limit,
         req.user!.id,
       );
-      this.sendSuccess(
+      ResponseHandler.success(
         res,
         result,
         "Organization invoices fetched successfully",

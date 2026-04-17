@@ -182,7 +182,12 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     requesterId: string,
   ): Promise<Organization> {
     await this._securityService.validateSuperAdmin(requesterId);
-    return this._orgRepo.create(data);
+    const orgData = {
+      ...data,
+      status: OrganizationStatus.ACTIVE,
+      createdAt: new Date(),
+    };
+    return this._orgRepo.create(orgData);
   }
 
   async updateOrganization(
@@ -190,6 +195,15 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     data: Partial<Organization>,
     requesterId: string,
   ): Promise<Organization> {
+    await this._securityService.validateSuperAdmin(requesterId);
+    if (data.status) {
+      this._logger.info("Status Changed ", {
+        orgId,
+        status: data.status,
+        requesterId,
+      });
+      await this.updateOrganizationStatus(orgId, data.status, requesterId);
+    }
     await this._securityService.validateOrgManager(requesterId, orgId);
     const updatedOrg = await this._orgRepo.update(orgId, data);
     if (!updatedOrg) {

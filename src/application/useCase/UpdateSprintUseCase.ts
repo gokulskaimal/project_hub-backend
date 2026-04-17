@@ -10,10 +10,8 @@ import { IUpdateSprintUseCase } from "../interface/useCases/IUpdateSprintUseCase
 import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
-import { ISocketService } from "../../application/interface/services/ISocketService";
-import { INotificationService } from "../../domain/interface/services/INotificationService";
-import { NotificationType } from "../../domain/enums/NotificationType";
-import { UserRole } from "../../domain/enums/UserRole";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { SPRINT_EVENTS } from "../events/SprintEvents";
 
 @injectable()
 export class UpdateSprintUseCase implements IUpdateSprintUseCase {
@@ -27,9 +25,7 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ISprintDomainService)
     private _sprintDomainService: ISprintDomainService,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.INotificationService)
-    private _notificationService: INotificationService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(
@@ -39,20 +35,16 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
   ): Promise<Sprint> {
     this._logger.info(`Updating sprint ${id} by user ${requesterId}`);
 
-    const sprint = await this._sprintRepo.findById(id);
-    if (!sprint) throw new EntityNotFoundError("Sprint", id);
+    const oldSprint = await this._sprintRepo.findById(id);
+    if (!oldSprint) throw new EntityNotFoundError("Sprint", id);
 
-    // RBAC Check
-    const projectCheck = await this._projectRepo.findById(sprint.projectId);
-    if (!projectCheck)
-      throw new EntityNotFoundError("Project", sprint.projectId);
-    await this._securityService.validateOrgManager(
-      requesterId,
-      projectCheck.orgId,
-    );
+    const project = await this._projectRepo.findById(oldSprint.projectId);
+    if (!project) throw new EntityNotFoundError("Project", oldSprint.projectId);
+
+    await this._securityService.validateOrgManager(requesterId, project.orgId);
 
     // [SCURM] Domain Rule: Immutability (Completed sprints are locked)
-    if (sprint.status === "COMPLETED") {
+    if (oldSprint.status === "COMPLETED") {
       try {
         await this._securityService.validateSuperAdmin(requesterId);
       } catch {
@@ -61,41 +53,32 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     }
 
     if (updateData.startDate || updateData.endDate) {
-      const project = await this._projectRepo.findById(sprint.projectId);
-      if (project) {
-        const sprintStart = updateData.startDate
-          ? new Date(updateData.startDate)
-          : new Date(sprint.startDate);
-        const sprintEnd = updateData.endDate
-          ? new Date(updateData.endDate)
-          : new Date(sprint.endDate);
+      const sprintStart = updateData.startDate
+        ? new Date(updateData.startDate)
+        : new Date(oldSprint.startDate);
+      const sprintEnd = updateData.endDate
+        ? new Date(updateData.endDate)
+        : new Date(oldSprint.endDate);
 
-        const projectEnd = new Date(project.endDate);
-        const projectStart = project.startDate
-          ? new Date(project.startDate)
-          : null;
+      const projectEnd = new Date(project.endDate);
+      const projectStart = project.startDate
+        ? new Date(project.startDate)
+        : null;
 
-        this._authValidationService.validateSprintDates(
-          sprintStart,
-          sprintEnd,
-          projectStart,
-          projectEnd,
-        );
-
-        // [SCURM] Domain Rule: Timebox (1-28 days)
-        this._sprintDomainService.validateTimebox(sprintStart, sprintEnd);
-      }
-    }
-
-    // [SCURM] Domain Rule: Validate Sprint Start (Cannot start tanpa goal)
-    if (updateData.status === "ACTIVE") {
-      this._logger.info(
-        `Sprint ${id} activation attempt. Current status: ${sprint.status}, Target status: ${updateData.status}`,
+      this._authValidationService.validateSprintDates(
+        sprintStart,
+        sprintEnd,
+        projectStart,
+        projectEnd,
       );
 
-      if (sprint.status !== "ACTIVE") {
+      this._sprintDomainService.validateTimebox(sprintStart, sprintEnd);
+    }
+
+    if (updateData.status === "ACTIVE") {
+      if (oldSprint.status !== "ACTIVE") {
         this._sprintDomainService.validateSprintStart({
-          ...sprint,
+          ...oldSprint,
           ...updateData,
         } as Sprint);
       }
@@ -104,74 +87,25 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     const updatedSprint = await this._sprintRepo.update(id, updateData);
     if (!updatedSprint) throw new EntityNotFoundError("Sprint", id);
 
-    if (updateData.status && updateData.status !== sprint.status) {
-      const project = projectCheck;
-
-      // 1. Notify Managers in Org
-      this._socketService.emitToRoleInOrg(
-        project.orgId,
-        UserRole.ORG_MANAGER,
-        `sprint:${updateData.status.toLowerCase()}`,
-        updatedSprint,
-      );
-
-      // 2. Notify Members of the Project
-      if (project.teamMemberIds && project.teamMemberIds.length > 0) {
-        // Emit to project room for UI refresh
-        this._socketService.emitToProject(
-          project.id,
-          `sprint:${updateData.status.toLowerCase()}`,
-          updatedSprint,
-        );
-
-        // Persistent System Notification
-        const statusVerb =
-          updateData.status === "ACTIVE"
-            ? "started"
-            : updateData.status === "COMPLETED"
-              ? "completed"
-              : "updated";
-
-        for (const memberId of project.teamMemberIds) {
-          if (memberId === requesterId) continue;
-          await this._notificationService.sendSystemNotification(
-            memberId,
-            `Sprint ${updateData.status}`,
-            `Sprint '${updatedSprint.name}' in project ${project.name} has been ${statusVerb}`,
-            NotificationType.INFO,
-            project.orgId,
-            `/member/projects/${project.id}`,
-          );
-        }
-      }
-    }
+    // DISPATCH EVENT - Side effects handled in SprintEventSubscriber
+    this._eventDispatcher.dispatch(SPRINT_EVENTS.UPDATED, {
+      oldSprint,
+      updatedSprint,
+      updaterId: requesterId,
+      changes: updateData,
+    });
 
     if (updateData.status === "COMPLETED") {
       const tasks = await this._taskRepo.findAll({ sprintId: id });
-      const unfinishedTasks = tasks.filter((t) => t.status !== "DONE");
+      const unfinishedTasksCount = tasks.filter(
+        (t) => t.status !== "DONE" && t.type !== "EPIC",
+      ).length;
 
-      await Promise.all(
-        unfinishedTasks.map((t) => {
-          let updatedTotalTime = t.totalTimeSpent || 0;
-          const updatedLogs = t.timeLogs ? [...t.timeLogs] : [];
-
-          t.timeLogs?.forEach((log, index) => {
-            if (!log.endTime) {
-              const now = new Date();
-              log.endTime = now;
-              log.duration = now.getTime() - new Date(log.startTime).getTime();
-              updatedTotalTime += log.duration;
-              updatedLogs[index] = log;
-            }
-          });
-
-          return this._taskRepo.update(t.id, {
-            sprintId: null, // Move unfinished items back to Backlog
-            timeLogs: updatedLogs,
-            totalTimeSpent: updatedTotalTime,
-          });
-        }),
-      );
+      if (unfinishedTasksCount > 0) {
+        throw new Error(
+          `Cannot complete sprint: There are ${unfinishedTasksCount} task(s) that are not 'DONE'. Please complete all tasks or move them out of the sprint first.`,
+        );
+      }
     }
 
     return updatedSprint;

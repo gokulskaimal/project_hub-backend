@@ -131,12 +131,6 @@ export interface IUserReadRepo {
   countVerified(): Promise<number>;
 
   /**
-   * Get role distribution
-   * @returns Array of role counts
-   */
-  getRoleDistribution(): Promise<Array<{ _id: string; count: number }>>;
-
-  /**
    * Find users by ID list
    * @param ids - Array of User IDs
    * @returns Array of users

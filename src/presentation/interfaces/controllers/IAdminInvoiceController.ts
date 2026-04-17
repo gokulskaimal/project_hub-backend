@@ -1,5 +1,9 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 
 export interface IAdminInvoiceController {
-  getInvoices(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getInvoices(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void | Promise<void>;
 }

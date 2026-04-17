@@ -14,6 +14,7 @@ export interface ProjectDTO {
   tags?: string[];
   teamMemberIds?: string[];
   tasksPerWeek?: number;
+  progress?: number;
 }
 
 export function toProjectDTO(project: Project): ProjectDTO {
@@ -27,12 +28,13 @@ export function toProjectDTO(project: Project): ProjectDTO {
     status: project.status,
     startDate: toIso(project.startDate),
     endDate: toIso(project.endDate),
-    createdAt: toIso(project.createdAt) as string, // CreatedAt should always exist
+    createdAt: toIso(project.createdAt) as string,
     updatedAt: toIso(project.updatedAt),
     orgId: project.orgId,
     priority: project.priority,
     tags: project.tags,
     teamMemberIds: project.teamMemberIds,
     tasksPerWeek: project.tasksPerWeek,
+    progress: project.progress,
   };
 }

@@ -3,7 +3,6 @@ import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
 import { TaskModel, ITaskDoc } from "../models/TaskModel";
 import { Model } from "mongoose";
-import { DateUtils, TimeFrame } from "../../utils/DateUtils";
 
 export class TaskRepo
   extends BaseRepository<Task, ITaskDoc>
@@ -61,7 +60,9 @@ export class TaskRepo
       completedAt: obj.completedAt,
       createdBy: createdBy?.toString(),
       parentTaskId: parentTaskId?.toString(),
+      epicId: obj.epicId?.toString(),
       dependencies: obj.dependencies || [],
+      acceptanceCriteria: obj.acceptanceCriteria || [],
     } as Task;
   }
 
@@ -104,167 +105,9 @@ export class TaskRepo
     });
   }
 
-  async sumDonePointsByUserInRange(
-    userId: string,
-    start: Date,
-    end: Date,
-  ): Promise<number> {
-    const result = await this.model.aggregate([
-      {
-        $match: {
-          assignedTo: userId,
-          status: "DONE",
-          completedAt: { $gte: start, $lte: end },
-        },
-      },
-      { $group: { _id: null, total: { $sum: "$storyPoints" } } },
-    ]);
-    return result[0]?.total || 0;
-  }
-
-  async sumDonePointsByProjectInRange(
-    projectId: string,
-    start: Date,
-    end: Date,
-  ): Promise<number> {
-    const result = await this.model.aggregate([
-      {
-        $match: {
-          projectId,
-          status: "DONE",
-          completedAt: { $gte: start, $lte: end },
-        },
-      },
-      { $group: { _id: null, total: { $sum: "$storyPoints" } } },
-    ]);
-    return result[0]?.total || 0;
-  }
-
   async deleteSubtasks(parentId: string): Promise<boolean> {
     await this.model.deleteMany({ parentTaskId: parentId });
     return true;
-  }
-
-  async getTopPerformers(
-    orgId: string,
-    limit: number,
-    timeFrame?: TimeFrame,
-  ): Promise<
-    Array<{
-      userId: string;
-      name: string;
-      storyPoints: number;
-      taskCount: number;
-    }>
-  > {
-    const match: Record<string, unknown> = {
-      orgId,
-      status: "DONE",
-      completedAt: { $exists: true },
-    };
-
-    if (timeFrame) {
-      const { startDate } = DateUtils.getTimeFrameRange(timeFrame);
-      match.completedAt = {
-        ...(match.completedAt as Record<string, unknown>),
-        $gte: startDate,
-      };
-    }
-
-    const result = await this.model.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: "$assignedTo",
-          storyPoints: { $sum: "$storyPoints" },
-          taskCount: { $sum: 1 },
-        },
-      },
-      { $sort: { storyPoints: -1 } },
-      { $limit: limit },
-      {
-        $addFields: {
-          assigneeId: { $toObjectId: "$_id" },
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "assigneeId",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      { $unwind: "$userDetails" },
-      {
-        $project: {
-          userId: "$_id",
-          name: {
-            $concat: ["$userDetails.firstName", " ", "$userDetails.lastName"],
-          },
-          storyPoints: 1,
-          taskCount: 1,
-        },
-      },
-    ]);
-    return result;
-  }
-
-  async getTasksStatusDistribution(
-    orgId: string,
-    userId?: string,
-    timeFrame?: TimeFrame,
-  ): Promise<Array<{ status: string; count: number }>> {
-    const match: Record<string, unknown> = {};
-    if (orgId) match.orgId = orgId;
-    if (userId) match.assignedTo = userId;
-
-    if (timeFrame) {
-      const { startDate } = DateUtils.getTimeFrameRange(timeFrame);
-      match.createdAt = { $gte: startDate };
-    }
-
-    const result = await this.model.aggregate([
-      { $match: match },
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-      { $project: { status: "$_id", count: 1, _id: 0 } },
-    ]);
-    return result as Array<{ status: string; count: number }>;
-  }
-
-  async getMonthlyVelocity(
-    orgId: string,
-    userId?: string,
-    timeFrame?: TimeFrame,
-  ): Promise<Array<{ month: string; points: number }>> {
-    const { startDate, groupFormat } = DateUtils.getTimeFrameRange(
-      timeFrame || "YEAR",
-    );
-    const match: Record<string, unknown> = {
-      status: "DONE",
-      completedAt: { $gte: startDate, $ne: null },
-    };
-    if (orgId) match.orgId = orgId;
-    if (userId) match.assignedTo = userId;
-
-    const result = await this.model.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: { $dateToString: { format: groupFormat, date: "$completedAt" } },
-          points: { $sum: "$storyPoints" },
-        },
-      },
-      { $sort: { _id: 1 } },
-      {
-        $project: {
-          month: "$_id",
-          points: 1,
-          _id: 0,
-        },
-      },
-    ]);
-    return result;
   }
 
   async findPaginatedByAssignee(
@@ -301,5 +144,32 @@ export class TaskRepo
 
   async countByOrg(orgId: string): Promise<number> {
     return await this.model.countDocuments({ orgId });
+  }
+
+  async findPaginatedByProject(
+    projectId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Task[]> {
+    const docs = await this.model
+      .find({ projectId })
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit);
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async countByProject(projectId: string): Promise<number> {
+    return await this.model.countDocuments({ projectId });
+  }
+
+  async findByParent(parentId: string): Promise<Task[]> {
+    const docs = await this.model.find({ parentTaskId: parentId });
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async findByEpic(epicId: string): Promise<Task[]> {
+    const docs = await this.model.find({ epicId: epicId });
+    return docs.map((d) => this.toDomain(d));
   }
 }

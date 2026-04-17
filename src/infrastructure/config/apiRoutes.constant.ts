@@ -58,6 +58,8 @@ export const API_ROUTES = {
     TASK_ATTACHMENTS: (id: string) => `/projects/tasks/${id}/attachments`,
     VELOCITY: (projectId: string) => `/projects/${projectId}/velocity`,
     MEMBERS: (projectId: string) => `/projects/${projectId}/members`,
+    EPIC_ANALYTICS: (projectId: string) =>
+      `/projects/${projectId}/epic-analytics`,
     SPRINT_CREATE: "/projects/sprints",
     SPRINTS: (projectId: string) => `/projects/${projectId}/sprints`,
     SPRINT_UPDATE: (id: string) => `/projects/sprints/${id}`,

@@ -36,4 +36,8 @@ export interface ITaskDomainService {
    * Enforces Scrum Rule: Tasks must have an assignee to reach Definition of Done
    */
   validateDefinitionOfDone(task: Task): void;
+
+  validateHierarchy(task: Task, parentTask?: Task | null): void;
+
+  validateCompletionGuard(task: Task, children: Task[]): Promise<void>;
 }

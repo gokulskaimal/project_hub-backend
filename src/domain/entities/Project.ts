@@ -14,4 +14,5 @@ export interface Project {
   key?: string;
   createdAt: Date;
   updatedAt: Date;
+  progress?: number;
 }

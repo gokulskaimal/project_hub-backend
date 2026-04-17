@@ -8,7 +8,6 @@ import { UserRole } from "../../domain/enums/UserRole";
 import OrgModel from "../models/OrgModel";
 import { TYPES } from "../container/types";
 import { ILogger } from "../../application/interface/services/ILogger";
-import mongoose from "mongoose";
 
 @injectable()
 export class UserRepo
@@ -237,64 +236,6 @@ export class UserRepo
     return await UserModel.countDocuments({ emailVerified: true });
   }
 
-  async getRoleDistribution(): Promise<Array<{ _id: string; count: number }>> {
-    return await UserModel.aggregate([
-      { $group: { _id: "$role", count: { $sum: 1 } } },
-    ]);
-  }
-
-  async getGlobalStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    pending: number;
-    verified: number;
-    unverified: number;
-    byRole: Record<string, number>;
-  }> {
-    const results = await UserModel.aggregate([
-      {
-        $facet: {
-          total: [{ $count: "count" }],
-          statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
-          verifiedCounts: [
-            { $group: { _id: "$emailVerified", count: { $sum: 1 } } },
-          ],
-          roleCounts: [{ $group: { _id: "$role", count: { $sum: 1 } } }],
-        },
-      },
-    ]);
-
-    const facet = results[0];
-    const stats = {
-      total: facet.total[0]?.count || 0,
-      active: 0,
-      inactive: 0,
-      pending: 0,
-      verified: 0,
-      unverified: 0,
-      byRole: {} as Record<string, number>,
-    };
-
-    facet.statusCounts.forEach((s: { _id: string; count: number }) => {
-      if (s._id === "ACTIVE") stats.active = s.count;
-      if (s._id === "INACTIVE" || s._id === "BLOCKED")
-        stats.inactive += s.count;
-      if (s._id === "PENDING_VERIFICATION") stats.pending = s.count;
-    });
-
-    facet.verifiedCounts.forEach((v: { _id: boolean; count: number }) => {
-      if (v._id === true) stats.verified = v.count;
-      if (v._id === false) stats.unverified = v.count;
-    });
-
-    facet.roleCounts.forEach((r: { _id: string; count: number }) => {
-      stats.byRole[r._id || "UNKNOWN"] = r.count;
-    });
-
-    return stats;
-  }
-
   async updateStatus(id: string, status: string): Promise<User> {
     try {
       const updated = await UserModel.findByIdAndUpdate(
@@ -485,40 +426,5 @@ export class UserRepo
       emailVerificationExpires: { $gt: new Date() },
     });
     return user ? this.toDomain(user) : null;
-  }
-
-  async getOrgMemberStats(
-    orgId: string,
-  ): Promise<{ total: number; active: number; inactive: number }> {
-    const results = await UserModel.aggregate([
-      {
-        $match: {
-          orgId: new mongoose.Types.ObjectId(orgId),
-          role: { $nin: [UserRole.SUPER_ADMIN, UserRole.ORG_MANAGER] },
-        },
-      },
-      {
-        $facet: {
-          total: [{ $count: "count" }],
-          statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
-        },
-      },
-    ]);
-    const facet = results[0];
-    const stats = {
-      total: facet.total[0]?.count || 0,
-      active: 0,
-      inactive: 0,
-    };
-    facet.statusCounts.forEach((s: { _id: string; count: number }) => {
-      if (s._id === "ACTIVE") stats.active = s.count;
-      if (
-        s._id === "INACTIVE" ||
-        s._id === "BLOCKED" ||
-        s._id === "PENDING_VERIFICATION"
-      )
-        stats.inactive += s.count;
-    });
-    return stats;
   }
 }

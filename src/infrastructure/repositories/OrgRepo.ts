@@ -5,7 +5,6 @@ import {
   OrganizationStatus,
 } from "../../domain/entities/Organization";
 import OrgModel, { IOrgDOc } from "../models/OrgModel";
-import UserModel from "../models/UserModel";
 
 @injectable()
 export class OrgRepo implements IOrgRepo {
@@ -136,25 +135,8 @@ export class OrgRepo implements IOrgRepo {
       OrgModel.countDocuments(query),
     ]);
 
-    // Aggregate user counts for the fetched organizations
-    const orgIds = docs.map((d) => d._id);
-    const userCounts = await UserModel.aggregate([
-      { $match: { orgId: { $in: orgIds } } },
-      { $group: { _id: "$orgId", count: { $sum: 1 } } },
-    ]);
-
-    // Create a map for easy lookup
-    const countMap = new Map<string, number>();
-    userCounts.forEach((c) => {
-      countMap.set(c._id.toString(), c.count);
-    });
-
     return {
-      organizations: docs.map((d) => {
-        const org = this.toDomain(d);
-        org.currentUserCount = countMap.get(org.id) || 0;
-        return org;
-      }),
+      organizations: docs.map((d) => this.toDomain(d)),
       total,
       hasMore: offset + limit < total,
     };
@@ -177,38 +159,5 @@ export class OrgRepo implements IOrgRepo {
     }
     const exists = await OrgModel.findOne(query).select("_id");
     return !!exists;
-  }
-
-  async getStatusDistribution(): Promise<
-    Array<{ status: string; count: number }>
-  > {
-    return await OrgModel.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-      { $project: { status: "$_id", count: 1, _id: 0 } },
-    ]);
-  }
-
-  async getPlanPerformance(): Promise<
-    Array<{ planName: string; count: number }>
-  > {
-    return await OrgModel.aggregate([
-      { $group: { _id: "$planId", count: { $sum: 1 } } },
-      {
-        $lookup: {
-          from: "plans",
-          localField: "_id",
-          foreignField: "_id",
-          as: "plan",
-        },
-      },
-      { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          planName: { $ifNull: ["$plan.name", "No Plan"] },
-          count: 1,
-          _id: 0,
-        },
-      },
-    ]);
   }
 }

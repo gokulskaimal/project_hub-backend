@@ -7,7 +7,8 @@ export interface TaskHistory {
     | "STATUS_CHANGED"
     | "ASSIGNEE_CHANGED"
     | "SPRINT_CHANGED"
-    | "UPDATED";
+    | "UPDATED"
+    | "DELETED";
   details?: string;
   previousValue?: string;
   newValue?: string;

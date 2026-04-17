@@ -39,6 +39,9 @@ export function createProjectRoutes(container: Container): Router {
   router.get(API_ROUTES.PROJECTS.VELOCITY(":id"), (req, res, next) =>
     projectCtrl.getProjectVelocity(req, res, next),
   );
+  router.get(API_ROUTES.PROJECTS.EPIC_ANALYTICS(":id"), (req, res, next) =>
+    projectCtrl.getEpicAnalytics(req, res, next),
+  );
   router.put(
     API_ROUTES.PROJECTS.UPDATE(":id"),
     roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),

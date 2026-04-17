@@ -1,13 +1,8 @@
 import { injectable, inject } from "inversify";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { TYPES } from "../../infrastructure/container/types";
-import { UserRole } from "../../domain/enums/UserRole";
 import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
 import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
-import { ISocketService } from "../../application/interface/services/ISocketService";
-import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
-import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
-import { NotificationType } from "../../domain/enums/NotificationType";
 import { ICreateProjectUseCase } from "../interface/useCases/ICreateProjectUseCase";
 import { Project } from "../../domain/entities/Project";
 import {
@@ -15,10 +10,11 @@ import {
   EntityNotFoundError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
+import { PROJECT_EVENTS } from "../events/ProjectEvents";
 import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { PLAN_DEFAULTS } from "../../infrastructure/config/common.constants";
-
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
 import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
@@ -27,10 +23,7 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ISubscriptionRepo) private _subRepo: ISubscriptionRepo,
     @inject(TYPES.IPlanRepo) private _planRepo: IPlanRepo,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
-    @inject(TYPES.ICreateNotificationUseCase)
-    private _createNotificationUseCase: ICreateNotificationUseCase,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IAuthValidationService)
     private _authValidationService: IAuthValidationService,
@@ -118,38 +111,10 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
         orgId,
       );
     }
-
-    // [NEW] Real-time & Notifications
-
-    // 1. Notify Org Managers (Manager Dashboard Live Update)
-    this._socketService.emitToRoleInOrg(
-      orgId,
-      UserRole.ORG_MANAGER,
-      "project:created",
+    this._eventDispatcher.dispatch(PROJECT_EVENTS.CREATED, {
       project,
-    );
-
-    // 2. Notify Assigned Team Members
-    if (project.teamMemberIds && project.teamMemberIds.length > 0) {
-      const creator = await this._userRepo.findById(userId);
-      const creatorName = creator
-        ? creator.firstName || creator.name
-        : "Manager";
-
-      for (const memberId of project.teamMemberIds) {
-        // A. Real-time update to Member Dashboard
-        this._socketService.emitToUser(memberId, "project:assigned", project);
-
-        // B. Persistent Notification
-        await this._createNotificationUseCase.execute(
-          memberId,
-          "New Project Assigned",
-          `You have been added to project '${project.name}' by ${creatorName}`,
-          NotificationType.INFO,
-          `/member/projects/${project.id}`,
-        );
-      }
-    }
+      creatorId: userId,
+    });
 
     return project;
   }

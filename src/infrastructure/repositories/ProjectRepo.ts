@@ -32,6 +32,11 @@ export class ProjectRepo
     } as Project;
   }
 
+  async findById(id: string): Promise<Project | null> {
+    const doc = await this.model.findById(id);
+    return doc ? this.toDomain(doc) : null;
+  }
+
   async countByOrg(orgId: string): Promise<number> {
     return await this.model.countDocuments({ orgId });
   }
@@ -82,96 +87,5 @@ export class ProjectRepo
       projects: docs.map((d) => this.toDomain(d)),
       total,
     };
-  }
-
-  async getProjectStats(orgId: string): Promise<{
-    total: number;
-    active: number;
-    onHold: number;
-    completed: number;
-  }> {
-    const stats = await this.model.aggregate([
-      { $match: { orgId } },
-      {
-        $facet: {
-          total: [{ $count: "count" }],
-          statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
-        },
-      },
-    ]);
-
-    const facet = stats[0];
-    const result = {
-      total: facet?.total[0]?.count || 0,
-      active: 0,
-      onHold: 0,
-      completed: 0,
-    };
-
-    facet?.statusCounts.forEach((s: { _id: string; count: number }) => {
-      const status = s._id;
-      if (status === "ACTIVE") result.active = s.count;
-      else if (status === "ON_HOLD") result.onHold = s.count;
-      else if (status === "COMPLETED") result.completed = s.count;
-    });
-
-    return result;
-  }
-
-  async getProjectProgressReport(
-    orgId: string,
-  ): Promise<
-    Array<{
-      name: string;
-      totalTasks: number;
-      completedTasks: number;
-      progress: number;
-    }>
-  > {
-    return await this.model.aggregate([
-      { $match: { orgId } },
-      {
-        $lookup: {
-          from: "tasks",
-          localField: "_id",
-          foreignField: "projectId",
-          as: "projectTasks",
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          totalTasks: { $size: "$projectTasks" },
-          completedTasks: {
-            $size: {
-              $filter: {
-                input: "$projectTasks",
-                as: "task",
-                cond: { $eq: ["$$task.status", "DONE"] },
-              },
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          totalTasks: 1,
-          completedTasks: 1,
-          progress: {
-            $cond: [
-              { $gt: ["$totalTasks", 0] },
-              {
-                $multiply: [
-                  { $divide: ["$completedTasks", "$totalTasks"] },
-                  100,
-                ],
-              },
-              0,
-            ],
-          },
-        },
-      },
-    ]);
   }
 }

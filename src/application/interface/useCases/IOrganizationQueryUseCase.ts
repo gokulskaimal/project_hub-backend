@@ -8,5 +8,8 @@ export interface IOrganizationQueryUseCase {
     status?: string,
   ): Promise<{ organizations: Organization[]; total: number }>;
 
-  getOrganizationById(orgId: string): Promise<Organization | null>;
+  getOrganizationById(
+    orgId: string,
+    requesterId: string,
+  ): Promise<Organization | null>;
 }

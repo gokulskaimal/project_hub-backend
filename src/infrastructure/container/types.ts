@@ -90,10 +90,16 @@ export const TYPES = {
   IMarkAllNotificationsReadUseCase: Symbol.for(
     "IMarkAllNotificationsReadUseCase",
   ),
+  IAddCommentUseCase: Symbol.for("IAddCommentUseCase"),
+  IAddAttachmentUseCase: Symbol.for("IAddAttachmentUseCase"),
   ISendMessageUseCase: Symbol.for("ISendMessageUseCase"),
   IGetProjectMessagesUseCase: Symbol.for("IGetProjectMessagesUseCase"),
   IEditMessageUseCase: Symbol.for("IEditMessageUseCase"),
   IDeleteMessageUseCase: Symbol.for("IDeleteMessageUseCase"),
+  IHandleRazorpayWebhookUseCase: Symbol.for("IHandleRazorpayWebhookUseCase"),
+  IGetProjectMembersUseCase: Symbol.for("IGetProjectMembersUseCase"),
+  IInvitationQueryUseCase: Symbol.for("IInvitationQueryUseCase"),
+  IGetOrgAnalyticsUseCase: Symbol.for("IGetOrgAnalyticsUseCase"),
 
   // ===== CONTROLLERS =====
   // AuthController: Symbol.for("AuthController"),
@@ -141,6 +147,12 @@ export const TYPES = {
   IInvoiceRepo: Symbol.for("IInvoiceRepo"),
   IGetAdminInvoicesUseCase: Symbol.for("IGetAdminInvoicesUseCase"),
   IGetOrgInvoicesUseCase: Symbol.for("IGetOrgInvoicesUseCase"),
+  IEventDispatcher: Symbol.for("IEventDispatcher"),
+  IAnalyticsRepo: Symbol.for("IAnalyticsRepo"),
+  TaskEventSubscriber: Symbol.for("TaskEventSubscriber"),
+  ProjectEventSubscriber: Symbol.for("ProjectEventSubscriber"),
+  SprintEventSubscriber: Symbol.for("SprintEventSubscriber"),
+  ChatEventSubscriber: Symbol.for("ChatEventSubscriber"),
 } as const;
 
 /**

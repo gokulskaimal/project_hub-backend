@@ -18,21 +18,4 @@ export interface IProjectRepo extends IBaseRepository<Project> {
     projects: Project[];
     total: number;
   }>;
-  getProjectStats(orgId: string): Promise<{
-    total: number;
-    active: number;
-    onHold: number;
-    completed: number;
-  }>;
-
-  getProjectProgressReport(
-    orgId: string,
-  ): Promise<
-    Array<{
-      name: string;
-      totalTasks: number;
-      completedTasks: number;
-      progress: number;
-    }>
-  >;
 }

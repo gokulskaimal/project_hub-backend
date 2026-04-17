@@ -15,7 +15,7 @@ export class CreatePlanUseCase implements ICreatePlanUseCase {
   ) {}
 
   async execute(
-    planData: Omit<Plan, "id" | "createdAt" | "updatedAt">,
+    planData: Omit<Plan, "id" | "createdAt" | "updatedAt" | "razorpayPlanId">,
     requesterId: string,
   ): Promise<Plan> {
     await this._securityService.validateSuperAdmin(requesterId);

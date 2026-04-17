@@ -10,30 +10,23 @@ import {
 } from "../../domain/errors/CommonErrors";
 
 import { ILogger } from "../../application/interface/services/ILogger";
-import { ISocketService } from "../../application/interface/services/ISocketService";
-import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
-import { NotificationType } from "../../domain/enums/NotificationType";
-import { User } from "../../domain/entities/User";
 
-import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { ITimeTrackingService } from "../../domain/interface/services/ITimeTrackingService";
+import { IEventDispatcher } from "../../application/interface/services/IEventDispatcher";
+import { TASK_EVENTS } from "../events/TaskEvents";
 
 @injectable()
 export class UpdateTaskUseCase implements IUpdateTaskUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.INotificationService)
-    private _notificationService: INotificationService,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
-    @inject(TYPES.ITaskHistoryRepo) private _historyRepo: ITaskHistoryRepo,
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ITaskDomainService)
@@ -41,6 +34,7 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ITimeTrackingService)
     private _timeTrackingService: ITimeTrackingService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(
@@ -112,12 +106,10 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
     }
 
-    // Filter out undefined values to prevent accidental overwrites of existing data
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([, value]) => value !== undefined),
     );
 
-    // Merged Task for Validation
     const mergedTask = { ...task, ...filteredData } as Task;
 
     // Domain Rule: Assignment to Sprint (Must be estimated)
@@ -128,6 +120,13 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
     // Domain Rule: Definition of Done (Must have assignee)
     if (data.status === "DONE" && task.status !== "DONE") {
       this._taskDomainService.validateDefinitionOfDone(mergedTask);
+
+      // Professional Workflow: Check for unfinished subtasks
+      const children = await this._taskRepo.findByParent(id);
+      await this._taskDomainService.validateCompletionGuard(
+        mergedTask,
+        children,
+      );
     }
 
     if (data.dueDate !== undefined || data.sprintId !== undefined) {
@@ -145,6 +144,21 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
 
         this._taskDomainService.validateDueDate(taskDueDate, sprint, project);
       }
+    }
+
+    // Hierarchy Re-validation on Update
+    if (
+      data.type !== undefined ||
+      data.parentTaskId !== undefined ||
+      data.sprintId !== undefined
+    ) {
+      const parentId =
+        data.parentTaskId !== undefined ? data.parentTaskId : task.parentTaskId;
+      let parentTask = null;
+      if (parentId) {
+        parentTask = await this._taskRepo.findById(parentId);
+      }
+      this._taskDomainService.validateHierarchy(mergedTask, parentTask);
     }
 
     // 2. Sprint Capacity Check
@@ -194,126 +208,31 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       data.timeLogs = task.timeLogs;
       data.totalTimeSpent = task.totalTimeSpent;
     }
-    // Tracking Logic
 
     if (data.status === "DONE" && task.status !== "DONE") {
       data.completedAt = new Date();
     }
 
-    // Task History Tracking
-    if (updaterId) {
-      if (data.status && data.status !== task.status) {
-        await this._historyRepo.create({
-          taskId: task.id,
-          userId: updaterId,
-          action: "STATUS_CHANGED",
-          previousValue: task.status,
-          newValue: data.status,
-          createdAt: new Date(),
-        });
-      }
-      if (
-        data.assignedTo !== undefined &&
-        data.assignedTo !== task.assignedTo
-      ) {
-        await this._historyRepo.create({
-          taskId: task.id,
-          userId: updaterId,
-          action: "ASSIGNEE_CHANGED",
-          previousValue: task.assignedTo || "Unassigned",
-          newValue: data.assignedTo || "Unassigned",
-          createdAt: new Date(),
-        });
-      }
-      if (data.sprintId !== undefined && data.sprintId !== task.sprintId) {
-        await this._historyRepo.create({
-          taskId: task.id,
-          userId: updaterId,
-          action: "SPRINT_CHANGED",
-          previousValue: task.sprintId || "Backlog",
-          newValue: data.sprintId || "Backlog",
-          createdAt: new Date(),
-        });
-      }
-    }
-    // Task History Tracking
-
+    // Perform Update
     const updated = await this._taskRepo.update(id, data);
     if (!updated) throw new EntityNotFoundError("Task Not Found", id);
 
-    if (task.orgId) {
-      // [NEW] Targeted Real-time Alerts
-      // 1. Project Room
-      this._socketService.emitToProject(
-        updated.projectId,
-        "task:updated",
-        updated,
-      );
-
-      // 2. Org Managers
-      this._socketService.emitToRoleInOrg(
+    // Validate assignee if it's being changed
+    if (data.assignedTo && task.orgId) {
+      await this._securityService.validateUserBelongsToOrg(
+        data.assignedTo,
         task.orgId,
-        UserRole.ORG_MANAGER,
-        "task:updated",
-        updated,
       );
     }
 
-    if (task.orgId && updaterId) {
-      const managers = await this._userRepo.findByOrgAndRole(
-        task.orgId,
-        UserRole.ORG_MANAGER,
-      );
-      const updater = await this._userRepo.findById(updaterId);
-      const updaterName = updater ? this.formatUserName(updater) : "User";
-
-      if (updaterId === task.assignedTo) {
-        for (const manager of managers) {
-          if (manager.id === updaterId) continue;
-          await this._notificationService.sendSystemNotification(
-            manager.id,
-            "Task Update from Member",
-            `Task '${updated.title}' updated by ${updaterName} (Status: ${data.status || updated.status})`,
-            NotificationType.INFO,
-            task.orgId,
-            `/manager/projects/${updated.projectId}`,
-          );
-        }
-      }
-
-      if (updated.assignedTo && updaterId !== updated.assignedTo) {
-        await this._notificationService.sendSystemNotification(
-          updated.assignedTo,
-          "Task Updated by Manager",
-          `Task '${updated.title}' updated by ${updaterName} (Status: ${data.status || updated.status})`,
-          NotificationType.INFO,
-          task.orgId,
-          `/manager/projects/${updated.projectId}`,
-        );
-
-        this._socketService.emitToUser(
-          updated.assignedTo,
-          "task:assigned",
-          updated,
-        );
-      }
-
-      // Validate assignee if it's being changed
-      if (data.assignedTo) {
-        await this._securityService.validateUserBelongsToOrg(
-          data.assignedTo,
-          task.orgId,
-        );
-      }
-    }
+    // 3. Dispatch Domain Event
+    this._eventDispatcher.dispatch(TASK_EVENTS.UPDATED, {
+      oldTask: task,
+      updatedTask: updated,
+      updaterId,
+      changes: data,
+    });
 
     return updated;
-  }
-
-  private formatUserName(user: User): string {
-    if (user.firstName) {
-      return `${user.firstName} ${user.lastName || ""}`.trim();
-    }
-    return user.name || "User";
   }
 }

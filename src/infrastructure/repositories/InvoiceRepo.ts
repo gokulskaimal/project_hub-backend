@@ -3,7 +3,6 @@ import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceR
 import { Invoice } from "../../domain/entities/Invoice";
 import { InvoiceModel } from "../models/InvoiceModel";
 import mongoose, { PipelineStage } from "mongoose";
-import { DateUtils, TimeFrame } from "../../utils/DateUtils";
 
 interface AggregatedInvoiceDoc {
   _id?: mongoose.Types.ObjectId;
@@ -141,32 +140,38 @@ export class InvoiceRepo implements IInvoiceRepo {
     else if (sort === "amount_desc") sortStage.amount = -1;
     else sortStage.createdAt = -1;
 
-    const countPipeline = [
+    // Use facets to get total count, total revenue, and paginated items in ONE call
+    const facetPipeline: PipelineStage[] = [
       ...pipeline,
       {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          totalRevenue: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "PAID"] }, "$amount", 0],
+        $facet: {
+          metadata: [
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                totalRevenue: { $sum: "$amount" },
+              },
             },
-          },
+          ],
+          data: [{ $sort: sortStage }, { $skip: skip }, { $limit: limit }],
         },
       },
     ];
-    const countResult = await InvoiceModel.aggregate(countPipeline);
-    const total = countResult[0]?.total || 0;
-    const totalRevenue = countResult[0]?.totalRevenue || 0;
 
-    pipeline.push({ $sort: sortStage });
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
+    const [result] = await InvoiceModel.aggregate<{
+      metadata: Array<{ total: number; totalRevenue: number }>;
+      data: AggregatedInvoiceDoc[];
+    }>(facetPipeline);
 
-    const docs = await InvoiceModel.aggregate<AggregatedInvoiceDoc>(pipeline);
+    const metadata = result.metadata[0] || { total: 0, totalRevenue: 0 };
+    const items = result.data.map((doc) => this.toDomain(doc));
 
-    const items = docs.map((doc) => this.toDomain(doc));
-    return { items, total, totalRevenue };
+    return {
+      items,
+      total: metadata.total,
+      totalRevenue: metadata.totalRevenue,
+    };
   }
 
   private toDomain(doc: AggregatedInvoiceDoc): Invoice {
@@ -190,61 +195,5 @@ export class InvoiceRepo implements IInvoiceRepo {
       planName: doc.plan?.name,
       planType: doc.plan?.type,
     };
-  }
-
-  async getRevenueGrowth(
-    timeFrame: TimeFrame,
-  ): Promise<Array<{ month: string; amount: number }>> {
-    const { startDate, groupFormat } = DateUtils.getTimeFrameRange(timeFrame);
-
-    return await InvoiceModel.aggregate([
-      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
-          total: { $sum: "$amount" },
-        },
-      },
-      { $sort: { _id: 1 } },
-      {
-        $project: {
-          month: "$_id",
-          amount: "$total",
-          _id: 0,
-        },
-      },
-    ]);
-  }
-
-  async getPlanPerformance(): Promise<
-    Array<{ planName: string; count: number; totalRevenue: number }>
-  > {
-    return await InvoiceModel.aggregate([
-      { $match: { status: "PAID" } },
-      {
-        $group: {
-          _id: "$planId",
-          count: { $sum: 1 },
-          totalRevenue: { $sum: "$amount" },
-        },
-      },
-      {
-        $lookup: {
-          from: "plans",
-          let: { planIdObj: { $toObjectId: "$_id" } },
-          pipeline: [{ $match: { $expr: { $eq: ["$_id", "$planIdObj"] } } }],
-          as: "planDetails",
-        },
-      },
-      { $unwind: "$planDetails" },
-      {
-        $project: {
-          planName: "$planDetails.name",
-          count: 1,
-          totalRevenue: 1,
-          _id: 0,
-        },
-      },
-    ]);
   }
 }

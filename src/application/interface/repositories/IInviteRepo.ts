@@ -87,19 +87,6 @@ export interface IInviteRepo {
   isValidInvitation(token: string): Promise<boolean>;
 
   /**
-   * Get invitation statistics for organization
-   * @param orgId - Organization ID
-   * @returns Invitation statistics
-   */
-  getInvitationStats(orgId: string): Promise<{
-    total: number;
-    pending: number;
-    accepted: number;
-    expired: number;
-    cancelled: number;
-  }>;
-
-  /**
    * Find invitation by ID
    * @param id - Invitation ID
    */
