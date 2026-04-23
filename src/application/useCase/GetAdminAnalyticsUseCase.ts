@@ -13,9 +13,8 @@ export class GetAdminAnalyticsUseCase implements IGetAdminAnalyticsUseCase {
   async execute(
     timeFrame: TimeFrame = "YEAR",
   ): Promise<Record<string, unknown>> {
-    const [revenueGrowth, planPerformance, orgStats] = await Promise.all([
+    const [revenueGrowth, orgStats] = await Promise.all([
       this._analyticsRepo.getRevenueStats(undefined, timeFrame),
-      this._analyticsRepo.getInvoicePlanPerformance(),
       this._analyticsRepo.getOrgStats(),
     ]);
 
@@ -26,7 +25,7 @@ export class GetAdminAnalyticsUseCase implements IGetAdminAnalyticsUseCase {
 
     return {
       revenue: revenueGrowth,
-      plans: planPerformance,
+      plans: orgStats.planPerformance, // Switched to Org distribution
       organizations: {
         total: totalOrgs,
         distribution: orgStats.statusDistribution,

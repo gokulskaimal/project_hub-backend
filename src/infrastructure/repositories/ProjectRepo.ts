@@ -14,10 +14,10 @@ export class ProjectRepo
   }
 
   protected toDomain(doc: IProjectDoc): Project {
-    const obj = doc.toObject();
+    const obj = doc.toObject ? doc.toObject() : doc;
     return {
-      id: obj._id.toString(),
-      orgId: obj.orgId,
+      id: obj._id?.toString(),
+      orgId: obj.orgId?.toString(),
       name: obj.name,
       description: obj.description,
       status: obj.status,
@@ -27,6 +27,9 @@ export class ProjectRepo
       tags: obj.tags,
       teamMemberIds: obj.teamMemberIds,
       tasksPerWeek: obj.tasksPerWeek,
+      progress: obj.progress || 0,
+      totalTasks: obj.totalTasks || 0,
+      completedTasks: obj.completedTasks || 0,
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
     } as Project;
@@ -54,6 +57,41 @@ export class ProjectRepo
     return docs.map((d) => this.toDomain(d));
   }
 
+  // async findPaginated(
+  //   limit: number,
+  //   offset: number,
+  //   filters?: {
+  //     orgId?: string;
+  //     status?: string;
+  //     priority?: string;
+  //     searchTerm?: string;
+  //   },
+  // ): Promise<{ projects: Project[]; total: number }> {
+  //   const query: Record<string, unknown> = {};
+  //   if (filters?.orgId) query.orgId = filters.orgId;
+  //   if (filters?.status && filters.status !== "ALL")
+  //     query.status = filters.status;
+  //   if (filters?.priority && filters.priority !== "ALL")
+  //     query.priority = filters.priority;
+
+  //   if (filters?.searchTerm) {
+  //     query.$or = [
+  //       { name: { $regex: filters.searchTerm, $options: "i" } },
+  //       { description: { $regex: filters.searchTerm, $options: "i" } },
+  //     ];
+  //   }
+
+  //   const [docs, total] = await Promise.all([
+  //     this.model.find(query).sort({ createdAt: -1 }).skip(offset).limit(limit),
+  //     this.model.countDocuments(query),
+  //   ]);
+
+  //   return {
+  //     projects: docs.map((d) => this.toDomain(d)),
+  //     total,
+  //   };
+  // }
+
   async findPaginated(
     limit: number,
     offset: number,
@@ -70,7 +108,6 @@ export class ProjectRepo
       query.status = filters.status;
     if (filters?.priority && filters.priority !== "ALL")
       query.priority = filters.priority;
-
     if (filters?.searchTerm) {
       query.$or = [
         { name: { $regex: filters.searchTerm, $options: "i" } },

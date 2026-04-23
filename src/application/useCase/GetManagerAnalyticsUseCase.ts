@@ -17,23 +17,41 @@ export class GetManagerAnalyticsUseCase implements IGetManagerAnalyticsUseCase {
       `Fetching analytics for org ${orgId} with timeframe ${timeFrame}`,
     );
 
-    const [topPerformers, taskDistribution, projectStatus, monthlyVelocity] =
-      await Promise.all([
-        this._analyticsRepo.getTopPerformers(orgId, 5, timeFrame),
-        this._analyticsRepo.getTaskStatusDistribution(
-          orgId,
-          undefined,
-          timeFrame,
-        ),
-        this._analyticsRepo.getProjectStats(orgId),
-        this._analyticsRepo.getMonthlyVelocity(orgId, undefined, timeFrame),
-      ]);
+    const [
+      topPerformers,
+      taskDistribution,
+      projectStatus,
+      monthlyVelocity,
+      projectHealth,
+      memberWorkload,
+    ] = await Promise.all([
+      this._analyticsRepo.getTopPerformers(orgId, 5, timeFrame),
+      this._analyticsRepo.getTaskStatusDistribution(
+        orgId,
+        undefined,
+        timeFrame,
+      ),
+      this._analyticsRepo.getProjectStats(orgId),
+      this._analyticsRepo.getMonthlyVelocity(orgId, undefined, timeFrame),
+      this._analyticsRepo.getProjectHealthReport(orgId),
+      this._analyticsRepo.getMemberWorkloadReport(orgId),
+    ]);
+
+    // Map project status stats (currently Record<string, number>) to StatusDistributionItem[]
+    const projectStatusDistribution = Object.entries(projectStatus).map(
+      ([status, count]) => ({
+        status,
+        count,
+      }),
+    );
 
     return {
       performance: topPerformers,
       tasks: taskDistribution,
-      projects: projectStatus,
+      projects: projectStatusDistribution,
       velocity: monthlyVelocity,
+      health: projectHealth,
+      workload: memberWorkload,
     };
   }
 }

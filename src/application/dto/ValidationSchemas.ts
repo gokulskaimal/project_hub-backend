@@ -28,16 +28,29 @@ export const TaskBaseSchema = z.object({
   storyPoints: z
     .number()
     .int()
-    .refine((v) => STORY_POINTS.includes(v as (typeof STORY_POINTS)[number]), {
-      message: "Story points must be one of 0,1,2,3,5,8,13",
-    })
+    .refine(
+      (v) =>
+        v === null ||
+        v === undefined ||
+        STORY_POINTS.includes(v as (typeof STORY_POINTS)[number]),
+      {
+        message: "Story points must be one of 0,1,2,3,5,8,13",
+      },
+    )
     .nullable()
     .optional(),
   assignedTo: z.string().nullable().optional(),
   parentTaskId: z.string().nullable().optional(),
   dueDate: z
-    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
-    .refine((date) => !date || !isNaN(Date.parse(date)), "Invalid due date")
+    .preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.union([z.string(), z.date()]).optional(),
+    )
+    .refine((v) => {
+      if (!v) return true;
+      if (v instanceof Date) return !isNaN(v.getTime());
+      return !isNaN(Date.parse(v));
+    }, "Invalid due date")
     .optional(),
   acceptanceCriteria: z
     .array(
@@ -82,17 +95,16 @@ export const TaskUpdateSchema = TaskBaseSchema.partial()
       )
       .optional(),
     comments: z.array(z.any()).optional(),
-    parentTaskId: z.string().optional(),
+    parentTaskId: z.string().nullable().optional(),
   })
   .refine(
     (data) => {
-      if (
-        data.type === "STORY" &&
-        (data.storyPoints === undefined ||
-          data.storyPoints === null ||
-          data.storyPoints === 0)
-      ) {
-        return false;
+      // For updates, we ONLY validate if storyPoints is explicitly provided.
+      // If it's undefined, we assume the existing value is preserved.
+      if (data.type === "STORY" && data.storyPoints !== undefined) {
+        if (data.storyPoints === null || data.storyPoints === 0) {
+          return false;
+        }
       }
       return true;
     },
@@ -129,12 +141,16 @@ export const SprintCreateSchema = z
 
 export const SprintUpdateSchema = z
   .object({
-    projectId: z.string().min(1, "Project ID is required"),
-    name: z.string().min(3, "Sprint name must be at least 3 characters"),
+    projectId: z.string().min(1, "Project ID is required").optional(),
+    name: z
+      .string()
+      .min(3, "Sprint name must be at least 3 characters")
+      .optional(),
     description: z.string().nullable().optional(),
     startDate: z
       .string()
-      .refine((date) => !isNaN(Date.parse(date)), "Invalid start date"),
+      .refine((date) => !isNaN(Date.parse(date)), "Invalid start date")
+      .optional(),
     endDate: z
       .string()
       .refine((date) => !isNaN(Date.parse(date)), "Invalid end date"),
@@ -143,10 +159,18 @@ export const SprintUpdateSchema = z
       .enum(["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED", "PLANNING"])
       .optional(),
   })
-  .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
-    message: "End date must be after or equal to start date",
-    path: ["endDate"],
-  });
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: "End date must be after or equal to start date",
+      path: ["endDate"],
+    },
+  );
 
 // Organization Validation
 export const OrgCreateSchema = z.object({

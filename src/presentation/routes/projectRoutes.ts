@@ -58,10 +58,8 @@ export function createProjectRoutes(container: Container): Router {
   );
 
   // Tasks
-  router.post(
-    API_ROUTES.PROJECTS.TASKS(":projectId"),
-    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
-    (req, res, next) => taskCtrl.createTask(req, res, next),
+  router.post(API_ROUTES.PROJECTS.TASKS(":projectId"), (req, res, next) =>
+    taskCtrl.createTask(req, res, next),
   );
   router.get(API_ROUTES.PROJECTS.TASKS(":projectId"), (req, res, next) =>
     taskCtrl.getAllTasks(req, res, next),

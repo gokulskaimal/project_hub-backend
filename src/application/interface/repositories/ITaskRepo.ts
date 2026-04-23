@@ -28,8 +28,32 @@ export interface ITaskRepo extends IBaseRepository<Task> {
     projectId: string,
     limit: number,
     offset: number,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
   ): Promise<Task[]>;
-  countByProject(projectId: string): Promise<number>;
+  countByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<number>;
+
+  findAllByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<Task[]>;
 
   findByParent(parentId: string): Promise<Task[]>;
   findByEpic(epicId: string): Promise<Task[]>;

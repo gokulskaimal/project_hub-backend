@@ -16,18 +16,15 @@ export class GetTaskUseCase implements IGetTaskUseCase {
   async execute(
     projectId: string,
     requesterId: string,
-    filters?: { epicId?: string; parentTaskId?: string },
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
   ): Promise<Task[]> {
     await this._securityService.validateProjectAccess(requesterId, projectId);
-
-    // Filter out undefined values from filters
-    const queryFilters = filters
-      ? Object.fromEntries(
-          Object.entries(filters).filter(([, v]) => v !== undefined),
-        )
-      : {};
-
-    const tasks = await this._taskRepo.findAll({ projectId, ...queryFilters });
+    const tasks = await this._taskRepo.findAllByProject(projectId, filters);
     if (!tasks) throw new EntityNotFoundError("Tasks Not Found", projectId);
     return tasks;
   }
@@ -37,14 +34,21 @@ export class GetTaskUseCase implements IGetTaskUseCase {
     requesterId: string,
     limit: number,
     offset: number,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
   ): Promise<{ tasks: Task[]; total: number }> {
     await this._securityService.validateProjectAccess(requesterId, projectId);
     const tasks = await this._taskRepo.findPaginatedByProject(
       projectId,
       limit,
       offset,
+      filters,
     );
-    const total = await this._taskRepo.countByProject(projectId);
+    const total = await this._taskRepo.countByProject(projectId, filters);
     return { tasks, total };
   }
 }

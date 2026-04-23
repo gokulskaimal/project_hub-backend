@@ -5,6 +5,7 @@ import { IOrganizationQueryUseCase } from "../interface/useCases/IOrganizationQu
 import { IAnalyticsRepo } from "../../application/interface/repositories/IAnalyticsRepo";
 import { Organization } from "../../domain/entities/Organization";
 import { ISecurityService } from "../interface/services/ISecurityService";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
 
 @injectable()
 export class OrganizationQueryUseCase implements IOrganizationQueryUseCase {
@@ -14,6 +15,8 @@ export class OrganizationQueryUseCase implements IOrganizationQueryUseCase {
     private readonly _analyticsRepo: IAnalyticsRepo,
     @inject(TYPES.ISecurityService)
     private readonly _securityService: ISecurityService,
+    @inject(TYPES.IPlanRepo)
+    private readonly _planRepo: IPlanRepo,
   ) {}
 
   async listOrganizations(
@@ -33,10 +36,14 @@ export class OrganizationQueryUseCase implements IOrganizationQueryUseCase {
       const orgIds = result.organizations.map((o: Organization) => o.id!);
       const countMap = await this._analyticsRepo.getUserCountsByOrgIds(orgIds);
 
+      const plans = await this._planRepo.findAll();
+      const planMap = new Map(plans.map((p) => [p.id, p.name]));
+
       result.organizations = result.organizations.map((org: Organization) => ({
         ...org,
         currentUserCount: countMap.get(org.id!) || 0,
-      }));
+        planName: planMap.get(org.planId || "") || "Free Tier",
+      })) as Organization[];
     }
 
     return result;

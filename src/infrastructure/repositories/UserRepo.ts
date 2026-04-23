@@ -427,4 +427,27 @@ export class UserRepo
     });
     return user ? this.toDomain(user) : null;
   }
+
+  async findByFirstNameAndOrg(
+    firstName: string,
+    orgId: string,
+  ): Promise<User | null> {
+    try {
+      const user = await UserModel.findOne({
+        orgId,
+        firstName: { $regex: new RegExp(`^${firstName}$`, "i") },
+      });
+      return user ? this.toDomain(user) : null;
+    } catch (error) {
+      this._logger.error(
+        "Error finding user by firstName and org",
+        error as Error,
+        {
+          firstName,
+          orgId,
+        },
+      );
+      return null;
+    }
+  }
 }

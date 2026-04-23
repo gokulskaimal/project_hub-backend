@@ -1,4 +1,7 @@
-import { Organization, OrganizationStatus } from "../../domain/entities/Organization";
+import {
+  Organization,
+  OrganizationStatus,
+} from "../../domain/entities/Organization";
 
 export interface OrgDTO {
   id: string;
@@ -13,25 +16,11 @@ export interface OrgDTO {
   maxManagers?: number;
   maxUsers?: number;
   currentUserCount?: number;
+  planName?: string;
   industry?: string;
   size?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
-  };
-  contact?: {
-    email?: string;
-    phone?: string;
-    supportEmail?: string;
-  };
-  features?: string[];
   createdAt: string;
   updatedAt?: string;
-  trialEndsAt?: string;
-  tags?: string[];
 }
 
 export function toOrgDTO(org: Organization): OrgDTO {
@@ -48,14 +37,12 @@ export function toOrgDTO(org: Organization): OrgDTO {
     maxManagers: org.maxManagers,
     maxUsers: org.maxUsers,
     currentUserCount: org.currentUserCount,
+    planName: org.planName,
     industry: org.industry,
     size: org.size,
-    address: org.address ? { ...org.address } : undefined,
-    contact: org.contact ? { ...org.contact } : undefined,
-    features: org.features ? [...org.features] : undefined,
-    createdAt: org.createdAt.toISOString(),
-    updatedAt: org.updatedAt?.toISOString(),
-    trialEndsAt: org.trialEndsAt?.toISOString(),
-    tags: org.tags ? [...org.tags] : undefined,
+    createdAt: org.createdAt
+      ? org.createdAt.toISOString()
+      : new Date().toISOString(),
+    updatedAt: org.updatedAt ? org.updatedAt.toISOString() : undefined,
   };
 }

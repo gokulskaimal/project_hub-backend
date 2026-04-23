@@ -1,3 +1,5 @@
+import { EpicProgressItem } from "../../interface/repositories/IAnalyticsRepo";
+
 export interface IGetOrgAnalyticsUseCase {
   getOrgStats(
     orgId: string,
@@ -18,5 +20,5 @@ export interface IGetOrgAnalyticsUseCase {
   getEpicProgress(
     projectId: string,
     requesterId: string,
-  ): Promise<Record<string, unknown>[]>;
+  ): Promise<EpicProgressItem[]>;
 }

@@ -30,18 +30,18 @@ export interface Organization {
     | "EXPIRED"
     | "CANCELLED";
 
+  subscriptionStartsAt?: Date;
+  subscriptionEndsAt?: Date;
+
   razorpaySubscriptionId?: string;
 
   status: OrganizationStatus;
 
   maxManagers?: number;
-
   maxUsers?: number;
-
   currentUserCount?: number;
 
   industry?: string;
-
   size?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE";
 
   address?: {
@@ -51,89 +51,41 @@ export interface Organization {
     zipCode?: string;
     country?: string;
   };
-
   contact?: {
     email?: string;
     phone?: string;
-    supportEmail?: string;
   };
-
   billing?: {
+    gstin?: string;
     billingEmail?: string;
-    taxId?: string;
-    currency?: string;
-    paymentMethod?: string;
   };
-
   settings?: {
-    allowSelfRegistration?: boolean;
+    allowInvitations?: boolean;
     requireEmailVerification?: boolean;
-    passwordPolicy?: {
-      minLength?: number;
-      requireUppercase?: boolean;
-      requireLowercase?: boolean;
-      requireNumbers?: boolean;
-      requireSymbols?: boolean;
-    };
-    sessionTimeout?: number;
+    [key: string]: unknown;
   };
-
   features?: string[];
-
   timezone?: string;
-
   locale?: string;
 
-  createdAt: Date;
-
-  updatedAt?: Date;
-
-  createdBy?: string;
-
   trialStartsAt?: Date;
-
   trialEndsAt?: Date;
 
-  subscriptionStartsAt?: Date;
-
-  subscriptionEndsAt?: Date;
-
   lastActivityAt?: Date;
-
   isDeleted?: boolean;
-
   deletedAt?: Date;
-
   deletionReason?: string;
 
-  customFields?: Record<string, unknown>;
-
+  customFields?: Map<string, unknown>;
   tags?: string[];
-
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-
-  onboardingStatus?: {
-    completed: boolean;
-    currentStep?: number;
-    completedSteps?: number[];
-    completedAt?: Date;
-  };
-
-  integrations?: {
-    [service: string]: {
-      enabled: boolean;
-      config?: Record<string, unknown>;
-      connectedAt?: Date;
-    };
-  };
-
-  usage?: {
-    storageUsed?: number;
-    storageLimit?: number;
-    apiCallsUsed?: number;
-    apiCallsLimit?: number;
-    lastResetAt?: Date;
-  };
-
+  priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  onboardingStatus?: string;
+  integrations?: Record<string, unknown>;
+  usage?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+  createdBy?: string;
+  planName?: string;
 }

@@ -1,5 +1,8 @@
 import { inject, injectable } from "inversify";
-import { IAnalyticsRepo } from "../../application/interface/repositories/IAnalyticsRepo";
+import {
+  IAnalyticsRepo,
+  EpicProgressItem,
+} from "../../application/interface/repositories/IAnalyticsRepo";
 import UserModel from "../models/UserModel";
 import OrgModel from "../models/OrgModel";
 import { TaskModel } from "../models/TaskModel";
@@ -11,6 +14,15 @@ import { TYPES } from "../container/types";
 import { ILogger } from "../../application/interface/services/ILogger";
 import { UserRole } from "../../domain/enums/UserRole";
 import { DateUtils, TimeFrame } from "../../utils/DateUtils";
+
+import {
+  StatusDistributionItem,
+  PerformanceMetric,
+  MonthlyVelocityItem,
+  ProjectHealthItem,
+  MemberWorkloadItem,
+  ProjectProgressItem,
+} from "../../application/interface/repositories/IAnalyticsRepo";
 
 @injectable()
 export class AnalyticsRepo implements IAnalyticsRepo {
@@ -87,7 +99,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
         { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
         {
           $project: {
-            planName: { $ifNull: ["$plan.name", "No Plan"] },
+            planName: { $ifNull: ["$plan.name", "Basic / No Plan"] },
             count: 1,
             _id: 0,
           },
@@ -136,7 +148,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     orgId: string,
     userId?: string,
     timeFrame?: TimeFrame,
-  ): Promise<Array<{ status: string; count: number }>> {
+  ): Promise<StatusDistributionItem[]> {
     const match: Record<string, unknown> = { orgId };
     if (userId) match.assignedTo = userId;
 
@@ -157,7 +169,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     orgId: string,
     userId?: string,
     timeFrame?: TimeFrame,
-  ): Promise<Array<{ month: string; points: number }>> {
+  ): Promise<MonthlyVelocityItem[]> {
     const { startDate, groupFormat } = DateUtils.getTimeFrameRange(
       timeFrame || "YEAR",
     );
@@ -192,7 +204,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     orgId: string,
     limit: number,
     timeFrame?: TimeFrame,
-  ): Promise<Record<string, unknown>[]> {
+  ): Promise<PerformanceMetric[]> {
     const match: Record<string, unknown> = {
       orgId,
       status: "DONE",
@@ -290,50 +302,15 @@ export class AnalyticsRepo implements IAnalyticsRepo {
 
   async getProjectProgressReport(
     orgId: string,
-  ): Promise<Record<string, unknown>[]> {
+  ): Promise<ProjectProgressItem[]> {
     return await ProjectModel.aggregate([
       { $match: { orgId } },
-      { $addFields: { projectIdStr: { $toString: "$_id" } } },
-      {
-        $lookup: {
-          from: "tasks",
-          localField: "projectIdStr",
-          foreignField: "projectId",
-          as: "projectTasks",
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          totalTasks: { $size: "$projectTasks" },
-          completedTasks: {
-            $size: {
-              $filter: {
-                input: "$projectTasks",
-                as: "task",
-                cond: { $eq: ["$$task.status", "DONE"] },
-              },
-            },
-          },
-        },
-      },
       {
         $project: {
           name: 1,
           totalTasks: 1,
           completedTasks: 1,
-          progress: {
-            $cond: [
-              { $gt: ["$totalTasks", 0] },
-              {
-                $multiply: [
-                  { $divide: ["$completedTasks", "$totalTasks"] },
-                  100,
-                ],
-              },
-              0,
-            ],
-          },
+          progress: 1,
         },
       },
     ]);
@@ -417,10 +394,10 @@ export class AnalyticsRepo implements IAnalyticsRepo {
           as: "planDetails",
         },
       },
-      { $unwind: "$planDetails" },
+      { $unwind: { path: "$planDetails", preserveNullAndEmptyArrays: true } },
       {
         $project: {
-          planName: "$planDetails.name",
+          planName: { $ifNull: ["$planDetails.name", "Uncategorized Plan"] },
           count: 1,
           totalRevenue: 1,
           _id: 0,
@@ -448,9 +425,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     return countMap;
   }
 
-  async getEpicProgressReport(
-    projectId: string,
-  ): Promise<Record<string, unknown>[]> {
+  async getEpicProgressReport(projectId: string): Promise<EpicProgressItem[]> {
     return await TaskModel.aggregate([
       {
         $match: {
@@ -504,6 +479,90 @@ export class AnalyticsRepo implements IAnalyticsRepo {
           },
         },
       },
+    ]);
+  }
+
+  async getProjectHealthReport(orgId: string): Promise<ProjectHealthItem[]> {
+    const now = new Date();
+    // For health report, we still need to check tasks for overdue status because overdue is time-dependent.
+    // However, we can optimize the lookup to only fetch what we need.
+    return await ProjectModel.aggregate([
+      { $match: { orgId, status: "ACTIVE" } },
+      { $addFields: { projectIdStr: { $toString: "$_id" } } },
+      {
+        $lookup: {
+          from: "tasks",
+          localField: "projectIdStr",
+          foreignField: "projectId",
+          as: "projectTasks",
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          overdueCount: {
+            $size: {
+              $filter: {
+                input: "$projectTasks",
+                as: "task",
+                cond: {
+                  $and: [
+                    { $ne: ["$$task.status", "DONE"] },
+                    { $lt: ["$$task.dueDate", now] },
+                  ],
+                },
+              },
+            },
+          },
+          totalActiveTasks: { $subtract: ["$totalTasks", "$completedTasks"] },
+          id: "$_id",
+        },
+      },
+      {
+        $addFields: {
+          health: {
+            $cond: [
+              { $gt: ["$overdueCount", 3] },
+              "RED",
+              {
+                $cond: [{ $gt: ["$overdueCount", 0] }, "AMBER", "GREEN"],
+              },
+            ],
+          },
+        },
+      },
+    ]);
+  }
+
+  async getMemberWorkloadReport(orgId: string): Promise<MemberWorkloadItem[]> {
+    return await TaskModel.aggregate([
+      { $match: { orgId, status: { $ne: "DONE" } } },
+      {
+        $group: {
+          _id: "$assignedTo",
+          taskCount: { $sum: 1 },
+          totalPoints: { $sum: "$storyPoints" },
+        },
+      },
+      { $addFields: { assigneeId: { $toObjectId: "$_id" } } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "assigneeId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          name: { $concat: ["$user.firstName", " ", "$user.lastName"] },
+          taskCount: 1,
+          totalPoints: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { taskCount: -1 } },
     ]);
   }
 }

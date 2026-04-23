@@ -88,7 +88,7 @@ export class SprintController {
       authReq.user?.role !== UserRole.ORG_MANAGER &&
       authReq.user?.role !== UserRole.SUPER_ADMIN
     ) {
-      return ResponseHandler.forbidden(res, "Forbiddeb");
+      return ResponseHandler.forbidden(res, "Forbidden");
     }
 
     const { id } = req.params;

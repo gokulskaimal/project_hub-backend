@@ -12,7 +12,9 @@ export interface Project {
   tasksPerWeek?: number;
   taskSequence?: number;
   key?: string;
+  totalTasks: number;
+  completedTasks: number;
+  progress: number;
   createdAt: Date;
   updatedAt: Date;
-  progress?: number;
 }

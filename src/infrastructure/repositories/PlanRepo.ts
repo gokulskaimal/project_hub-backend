@@ -17,18 +17,25 @@ export class PlanRepo
   protected toDomain(doc: IPlanDoc): Plan {
     const obj = doc.toObject();
     return {
-      id: obj._id.toString(),
+      id: String(obj._id),
       name: obj.name,
       description: obj.description,
       price: obj.price,
       currency: obj.currency,
-      features: obj.features,
-      type: obj.type,
+      duration: obj.duration,
       isActive: obj.isActive,
       razorpayPlanId: obj.razorpayPlanId,
-      limits: obj.limits,
-      createdAt: obj.createdAt,
-      updatedAt: obj.updatedAt,
+      type: obj.type,
+      limits: {
+        projects: obj.limits?.projects || 0,
+        members: obj.limits?.members || 0,
+        storage: obj.limits?.storage || 0,
+        messages: obj.limits?.messages || 0,
+        sprints: obj.limits?.sprints || 0,
+      },
+      features: obj.features || [],
+      createdAt: new Date(obj.createdAt || Date.now()),
+      updatedAt: new Date(obj.updatedAt || Date.now()),
     } as Plan;
   }
 

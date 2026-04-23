@@ -10,7 +10,9 @@ import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import {
   EntityNotFoundError,
   ValidationError,
+  ForbiddenError,
 } from "../../domain/errors/CommonErrors";
+import { UserRole } from "../../domain/enums/UserRole";
 
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
@@ -36,6 +38,23 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     if (data.orgId) {
       await this._securityService.validateOrgAccess(creatorId, data.orgId);
     }
+
+    const creator = await this._userRepo.findById(creatorId);
+    if (!creator) throw new EntityNotFoundError("User", creatorId);
+    if (creator.role === UserRole.TEAM_MEMBER) {
+      if (data.type == "EPIC") {
+        throw new ForbiddenError("Team member cannot create epic");
+      }
+      if (data.storyPoints !== undefined) {
+        throw new ForbiddenError("Only managers can estimate story points");
+      }
+      if (data.assignedTo && data.assignedTo !== creatorId) {
+        throw new ForbiddenError(
+          "Team member cannot assign tasks to other users",
+        );
+      }
+    }
+
     if (!data.projectId) throw new ValidationError("Project Id is required");
     const project = await this._projectRepo.findById(data.projectId);
     if (!project)
@@ -152,6 +171,18 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     await this._eventDispatcher.dispatch(TASK_EVENTS.CREATED, {
       task: newTask,
       creatorId,
+    });
+
+    // Synchronize Denormalized Stats
+    const totalTasks = (project.totalTasks || 0) + 1;
+    const completedTasks = project.completedTasks || 0;
+    const progress =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    await this._projectRepo.update(project.id, {
+      totalTasks,
+      completedTasks,
+      progress,
     });
 
     return newTask;

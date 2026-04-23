@@ -107,7 +107,12 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
     }
 
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([, value]) => value !== undefined),
+      Object.entries(data).filter(([key, value]) => {
+        if (value === null) {
+          return ["epicId", "sprintId", "parentTaskId"].includes(key);
+        }
+        return value !== undefined;
+      }),
     );
 
     const mergedTask = { ...task, ...filteredData } as Task;
@@ -232,6 +237,25 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       updaterId,
       changes: data,
     });
+
+    // Synchronize Denormalized Stats
+    if (data.status && data.status !== task.status) {
+      const project = await this._projectRepo.findById(task.projectId);
+      if (project) {
+        let newCompleted = project.completedTasks || 0;
+        if (data.status === "DONE") newCompleted++;
+        if (task.status === "DONE") newCompleted--;
+
+        const total = project.totalTasks || 0;
+        const progress =
+          total > 0 ? Math.round((newCompleted / total) * 100) : 0;
+
+        await this._projectRepo.update(project.id, {
+          completedTasks: newCompleted,
+          progress,
+        });
+      }
+    }
 
     return updated;
   }

@@ -138,6 +138,17 @@ export interface IUserReadRepo {
   findByIds(ids: string[]): Promise<User[]>;
 
   /**
+   * Find user by first name and organization (for mentions)
+   * @param firstName - User's first name
+   * @param orgId - Organization ID
+   * @returns User or null
+   */
+  findByFirstNameAndOrg?(
+    firstName: string,
+    orgId: string,
+  ): Promise<User | null>;
+
+  /**
    * @param orgId - Organization ID
    * @returns Organization or null
    */

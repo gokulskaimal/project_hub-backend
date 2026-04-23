@@ -38,8 +38,9 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
     if (!data.name) throw new ValidationError("Project name is required");
     this._authValidationService.validateProjectName(data.name);
 
-    // RBAC Check
+    // RBAC & Plan Check
     await this._securityService.validateOrgManager(userId, orgId);
+    await this._securityService.validatePlan(orgId);
 
     this._logger.info(`Checking subscription for userId: ${userId}`);
 

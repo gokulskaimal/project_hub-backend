@@ -15,24 +15,36 @@ export interface PlanDTO {
     members: number;
     storage?: number;
     messages?: number;
+    sprints?: number;
   };
   createdAt: string;
   updatedAt: string;
 }
 
 export function toPlanDTO(plan: Plan): PlanDTO {
+  const safeDate = (date: Date | string | number | undefined) =>
+    date instanceof Date && !isNaN(date.getTime())
+      ? date
+      : new Date(date || Date.now());
+
   return {
     id: plan.id,
     name: plan.name,
     description: plan.description,
     price: plan.price,
     currency: plan.currency,
-    features: [...plan.features],
+    features: [...(plan.features || [])],
     duration: plan.duration,
     type: plan.type,
     isActive: plan.isActive,
-    limits: { ...plan.limits },
-    createdAt: plan.createdAt.toISOString(),
-    updatedAt: plan.updatedAt.toISOString(),
+    limits: {
+      projects: plan.limits?.projects || 0,
+      members: plan.limits?.members || 0,
+      storage: plan.limits?.storage || 0,
+      messages: plan.limits?.messages || 0,
+      sprints: plan.limits?.sprints || 0,
+    },
+    createdAt: safeDate(plan.createdAt).toISOString(),
+    updatedAt: safeDate(plan.updatedAt).toISOString(),
   };
 }

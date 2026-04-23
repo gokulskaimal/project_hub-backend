@@ -20,8 +20,9 @@ const planSchema = new Schema(
     limits: {
       projects: { type: Number, required: true, default: 1 },
       members: { type: Number, required: true, default: 5 },
-      storage: { type: Number, required: true, default: 1 },
-      messages: { type: Number, required: true, default: 100 },
+      storage: { type: Number, default: 0 },
+      messages: { type: Number, default: 0 },
+      sprints: { type: Number, default: 0 },
     },
   },
   { timestamps: true },

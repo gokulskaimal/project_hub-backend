@@ -55,8 +55,9 @@ export class InviteMemberUseCase implements IInviteMemberUseCase {
 
     try {
       this._validateOrgId(orgId);
-      // RBAC Check
+      // RBAC & Plan Check
       await this._securityService.validateOrgManager(requesterId, orgId);
+      await this._securityService.validatePlan(orgId);
 
       this._authValidationService.validateEmail(email);
 

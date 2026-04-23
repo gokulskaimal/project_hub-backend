@@ -1,6 +1,9 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { IAnalyticsRepo } from "../../application/interface/repositories/IAnalyticsRepo";
+import {
+  IAnalyticsRepo,
+  EpicProgressItem,
+} from "../../application/interface/repositories/IAnalyticsRepo";
 import { IGetOrgAnalyticsUseCase } from "../interface/useCases/IGetOrgAnalyticsUseCase";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
@@ -49,7 +52,7 @@ export class GetOrgAnalyticsUseCase implements IGetOrgAnalyticsUseCase {
   async getEpicProgress(
     projectId: string,
     requesterId: string,
-  ): Promise<Record<string, unknown>[]> {
+  ): Promise<EpicProgressItem[]> {
     await this._securityService.validateProjectAccess(requesterId, projectId);
     return this._analyticsRepo.getEpicProgressReport(projectId);
   }

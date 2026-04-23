@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { IDeleteTaskUseCase } from "../interface/useCases/IDeleteTaskUseCase";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../application/interface/services/ILogger";
@@ -19,6 +20,7 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.IFileService) private _fileService: IFileService,
+    @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
   ) {}
 
   async execute(id: string, requesterId: string): Promise<boolean> {
@@ -57,6 +59,24 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
       deleterId: requesterId,
       taskTitle: task.title,
     });
+
+    // Synchronize Denormalized Stats
+    const project = await this._projectRepo.findById(task.projectId);
+    if (project) {
+      const totalTasks = Math.max(0, (project.totalTasks || 0) - 1);
+      let completedTasks = project.completedTasks || 0;
+      if (task.status === "DONE")
+        completedTasks = Math.max(0, completedTasks - 1);
+
+      const progress =
+        totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      await this._projectRepo.update(project.id, {
+        totalTasks,
+        completedTasks,
+        progress,
+      });
+    }
 
     return true;
   }

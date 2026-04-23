@@ -4,13 +4,24 @@ export interface IGetTaskUseCase {
   execute(
     projectId: string,
     requesterId: string,
-    filters?: { epicId?: string; parentTaskId?: string },
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
   ): Promise<Task[]>;
   executePaginated(
     projectId: string,
     requesterId: string,
     limit: number,
     offset: number,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
   ): Promise<{ tasks: Task[]; total: number }>;
 }
 

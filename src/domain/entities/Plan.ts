@@ -14,6 +14,7 @@ export interface Plan {
     members: number;
     storage?: number;
     messages?: number;
+    sprints?: number;
   };
   createdAt: Date;
   updatedAt: Date;

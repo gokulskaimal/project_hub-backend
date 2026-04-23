@@ -4,6 +4,8 @@ export interface TaskDTO {
   id: string;
   projectId: string;
   orgId: string;
+  epicId?: string;
+  taskKey?: string;
   title: string;
   description?: string;
   status: string;
@@ -46,6 +48,8 @@ export function toTaskDTO(task: Task): TaskDTO {
     id: task.id,
     projectId: task.projectId,
     orgId: task.orgId,
+    epicId: task.epicId ?? undefined,
+    taskKey: task.taskKey ?? undefined,
     title: task.title,
     description: task.description ?? undefined,
     status: task.status,

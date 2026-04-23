@@ -51,4 +51,10 @@ export interface ISecurityService {
    * Throws ValidationError if not.
    */
   validateMembersBelongToOrg(memberIds: string[], orgId: string): Promise<void>;
+
+  /**
+   * Verify that an organization has an active and unexpired plan.
+   * Throws ForbiddenError or ValidationError if not.
+   */
+  validatePlan(orgId: string): Promise<void>;
 }

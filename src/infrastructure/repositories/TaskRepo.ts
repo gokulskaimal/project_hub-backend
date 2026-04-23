@@ -25,6 +25,13 @@ export class TaskRepo
     const orgId = obj.orgId || doc.get("orgId") || raw.orgId;
     const parentTaskId =
       obj.parentTaskId || doc.get("parentTaskId") || raw.parentTaskId;
+    const epicId = obj.epicId || doc.get("epicId") || raw.epicId;
+
+    if (epicId) {
+      console.log(
+        `[TaskRepo] Mapping Task ${obj.taskKey} with EpicId: ${epicId}`,
+      );
+    }
 
     return {
       id: doc._id.toString(),
@@ -60,7 +67,7 @@ export class TaskRepo
       completedAt: obj.completedAt,
       createdBy: createdBy?.toString(),
       parentTaskId: parentTaskId?.toString(),
-      epicId: obj.epicId?.toString(),
+      epicId: epicId?.toString(),
       dependencies: obj.dependencies || [],
       acceptanceCriteria: obj.acceptanceCriteria || [],
     } as Task;
@@ -146,21 +153,80 @@ export class TaskRepo
     return await this.model.countDocuments({ orgId });
   }
 
+  private _buildQuery(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Record<string, unknown> {
+    const query: Record<string, unknown> = { projectId };
+    if (filters?.epicId) {
+      query.epicId = filters.epicId;
+    }
+    if (filters?.parentTaskId) {
+      query.parentTaskId = filters.parentTaskId;
+    }
+    if (filters?.type) {
+      query.type = filters.type;
+    }
+    if (filters?.isInBacklog) {
+      query.sprintId = null;
+      if (!filters.type) {
+        query.type = { $ne: "EPIC" };
+      }
+    }
+    console.log("[TaskRepo] Final Query:", JSON.stringify(query, null, 2));
+    return query;
+  }
+
   async findPaginatedByProject(
     projectId: string,
     limit: number,
     offset: number,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
   ): Promise<Task[]> {
+    const query = this._buildQuery(projectId, filters);
     const docs = await this.model
-      .find({ projectId })
+      .find(query)
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit);
     return docs.map((d) => this.toDomain(d));
   }
 
-  async countByProject(projectId: string): Promise<number> {
-    return await this.model.countDocuments({ projectId });
+  async findAllByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<Task[]> {
+    const query = this._buildQuery(projectId, filters);
+    const docs = await this.model.find(query).sort({ createdAt: -1 });
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async countByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<number> {
+    const query = this._buildQuery(projectId, filters);
+    return await this.model.countDocuments(query);
   }
 
   async findByParent(parentId: string): Promise<Task[]> {

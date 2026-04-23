@@ -786,12 +786,6 @@ class DIContainer {
   }
 
   private _bindControllers(): void {
-    /*
-    this._container
-      .bind<AuthController>(TYPES.AuthController)
-      .to(AuthController)
-      .inSingletonScope();
-    */
     this._container
       .bind<SessionController>(TYPES.SessionController)
       .to(SessionController)

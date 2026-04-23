@@ -122,12 +122,39 @@ export class TaskController {
 
   getAllTasks = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
-    const { epicId, parentTaskId } = req.query;
+    const { epicId, parentTaskId, page, limit, isInBacklog, type } = req.query;
     const authReq = req as AuthenticatedRequest;
     this._logger.info(`Fetching tasks for Project ${projectId}`);
+
+    if (page && limit) {
+      const p = parseInt(page as string) || 1;
+      const l = parseInt(limit as string) || 10;
+      const offset = (p - 1) * l;
+      const result = await this._getTaskUC.executePaginated(
+        projectId,
+        authReq.user!.id,
+        l,
+        offset,
+        {
+          epicId: epicId as string,
+          parentTaskId: parentTaskId as string,
+          isInBacklog: isInBacklog === "true",
+          type: type as string,
+        },
+      );
+      return ResponseHandler.success(res, {
+        items: result.tasks.map(toTaskDTO),
+        total: result.total,
+        page: p,
+        limit: l,
+        totalPages: Math.ceil(result.total / l),
+      });
+    }
     const tasks = await this._getTaskUC.execute(projectId, authReq.user!.id, {
       epicId: epicId as string,
       parentTaskId: parentTaskId as string,
+      isInBacklog: isInBacklog === "true",
+      type: type as string,
     });
     ResponseHandler.success(res, tasks.map(toTaskDTO));
   });
@@ -190,6 +217,10 @@ export class TaskController {
 
     const validation = TaskUpdateSchema.safeParse(req.body);
     if (!validation.success) {
+      console.error(
+        "[TaskController] Validation Failed:",
+        JSON.stringify(validation.error.format(), null, 2),
+      );
       return ResponseHandler.validationError(res, validation.error.format());
     }
 

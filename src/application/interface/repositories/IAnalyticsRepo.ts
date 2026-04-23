@@ -1,5 +1,53 @@
 import { TimeFrame } from "../../../utils/DateUtils";
 
+export interface StatusDistributionItem {
+  status: string;
+  count: number;
+}
+
+export interface PerformanceMetric {
+  userId: string;
+  name: string;
+  storyPoints: number;
+  taskCount: number;
+}
+
+export interface MonthlyVelocityItem {
+  month: string;
+  points: number;
+}
+
+export interface ProjectHealthItem {
+  id: string;
+  name: string;
+  overdueCount: number;
+  totalActiveTasks: number;
+  health: "GREEN" | "AMBER" | "RED";
+}
+
+export interface MemberWorkloadItem {
+  name: string;
+  taskCount: number;
+  totalPoints: number;
+}
+
+export interface ProjectProgressItem {
+  id: string;
+  name: string;
+  totalTasks: number;
+  completedTasks: number;
+  progress: number;
+}
+
+export interface EpicProgressItem {
+  id: string;
+  title: string;
+  status: string;
+  totalStories: number;
+  completedStories: number;
+  progress: number;
+}
+
 export interface IAnalyticsRepo {
   getGlobalUserStats(): Promise<{
     total: number;
@@ -12,7 +60,7 @@ export interface IAnalyticsRepo {
   }>;
 
   getOrgStats(): Promise<{
-    statusDistribution: Array<{ status: string; count: number }>;
+    statusDistribution: StatusDistributionItem[];
     planPerformance: Array<{ planName: string; count: number }>;
   }>;
 
@@ -22,22 +70,25 @@ export interface IAnalyticsRepo {
     inactive: number;
   }>;
 
-  // Task & Performance Stats (Moved from TaskRepo)
+  // Task & Performance Stats
   getTaskStatusDistribution(
     orgId: string,
     userId?: string,
     timeFrame?: TimeFrame,
-  ): Promise<Array<{ status: string; count: number }>>;
+  ): Promise<StatusDistributionItem[]>;
+
   getMonthlyVelocity(
     orgId: string,
     userId?: string,
     timeFrame?: TimeFrame,
-  ): Promise<Array<{ month: string; points: number }>>;
+  ): Promise<MonthlyVelocityItem[]>;
+
   getTopPerformers(
     orgId: string,
     limit: number,
     timeFrame?: TimeFrame,
-  ): Promise<Record<string, unknown>[]>;
+  ): Promise<PerformanceMetric[]>;
+
   getDonePointsInRange(
     scope: "user" | "project",
     id: string,
@@ -46,8 +97,8 @@ export interface IAnalyticsRepo {
   ): Promise<number>;
 
   getProjectStats(orgId: string): Promise<Record<string, number>>;
-  getProjectProgressReport(orgId: string): Promise<Record<string, unknown>[]>;
-  getEpicProgressReport(projectId: string): Promise<Record<string, unknown>[]>;
+  getProjectProgressReport(orgId: string): Promise<ProjectProgressItem[]>;
+  getEpicProgressReport(projectId: string): Promise<EpicProgressItem[]>;
   getRevenueStats(
     orgId?: string,
     timeFrame?: TimeFrame,
@@ -58,6 +109,8 @@ export interface IAnalyticsRepo {
   >;
 
   getInvitationStats(orgId?: string): Promise<Record<string, number>>;
+  getProjectHealthReport(orgId: string): Promise<ProjectHealthItem[]>;
+  getMemberWorkloadReport(orgId: string): Promise<MemberWorkloadItem[]>;
 
   // Cross-collection Enrichment
   getUserCountsByOrgIds(orgIds: string[]): Promise<Map<string, number>>;
