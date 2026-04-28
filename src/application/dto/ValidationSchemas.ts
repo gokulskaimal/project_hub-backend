@@ -158,6 +158,7 @@ export const SprintUpdateSchema = z
     status: z
       .enum(["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED", "PLANNING"])
       .optional(),
+    spilloverDestination: z.string().nullable().optional(),
   })
   .refine(
     (data) => {

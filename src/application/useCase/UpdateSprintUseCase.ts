@@ -30,10 +30,11 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
 
   async execute(
     id: string,
-    updateData: Partial<Sprint>,
+    updateData: Partial<Sprint> & { spilloverDestination?: string },
     requesterId: string,
   ): Promise<Sprint> {
     this._logger.info(`Updating sprint ${id} by user ${requesterId}`);
+    const { spilloverDestination, ...sprintData } = updateData;
 
     const oldSprint = await this._sprintRepo.findById(id);
     if (!oldSprint) throw new EntityNotFoundError("Sprint", id);
@@ -49,6 +50,30 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
         await this._securityService.validateSuperAdmin(requesterId);
       } catch {
         throw new Error("Completed sprints are locked and cannot be modified.");
+      }
+    }
+
+    if (sprintData.status == "COMPLETED") {
+      const tasks = await this._taskRepo.findAll({ sprintId: id });
+      const unfinishedTasks = tasks.filter(
+        (t) => t.status !== "DONE" && t.type !== "EPIC",
+      );
+      if (unfinishedTasks.length > 0) {
+        if (spilloverDestination) {
+          const destinationId =
+            spilloverDestination == "BACKLOG" ? null : spilloverDestination;
+          await this._taskRepo.bulkUpdateSprint(
+            { sprintId: id, status: { $ne: "DONE" }, type: { $ne: "EPIC" } },
+            destinationId,
+          );
+          this._logger.info(
+            `Migrated ${unfinishedTasks.length} tasks to ${spilloverDestination}`,
+          );
+        } else {
+          throw new Error(
+            `Cannot complete sprint: There are ${unfinishedTasks.length} task(s) that are not 'DONE'. Please complete all tasks or move them out of the sprint first.`,
+          );
+        }
       }
     }
 
@@ -84,7 +109,7 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
       }
     }
 
-    const updatedSprint = await this._sprintRepo.update(id, updateData);
+    const updatedSprint = await this._sprintRepo.update(id, sprintData);
     if (!updatedSprint) throw new EntityNotFoundError("Sprint", id);
 
     // DISPATCH EVENT - Side effects handled in SprintEventSubscriber
@@ -94,19 +119,6 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
       updaterId: requesterId,
       changes: updateData,
     });
-
-    if (updateData.status === "COMPLETED") {
-      const tasks = await this._taskRepo.findAll({ sprintId: id });
-      const unfinishedTasksCount = tasks.filter(
-        (t) => t.status !== "DONE" && t.type !== "EPIC",
-      ).length;
-
-      if (unfinishedTasksCount > 0) {
-        throw new Error(
-          `Cannot complete sprint: There are ${unfinishedTasksCount} task(s) that are not 'DONE'. Please complete all tasks or move them out of the sprint first.`,
-        );
-      }
-    }
 
     return updatedSprint;
   }

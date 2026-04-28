@@ -1,14 +1,18 @@
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../infrastructure/container/types";
 import { BaseRepository } from "./BaseRepo";
 import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
 import { TaskModel, ITaskDoc } from "../models/TaskModel";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { Model } from "mongoose";
 
+@injectable()
 export class TaskRepo
   extends BaseRepository<Task, ITaskDoc>
   implements ITaskRepo
 {
-  constructor() {
+  constructor(@inject(TYPES.ILogger) private readonly _logger: ILogger) {
     super(TaskModel as unknown as Model<ITaskDoc>);
   }
 
@@ -237,5 +241,24 @@ export class TaskRepo
   async findByEpic(epicId: string): Promise<Task[]> {
     const docs = await this.model.find({ epicId: epicId });
     return docs.map((d) => this.toDomain(d));
+  }
+
+  async bulkUpdateSprint(
+    filter: {
+      sprintId: string;
+      status: { $ne: string };
+      type?: { $ne: string };
+    },
+    newSprintId: string | null,
+  ): Promise<number> {
+    try {
+      const result = await this.model.updateMany(filter, {
+        $set: { sprintId: newSprintId, updatedAt: new Date() },
+      });
+      return result.modifiedCount;
+    } catch (error) {
+      this._logger.error("Error in bulkUpdateSprint", error as Error);
+      throw error;
+    }
   }
 }

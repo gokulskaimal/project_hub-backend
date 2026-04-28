@@ -123,7 +123,7 @@ import { TaskDomainService } from "../../domain/services/TaskDomainService";
 import { AuthValidationService } from "../services/AuthValidationService";
 import { SecurityService } from "../services/SecurityService";
 import { TimeTrackingService } from "../../domain/services/TimeTrackingService";
-import { NotificationService } from "../../domain/services/NotificationService";
+import { NotificationService } from "../services/NotificationService";
 import { SprintDomainService } from "../../domain/services/SprintDomainService";
 import { EventDispatcher } from "../services/EventDispatcher";
 

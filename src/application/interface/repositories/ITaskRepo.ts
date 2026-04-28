@@ -57,4 +57,12 @@ export interface ITaskRepo extends IBaseRepository<Task> {
 
   findByParent(parentId: string): Promise<Task[]>;
   findByEpic(epicId: string): Promise<Task[]>;
+  bulkUpdateSprint(
+    filter: {
+      sprintId: string;
+      status: { $ne: string };
+      type?: { $ne: string };
+    },
+    newSprintId: string | null,
+  ): Promise<number>;
 }
