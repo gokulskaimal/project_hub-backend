@@ -153,7 +153,8 @@ export const SprintUpdateSchema = z
       .optional(),
     endDate: z
       .string()
-      .refine((date) => !isNaN(Date.parse(date)), "Invalid end date"),
+      .refine((date) => !isNaN(Date.parse(date)), "Invalid end date")
+      .optional(),
     goal: z.string().nullable().optional(),
     status: z
       .enum(["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED", "PLANNING"])

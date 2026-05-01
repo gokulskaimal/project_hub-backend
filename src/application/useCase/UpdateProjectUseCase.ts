@@ -61,6 +61,10 @@ export class UpdateProjectUseCase implements IUpdateProjectUseCase {
       );
     }
 
+    if (data.status === "COMPLETED" && oldProject.status !== "COMPLETED") {
+      data.progress = 100;
+    }
+
     this._logger.info(`Updating project ${id}`);
     const updated = await this._projectRepo.update(id, data);
     if (!updated) {

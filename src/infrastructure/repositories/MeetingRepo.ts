@@ -75,13 +75,11 @@ export class MeetingRepo
     const now = new Date();
 
     if (status === "SCHEDULED") {
-      // Future meetings or ones explicitly marked SCHEDULED
       query.$or = [
         { status: { $in: ["SCHEDULED", "LIVE"] } },
         { scheduledAt: { $gte: now }, status: { $ne: "COMPLETED" } },
       ];
     } else if (status === "HISTORY") {
-      // Completed meetings or past meetings
       query.$or = [
         { status: "COMPLETED" },
         { scheduledAt: { $lt: now }, status: { $ne: "LIVE" } },
