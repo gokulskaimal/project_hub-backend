@@ -36,6 +36,7 @@ import { INotificationRepo } from "../../application/interface/repositories/INot
 import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 import { IAnalyticsRepo } from "../../application/interface/repositories/IAnalyticsRepo";
+import { IMeetingRepo } from "../../application/interface/repositories/IMeetingRepo";
 
 //Interfaces - Use Cases
 import { ILoginUseCase } from "../../application/interface/useCases/ILoginUseCase";
@@ -101,6 +102,12 @@ import { ICreateNotificationUseCase } from "../../application/interface/useCases
 import { IGetProjectMembersUseCase } from "../../application/interface/useCases/IGetProjectMembersUseCase";
 import { IInvitationQueryUseCase } from "../../application/interface/useCases/IInvitationQueryUseCase";
 import { IGetOrgAnalyticsUseCase } from "../../application/interface/useCases/IGetOrgAnalyticsUseCase";
+import { ICreateMeetingUseCase } from "../../application/interface/useCases/ICreateMeetingUseCase";
+import { IGetMyMeetingsUseCase } from "../../application/interface/useCases/IGetMyMeetingsUseCase";
+import { IUpdateMeetingUseCase } from "../../application/interface/useCases/IUpdateMeetingUseCase";
+import { IDeleteMeetingUseCase } from "../../application/interface/useCases/IDeleteMeetingUseCase";
+import { IGetSprintMeetingUseCase } from "../../application/interface/useCases/IGetSprintMeetingUseCase";
+import { ICompleteMeetingUseCase } from "../../application/interface/useCases/ICompleteMeetingUseCase";
 
 // Infrastructure Implementations - Services
 import { Logger } from "../services/Logger";
@@ -133,6 +140,7 @@ import { TaskEventSubscriber } from "../subscribers/TaskEventSubscriber";
 import { ProjectEventSubscriber } from "../subscribers/ProjectEventSubscriber";
 import { SprintEventSubscriber } from "../subscribers/SprintEventSubscriber";
 import { ChatEventSubscriber } from "../subscribers/ChatEventSubscriber";
+import { MeetingEventSubscriber } from "../subscribers/MeetingEventSubscriber";
 
 // Infrastructure Implementations - Repositories
 import { UserRepo } from "../repositories/UserRepo";
@@ -148,6 +156,7 @@ import { ITaskHistoryRepo } from "../../application/interface/repositories/ITask
 import { TaskHistoryRepo } from "../repositories/TaskHistoryRepo";
 import { InvoiceRepo } from "../repositories/InvoiceRepo";
 import { AnalyticsRepo } from "../repositories/AnalyticsRepo";
+import { MeetingRepo } from "../repositories/MeetingRepo";
 
 // Application Use Cases
 import { LoginUseCase } from "../../application/useCase/LoginUseCase";
@@ -212,7 +221,12 @@ import { GetOrgTasksUseCase } from "../../application/useCase/GetOrgTasksUseCase
 import { GetUserVelocityUseCase } from "../../application/useCase/GetUserVelocityUseCase";
 import { ToggleTimerUseCase } from "../../application/useCase/ToggleTimerUseCase";
 import { GetProjectMembersUseCase } from "../../application/useCase/GetProjectMembersUseCase";
-
+import { CreateMeetingUseCase } from "../../application/useCase/CreateMeetingUseCase";
+import { UpdateMeetingUseCase } from "../../application/useCase/UpdateMeeting";
+import { GetMyMeetingsUseCase } from "../../application/useCase/GetMyMeetings";
+import { GetSprintMeetingUseCase } from "../../application/useCase/GetSprintMeetingUseCase";
+import { DeleteMeetingUseCase } from "../../application/useCase/DeleteMeetingUseCase";
+import { CompleteMeetingUseCase } from "../../application/useCase/CompleteMeetingUseCase";
 // Presentation Controllers
 import { SessionController } from "../../presentation/controllers/auth/SessionController";
 import { RegistrationController } from "../../presentation/controllers/auth/RegistrationController";
@@ -236,6 +250,7 @@ import { NotificationController } from "../../presentation/controllers/Notificat
 import { ChatController } from "../../presentation/controllers/ChatController";
 import { UploadController } from "../../presentation/controllers/UploadController";
 import { SprintController } from "../../presentation/controllers/manager/SprintController";
+import { MeetingController } from "../../presentation/controllers/manager/MeetingController";
 
 // Chat Interfaces
 import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
@@ -420,6 +435,11 @@ class DIContainer {
       .bind<ChatEventSubscriber>(TYPES.ChatEventSubscriber)
       .to(ChatEventSubscriber)
       .inSingletonScope();
+
+    this._container
+      .bind<MeetingEventSubscriber>(TYPES.MeetingEventSubscriber)
+      .to(MeetingEventSubscriber)
+      .inSingletonScope();
   }
 
   private _bindRepositories(): void {
@@ -480,6 +500,10 @@ class DIContainer {
     this._container
       .bind<IInvoiceRepo>(TYPES.IInvoiceRepo)
       .to(InvoiceRepo)
+      .inSingletonScope();
+    this._container
+      .bind<IMeetingRepo>(TYPES.IMeetingRepo)
+      .to(MeetingRepo)
       .inSingletonScope();
   }
 
@@ -783,6 +807,30 @@ class DIContainer {
       .bind<IGetOrgAnalyticsUseCase>(TYPES.IGetOrgAnalyticsUseCase)
       .to(GetOrgAnalyticsUseCase)
       .inTransientScope();
+    this._container
+      .bind<ICreateMeetingUseCase>(TYPES.ICreateMeetingUseCase)
+      .to(CreateMeetingUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IGetSprintMeetingUseCase>(TYPES.IGetSprintMeetingsUseCase)
+      .to(GetSprintMeetingUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IUpdateMeetingUseCase>(TYPES.IUpdateMeetingUseCase)
+      .to(UpdateMeetingUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IGetMyMeetingsUseCase>(TYPES.IGetMyMeetingsUseCase)
+      .to(GetMyMeetingsUseCase)
+      .inTransientScope();
+    this._container
+      .bind<ICompleteMeetingUseCase>(TYPES.ICompleteMeetingUseCase)
+      .to(CompleteMeetingUseCase)
+      .inTransientScope();
+    this._container
+      .bind<IDeleteMeetingUseCase>(TYPES.IDeleteMeetingUseCase)
+      .to(DeleteMeetingUseCase)
+      .inTransientScope();
   }
 
   private _bindControllers(): void {
@@ -872,6 +920,10 @@ class DIContainer {
     this._container
       .bind<SprintController>(TYPES.SprintController)
       .to(SprintController)
+      .inSingletonScope();
+    this._container
+      .bind<MeetingController>(TYPES.MeetingController)
+      .to(MeetingController)
       .inSingletonScope();
   }
 

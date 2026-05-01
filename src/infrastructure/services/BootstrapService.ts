@@ -25,6 +25,8 @@ export class BootstrapService implements IBootstrapService {
     private readonly _sprintSubscriber: IEventSubscriber,
     @inject(TYPES.ChatEventSubscriber)
     private readonly _chatSubscriber: IEventSubscriber,
+    @inject(TYPES.MeetingEventSubscriber)
+    private readonly _meetingSubscriber: IEventSubscriber,
   ) {}
 
   public async run(): Promise<void> {
@@ -33,6 +35,7 @@ export class BootstrapService implements IBootstrapService {
     this._projectSubscriber.init();
     this._sprintSubscriber.init();
     this._chatSubscriber.init();
+    this._meetingSubscriber.init();
 
     try {
       const email = this.config.bootstrap.adminEmail;

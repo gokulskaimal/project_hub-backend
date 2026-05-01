@@ -64,6 +64,14 @@ export const API_ROUTES = {
     SPRINTS: (projectId: string) => `/projects/${projectId}/sprints`,
     SPRINT_UPDATE: (id: string) => `/projects/sprints/${id}`,
     SPRINT_DELETE: (id: string) => `/projects/sprints/${id}`,
+    MEETINGS_CREATE: "/projects/meetings",
+    MEETINGS_BY_SPRINT: (sprintId: string) =>
+      `/projects/meetings/sprint/${sprintId}`,
+    MY_MEETINGS: "/projects/meetings/my-meetings",
+    MEETINGS_COMPLETE: (roomId: string) =>
+      `/projects/meetings/${roomId}/complete`,
+    MEETINGS_DELETE: (roomId: string) => `/projects/meetings/${roomId}`,
+    MEETINGS_UPDATE: (roomId: string) => `/projects/meetings/${roomId}`,
   },
   USER: {
     BASE: "/user",

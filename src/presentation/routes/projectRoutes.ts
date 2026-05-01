@@ -3,6 +3,7 @@ import { Container } from "inversify";
 import { ProjectController } from "../controllers/manager/ProjectController";
 import { TaskController } from "../controllers/manager/TaskController";
 import { SprintController } from "../controllers/manager/SprintController";
+import { MeetingController } from "../controllers/manager/MeetingController";
 import { TYPES } from "../../infrastructure/container/types";
 import { authMiddleware } from "../middleware/AuthMiddleware";
 import { roleMiddleware } from "../middleware/RoleMiddleware";
@@ -14,6 +15,7 @@ export function createProjectRoutes(container: Container): Router {
   const projectCtrl = container.get<ProjectController>(TYPES.ProjectController);
   const taskCtrl = container.get<TaskController>(TYPES.TaskController);
   const sprintCtrl = container.get<SprintController>(TYPES.SprintController);
+  const meetingCtrl = container.get<MeetingController>(TYPES.MeetingController);
 
   router.use(API_ROUTES.PROJECTS.BASE, authMiddleware);
 
@@ -109,6 +111,39 @@ export function createProjectRoutes(container: Container): Router {
     API_ROUTES.PROJECTS.SPRINT_DELETE(":id"),
     roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
     (req, res, next) => sprintCtrl.deleteSprint(req, res, next),
+  );
+
+  // Meetings
+  router.post(
+    API_ROUTES.PROJECTS.MEETINGS_CREATE,
+    roleMiddleware([UserRole.ORG_MANAGER]),
+    (req, res, next) => meetingCtrl.createMeeting(req, res, next),
+  );
+
+  router.get(API_ROUTES.PROJECTS.MY_MEETINGS, (req, res, next) =>
+    meetingCtrl.getMyMeetings(req, res, next),
+  );
+
+  router.get(
+    API_ROUTES.PROJECTS.MEETINGS_BY_SPRINT(":sprintId"),
+    (req, res, next) => meetingCtrl.getSprintMeetings(req, res, next),
+  );
+
+  router.patch(
+    API_ROUTES.PROJECTS.MEETINGS_COMPLETE(":roomId"),
+    (req, res, next) => meetingCtrl.completeMeeting(req, res, next),
+  );
+
+  router.put(
+    API_ROUTES.PROJECTS.MEETINGS_UPDATE(":roomId"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => meetingCtrl.updateMeeting(req, res, next),
+  );
+
+  router.delete(
+    API_ROUTES.PROJECTS.MEETINGS_DELETE(":roomId"),
+    roleMiddleware([UserRole.ORG_MANAGER, UserRole.SUPER_ADMIN]),
+    (req, res, next) => meetingCtrl.deleteMeeting(req, res, next),
   );
 
   return router;

@@ -32,6 +32,7 @@ export const TYPES = {
   IChatRepo: Symbol.for("IChatRepo"),
   ISprintRepo: Symbol.for("ISprintRepo"),
   ITaskHistoryRepo: Symbol.for("ITaskHistoryRepo"),
+  IMeetingRepo: Symbol.for("IMeetingRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -100,6 +101,13 @@ export const TYPES = {
   IGetProjectMembersUseCase: Symbol.for("IGetProjectMembersUseCase"),
   IInvitationQueryUseCase: Symbol.for("IInvitationQueryUseCase"),
   IGetOrgAnalyticsUseCase: Symbol.for("IGetOrgAnalyticsUseCase"),
+  ICreateMeetingUseCase: Symbol.for("ICreateMeetingUseCase"),
+  IGetMeetingUseCase: Symbol.for("IGetMeetingUseCase"),
+  IGetSprintMeetingsUseCase: Symbol.for("IGetSprintMeetingsUseCase"),
+  IUpdateMeetingUseCase: Symbol.for("IUpdateMeetingUseCase"),
+  IGetMyMeetingsUseCase: Symbol.for("IGetMyMeetingsUseCase"),
+  ICompleteMeetingUseCase: Symbol.for("ICompleteMeetingUseCase"),
+  IDeleteMeetingUseCase: Symbol.for("IDeleteMeetingUseCase"),
 
   // ===== CONTROLLERS =====
   // AuthController: Symbol.for("AuthController"),
@@ -124,6 +132,7 @@ export const TYPES = {
   SprintController: Symbol.for("SprintController"),
   AdminInvoiceController: Symbol.for("AdminInvoiceController"),
   ManagerInvoiceController: Symbol.for("ManagerInvoiceController"),
+  MeetingController: Symbol.for("MeetingController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),
@@ -153,6 +162,7 @@ export const TYPES = {
   ProjectEventSubscriber: Symbol.for("ProjectEventSubscriber"),
   SprintEventSubscriber: Symbol.for("SprintEventSubscriber"),
   ChatEventSubscriber: Symbol.for("ChatEventSubscriber"),
+  MeetingEventSubscriber: Symbol.for("MeetingEventSubscriber"),
 } as const;
 
 /**
