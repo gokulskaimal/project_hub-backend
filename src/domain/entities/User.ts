@@ -16,6 +16,7 @@ export interface User {
   googleId?: string;
   avatar?: string | null;
   orgId?: string;
+  organizationName?: string;
   otp?: string;
   otpExpiry?: Date;
   emailVerified: boolean;
@@ -28,7 +29,11 @@ export interface User {
     | "PENDING_APPROVAL";
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
   createdAt: Date;
   updatedAt?: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
   lastLoginAt?: Date;
 }

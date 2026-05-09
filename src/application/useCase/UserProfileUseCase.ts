@@ -219,10 +219,7 @@ export class UserProfileUseCase implements IUserProfileUseCase {
         throw new InvalidCredentialsError();
       }
 
-      await this._userRepo.update(userId, {
-        status: "INACTIVE",
-        email: `deleted_${Date.now()}_${user.email}`,
-      });
+      await this._userRepo.softDelete(userId);
 
       this._logger.info("Account deleted successfully", { userId });
     } catch (error) {

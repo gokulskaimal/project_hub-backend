@@ -4,6 +4,8 @@ export interface TaskDTO {
   id: string;
   projectId: string;
   orgId: string;
+  epicId?: string;
+  taskKey?: string;
   title: string;
   description?: string;
   status: string;
@@ -46,24 +48,26 @@ export function toTaskDTO(task: Task): TaskDTO {
     id: task.id,
     projectId: task.projectId,
     orgId: task.orgId,
+    epicId: task.epicId ?? undefined,
+    taskKey: task.taskKey ?? undefined,
     title: task.title,
-    description: task.description,
+    description: task.description ?? undefined,
     status: task.status,
     priority: task.priority,
     type: task.type,
-    storyPoints: task.storyPoints || 0,
-    sprintId: task.sprintId || undefined,
-    sprintAssignedAt: toIso(task.sprintAssignedAt),
-    assignedTo: task.assignedTo,
-    dueDate: toIso(task.dueDate),
+    storyPoints: task.storyPoints ?? 0,
+    sprintId: task.sprintId ?? undefined,
+    sprintAssignedAt: toIso(task.sprintAssignedAt || undefined),
+    assignedTo: task.assignedTo ?? undefined,
+    dueDate: toIso(task.dueDate || undefined),
     createdAt: toIso(task.createdAt) as string,
     updatedAt: toIso(task.updatedAt),
-    completedAt: toIso(task.completedAt),
+    completedAt: toIso(task.completedAt || undefined),
     attachments: task.attachments || [],
     comments: task.comments || [],
-    parentTaskId: task.parentTaskId,
+    parentTaskId: task.parentTaskId ?? undefined,
     dependencies: task.dependencies || [],
     timeLogs: task.timeLogs || [],
-    totalTimeSpent: task.totalTimeSpent || 0,
+    totalTimeSpent: task.totalTimeSpent ?? 0,
   };
 }

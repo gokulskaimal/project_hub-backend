@@ -46,25 +46,28 @@ export class InviteRepo
   }
 
   async findByToken(token: string): Promise<Invite | null> {
-    const doc = await this.model.findOne({ token });
+    const doc = await this.model.findOne({ token, isDeleted: { $ne: true } });
     return doc ? this.toDomain(doc) : null;
   }
 
   async delete(token: string): Promise<boolean> {
-    const result = await this.model.findOneAndDelete({ token });
+    const result = await this.model.findOneAndUpdate(
+      { token, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
     return !!result;
   }
 
   async markAccepted(token: string): Promise<void> {
     await this.model.findOneAndUpdate(
-      { token },
+      { token, isDeleted: { $ne: true } },
       { status: "ACCEPTED", acceptedAt: new Date() },
     );
   }
 
   async expire(token: string): Promise<void> {
     await this.model.findOneAndUpdate(
-      { token },
+      { token, isDeleted: { $ne: true } },
       { status: "EXPIRED", updatedAt: new Date() },
     );
   }
@@ -78,12 +81,15 @@ export class InviteRepo
       orgId,
       status: "PENDING",
       expiry: { $gt: new Date() },
+      isDeleted: { $ne: true },
     });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findByOrganization(orgId: string): Promise<Invite[]> {
-    const docs = await this.model.find({ orgId }).sort({ createdAt: -1 });
+    const docs = await this.model
+      .find({ orgId, isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -92,32 +98,42 @@ export class InviteRepo
       orgId,
       status: "PENDING",
       expiry: { $gt: new Date() },
+      isDeleted: { $ne: true },
     });
     return docs.map((d) => this.toDomain(d));
   }
 
   async markCancelled(token: string): Promise<void> {
     await this.model.findOneAndUpdate(
-      { token },
+      { token, isDeleted: { $ne: true } },
       { status: "CANCELLED", cancelledAt: new Date() },
     );
   }
 
   async markCancelledById(id: string): Promise<void> {
-    await this.model.findByIdAndUpdate(id, {
-      status: "CANCELLED",
-      cancelledAt: new Date(),
-    });
+    await this.model.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
+      { status: "CANCELLED", cancelledAt: new Date() },
+    );
   }
 
   async deleteById(id: string): Promise<boolean> {
-    const result = await this.model.findByIdAndDelete(id);
+    const result = await this.model.findByIdAndUpdate(id, {
+      isDeleted: true,
+      deletedAt: new Date(),
+    });
     return !!result;
   }
 
   async deleteByOrganization(orgId: string): Promise<number> {
-    const result = await this.model.deleteMany({ orgId });
-    return result.deletedCount;
+    const result = await this.model.updateMany(
+      { orgId },
+      {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    );
+    return result.modifiedCount;
   }
 
   async expireOldInvitations(): Promise<number> {
@@ -135,7 +151,11 @@ export class InviteRepo
   }
 
   async isValidInvitation(token: string): Promise<boolean> {
-    const doc = await this.model.findOne({ token, status: "PENDING" });
+    const doc = await this.model.findOne({
+      token,
+      status: "PENDING",
+      isDeleted: { $ne: true },
+    });
     if (!doc) return false;
 
     if (doc.expiry < new Date()) {
@@ -145,40 +165,28 @@ export class InviteRepo
     return true;
   }
 
-  async getInvitationStats(orgId: string): Promise<{
-    total: number;
-    pending: number;
-    accepted: number;
-    expired: number;
-    cancelled: number;
-  }> {
-    const stats = await this.model.aggregate([
-      { $match: { orgId } },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
+  async findPaginated(
+    limit: number,
+    offset: number,
+    searchTerm?: string,
+    filters?: { orgId?: string; status?: string },
+  ): Promise<{ invites: Invite[]; total: number }> {
+    const query: Record<string, unknown> = { isDeleted: { $ne: true } };
+    if (filters?.orgId) query.orgId = filters.orgId;
+    if (filters?.status && filters.status !== "ALL")
+      query.status = filters.status;
+    if (searchTerm) {
+      query.email = { $regex: searchTerm, $options: "i" };
+    }
+
+    const [docs, total] = await Promise.all([
+      this.model.find(query).sort({ createdAt: -1 }).skip(offset).limit(limit),
+      this.model.countDocuments(query),
     ]);
 
-    // Convert array of {_id: "PENDING", count: 5} to object
-    const result = {
-      total: 0,
-      pending: 0,
-      accepted: 0,
-      expired: 0,
-      cancelled: 0,
+    return {
+      invites: docs.map((d) => this.toDomain(d)),
+      total,
     };
-
-    stats.forEach((s) => {
-      const status = s._id.toLowerCase() as keyof typeof result;
-      if (status in result) {
-        result[status] = s.count;
-      }
-      result.total += s.count;
-    });
-
-    return result;
   }
 }

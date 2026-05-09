@@ -1,4 +1,4 @@
-import { Document, Model, FilterQuery } from "mongoose";
+import { Document, Model, FilterQuery, ClientSession } from "mongoose";
 import { IBaseRepository } from "../../application/interface/repositories/IBaseRepo";
 
 /**
@@ -35,13 +35,19 @@ export abstract class BaseRepository<
    * Creates a new document in the database
    *
    * @param data - The data to create the document with
+   * @param session - Optional database transaction session
    * @returns The created domain entity
    */
-  async create(data: Partial<TDomain>): Promise<TDomain> {
+  async create(
+    data: Partial<TDomain>,
+    session?: ClientSession,
+  ): Promise<TDomain> {
     // Cast via unknown is necessary here because TDomain (Entity) and TDoc (Mongoose Document)
     // are structurally different types in TypeScript, even though they map to the same data.
-    const doc = await this.model.create(data as unknown as Partial<TDoc>);
-    return this.toDomain(doc);
+    const doc = await this.model.create([data as unknown as Partial<TDoc>], {
+      session,
+    });
+    return this.toDomain(doc[0]);
   }
 
   /**
@@ -51,7 +57,10 @@ export abstract class BaseRepository<
    * @returns The found domain entity or null if not found
    */
   async findById(id: string): Promise<TDomain | null> {
-    const doc = await this.model.findById(id);
+    const doc = await this.model.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    } as FilterQuery<TDoc>);
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -62,7 +71,11 @@ export abstract class BaseRepository<
    * @returns An array of domain entities
    */
   async findAll(filter: FilterQuery<TDoc> = {}): Promise<TDomain[]> {
-    const docs = await this.model.find(filter);
+    const finalFilter = {
+      ...filter,
+      isDeleted: { $ne: true },
+    } as FilterQuery<TDoc>;
+    const docs = await this.model.find(finalFilter);
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -71,10 +84,15 @@ export abstract class BaseRepository<
    *
    * @param id - The ID of the document to update
    * @param data - The data to update the document with
+   * @param session - Optional database transaction session
    * @returns The updated domain entity
    * @throws Error if the document is not found
    */
-  async update(id: string, data: Partial<TDomain>): Promise<TDomain | null> {
+  async update(
+    id: string,
+    data: Partial<TDomain>,
+    session?: ClientSession,
+  ): Promise<TDomain | null> {
     // Merge update payload and cast safely for Mongoose
     // We treat 'data' as a generic record to merge it with 'updatedAt'
     const updatePayload = {
@@ -82,12 +100,13 @@ export abstract class BaseRepository<
       updatedAt: new Date(),
     };
 
-    const doc = await this.model.findByIdAndUpdate(
-      id,
+    const doc = await this.model.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } } as FilterQuery<TDoc>,
       updatePayload as unknown as Partial<TDoc>,
       {
         new: true,
         runValidators: true,
+        session,
       },
     );
     return doc ? this.toDomain(doc) : null;
@@ -97,10 +116,35 @@ export abstract class BaseRepository<
    * Deletes a document by its ID
    *
    * @param id - The ID of the document to delete
+   * @param session - Optional database transaction session
    */
-  async delete(id: string): Promise<boolean> {
-    const result = await this.model.findByIdAndDelete(id);
+  async delete(id: string, session?: ClientSession): Promise<boolean> {
+    const result = await this.model.findByIdAndUpdate(
+      id,
+      { isDeleted: true, deletedAt: new Date() },
+      { session },
+    );
     return !!result;
+  }
+
+  /**
+   * Deletes multiple documents matching a filter
+   * @param filter - The Mongoose filter query
+   * @param session - Optional database transaction session
+   */
+  async deleteMany(
+    filter: FilterQuery<TDomain>,
+    session?: ClientSession,
+  ): Promise<boolean> {
+    const result = await this.model.updateMany(
+      filter,
+      {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+      { session },
+    );
+    return result.acknowledged;
   }
 
   /**
@@ -110,7 +154,11 @@ export abstract class BaseRepository<
    * @returns The number of matching documents
    */
   async count(filter: FilterQuery<TDoc> = {}): Promise<number> {
-    return this.model.countDocuments(filter);
+    const finalFilter = {
+      ...filter,
+      isDeleted: { $ne: true },
+    } as FilterQuery<TDoc>;
+    return this.model.countDocuments(finalFilter);
   }
 
   /**
@@ -120,19 +168,21 @@ export abstract class BaseRepository<
    * @returns True if the document exists, false otherwise
    */
   async exists(id: string): Promise<boolean> {
-    return !!(await this.model.findById(id));
+    return !!(await this.model.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    } as FilterQuery<TDoc>));
   }
 
   /**
-   * Soft deletes a document by its ID
-   * Sets isDeleted flag to true and records deletion time
+   * Soft deletes a document by its ID.
+   * Convenience alias for delete() — kept for semantic clarity at call sites.
+   * Sets isDeleted flag to true and records deletion time.
    *
    * @param id - The ID of the document to soft delete
+   * @param session - Optional database transaction session
    */
-  async softDelete(id: string): Promise<void> {
-    await this.model.findByIdAndUpdate(id, {
-      isDeleted: true,
-      deletedAt: new Date(),
-    });
+  async softDelete(id: string, session?: ClientSession): Promise<void> {
+    await this.delete(id, session);
   }
 }

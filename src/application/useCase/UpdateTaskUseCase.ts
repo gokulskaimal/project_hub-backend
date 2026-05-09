@@ -6,33 +6,27 @@ import { Task } from "../../domain/entities/Task";
 import {
   EntityNotFoundError,
   ValidationError,
+  ForbiddenError,
 } from "../../domain/errors/CommonErrors";
 
 import { ILogger } from "../../application/interface/services/ILogger";
-import { ISocketService } from "../../application/interface/services/ISocketService";
-import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { UserRole } from "../../domain/enums/UserRole";
-import { NotificationType } from "../../domain/enums/NotificationType";
-import { User } from "../../domain/entities/User";
 
-import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { ITimeTrackingService } from "../../domain/interface/services/ITimeTrackingService";
+import { IEventDispatcher } from "../../application/interface/services/IEventDispatcher";
+import { TASK_EVENTS } from "../events/TaskEvents";
 
 @injectable()
 export class UpdateTaskUseCase implements IUpdateTaskUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.INotificationService)
-    private _notificationService: INotificationService,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
-    @inject(TYPES.ITaskHistoryRepo) private _historyRepo: ITaskHistoryRepo,
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ITaskDomainService)
@@ -40,6 +34,7 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ITimeTrackingService)
     private _timeTrackingService: ITimeTrackingService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(
@@ -56,13 +51,13 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       await this._securityService.validateOrgAccess(updaterId, task.orgId);
     }
 
+    // Fetch updater ONCE here and reuse below to avoid duplicate DB queries
+    const updater = updaterId ? await this._userRepo.findById(updaterId) : null;
+
     // Sprint Immutability Check (Velocity Protection)
     if (task.sprintId) {
       const currentSprint = await this._sprintRepo.findById(task.sprintId);
       if (currentSprint && currentSprint.status === "COMPLETED") {
-        const updater = updaterId
-          ? await this._userRepo.findById(updaterId)
-          : null;
         if (updater?.role !== UserRole.SUPER_ADMIN) {
           throw new ValidationError(
             "Tasks in completed sprints are locked and cannot be modified.",
@@ -71,29 +66,68 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
     }
 
-    // 1. Validation Logic
-    if (updaterId) {
-      const updater = await this._userRepo.findById(updaterId);
-      if (updater) {
-        this._taskDomainService.validateStatusTransition(
-          task,
-          data.status,
-          updater,
+    // 1. Role-Based Field & Status Validation
+    if (updater) {
+      if (
+        updater.role !== UserRole.ORG_MANAGER &&
+        updater.role !== UserRole.SUPER_ADMIN
+      ) {
+        // Team members can only touch these fields
+        const allowedFields = [
+          "status",
+          "timeLogs",
+          "totalTimeSpent",
+          "completedAt",
+          "comments",
+          "attachments",
+        ];
+        const attemptedFields = Object.keys(data).filter(
+          (key) => data[key as keyof Partial<Task>] !== undefined,
         );
+        const hasUnauthorizedFields = attemptedFields.some(
+          (field) => !allowedFields.includes(field),
+        );
+
+        if (hasUnauthorizedFields) {
+          throw new ForbiddenError(
+            "Members can only update task status, comments, and attachments. Core details are reserved for Managers.",
+          );
+        }
       }
+
+      this._taskDomainService.validateStatusTransition(
+        task,
+        data.status,
+        updater,
+      );
     }
 
-    // [SCURM] Merged Task for Validation
-    const mergedTask = { ...task, ...data } as Task;
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => {
+        if (value === null) {
+          return ["epicId", "sprintId", "parentTaskId"].includes(key);
+        }
+        return value !== undefined;
+      }),
+    );
 
-    // [SCURM] Domain Rule: Assignment to Sprint (Must be estimated)
+    const mergedTask = { ...task, ...filteredData } as Task;
+
+    // Domain Rule: Assignment to Sprint (Must be estimated)
     if (data.sprintId && data.sprintId !== task.sprintId) {
       this._taskDomainService.validateAssignmentToSprint(mergedTask);
     }
 
-    // [SCURM] Domain Rule: Definition of Done (Must have assignee)
+    // Domain Rule: Definition of Done (Must have assignee)
     if (data.status === "DONE" && task.status !== "DONE") {
       this._taskDomainService.validateDefinitionOfDone(mergedTask);
+
+      // Professional Workflow: Check for unfinished subtasks
+      const children = await this._taskRepo.findByParent(id);
+      await this._taskDomainService.validateCompletionGuard(
+        mergedTask,
+        children,
+      );
     }
 
     if (data.dueDate !== undefined || data.sprintId !== undefined) {
@@ -113,6 +147,21 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
     }
 
+    // Hierarchy Re-validation on Update
+    if (
+      data.type !== undefined ||
+      data.parentTaskId !== undefined ||
+      data.sprintId !== undefined
+    ) {
+      const parentId =
+        data.parentTaskId !== undefined ? data.parentTaskId : task.parentTaskId;
+      let parentTask = null;
+      if (parentId) {
+        parentTask = await this._taskRepo.findById(parentId);
+      }
+      this._taskDomainService.validateHierarchy(mergedTask, parentTask);
+    }
+
     // 2. Sprint Capacity Check
     if (data.sprintId && data.sprintId !== task.sprintId) {
       const sprint = await this._sprintRepo.findById(data.sprintId);
@@ -122,11 +171,11 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
         throw new ValidationError(`Cannot assign tasks to a completed sprint.`);
       }
 
-      // Daily limit check
+      // Daily limit check (UTC-based to avoid server timezone offset bugs)
       const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
+      startOfDay.setUTCHours(0, 0, 0, 0);
       const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
+      endOfDay.setUTCHours(23, 59, 59, 999);
 
       const dailyCount = await this._taskRepo.countBySprintAssignedAtRange(
         data.sprintId,
@@ -154,132 +203,46 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       data.sprintAssignedAt = new Date();
     }
 
-    //Time Tracking Logic
+    // Time Tracking Logic
     if (data.status && data.status !== task.status && updaterId) {
       this._timeTrackingService.updateTimeLogs(task, data.status, updaterId);
       data.timeLogs = task.timeLogs;
       data.totalTimeSpent = task.totalTimeSpent;
     }
-    // Tracking Logic
 
     if (data.status === "DONE" && task.status !== "DONE") {
       data.completedAt = new Date();
     }
 
-    // Task History Tracking
-    if (updaterId) {
-      if (data.status && data.status !== task.status) {
-        await this._historyRepo.create({
-          taskId: task.id,
-          userId: updaterId,
-          action: "STATUS_CHANGED",
-          previousValue: task.status,
-          newValue: data.status,
-          createdAt: new Date(),
-        });
-      }
-      if (
-        data.assignedTo !== undefined &&
-        data.assignedTo !== task.assignedTo
-      ) {
-        await this._historyRepo.create({
-          taskId: task.id,
-          userId: updaterId,
-          action: "ASSIGNEE_CHANGED",
-          previousValue: task.assignedTo || "Unassigned",
-          newValue: data.assignedTo || "Unassigned",
-          createdAt: new Date(),
-        });
-      }
-      if (data.sprintId !== undefined && data.sprintId !== task.sprintId) {
-        await this._historyRepo.create({
-          taskId: task.id,
-          userId: updaterId,
-          action: "SPRINT_CHANGED",
-          previousValue: task.sprintId || "Backlog",
-          newValue: data.sprintId || "Backlog",
-          createdAt: new Date(),
-        });
-      }
+    // Validate assignee BEFORE saving — ensures invalid assignees never persist
+    if (data.assignedTo && task.orgId) {
+      await this._securityService.validateUserBelongsToOrg(
+        data.assignedTo,
+        task.orgId,
+      );
     }
-    // Task History Tracking
 
+    // Perform Update
     const updated = await this._taskRepo.update(id, data);
     if (!updated) throw new EntityNotFoundError("Task Not Found", id);
 
-    if (task.orgId) {
-      // [NEW] Targeted Real-time Alerts
-      // 1. Project Room
-      this._socketService.emitToProject(
-        updated.projectId,
-        "task:updated",
-        updated,
-      );
+    // 3. Dispatch Domain Event
+    this._eventDispatcher.dispatch(TASK_EVENTS.UPDATED, {
+      oldTask: task,
+      updatedTask: updated,
+      updaterId,
+      changes: data,
+    });
 
-      // 2. Org Managers
-      this._socketService.emitToRoleInOrg(
-        task.orgId,
-        UserRole.ORG_MANAGER,
-        "task:updated",
-        updated,
-      );
-    }
-
-    if (task.orgId && updaterId) {
-      const managers = await this._userRepo.findByOrgAndRole(
-        task.orgId,
-        UserRole.ORG_MANAGER,
-      );
-      const updater = await this._userRepo.findById(updaterId);
-      const updaterName = updater ? this.formatUserName(updater) : "User";
-
-      if (updaterId === task.assignedTo) {
-        for (const manager of managers) {
-          if (manager.id === updaterId) continue;
-          await this._notificationService.sendSystemNotification(
-            manager.id,
-            "Task Update from Member",
-            `Task '${updated.title}' updated by ${updaterName} (Status: ${data.status || updated.status})`,
-            NotificationType.INFO,
-            task.orgId,
-            `/manager/projects/${updated.projectId}`,
-          );
-        }
-      }
-
-      if (updated.assignedTo && updaterId !== updated.assignedTo) {
-        await this._notificationService.sendSystemNotification(
-          updated.assignedTo,
-          "Task Updated by Manager",
-          `Task '${updated.title}' updated by ${updaterName} (Status: ${data.status || updated.status})`,
-          NotificationType.INFO,
-          task.orgId,
-          `/manager/projects/${updated.projectId}`,
-        );
-
-        this._socketService.emitToUser(
-          updated.assignedTo,
-          "task:assigned",
-          updated,
-        );
-      }
-
-      // Validate assignee if it's being changed
-      if (data.assignedTo) {
-        await this._securityService.validateUserBelongsToOrg(
-          data.assignedTo,
-          task.orgId,
-        );
-      }
+    if (data.status && data.status !== task.status) {
+      let completedTasksInc = 0;
+      if (data.status === "DONE") completedTasksInc = 1;
+      else if (task.status === "DONE") completedTasksInc = -1;
+      await this._projectRepo.incrementStats(task.projectId, {
+        completedTasks: completedTasksInc,
+      });
     }
 
     return updated;
-  }
-
-  private formatUserName(user: User): string {
-    if (user.firstName) {
-      return `${user.firstName} ${user.lastName || ""}`.trim();
-    }
-    return user.name || "User";
   }
 }

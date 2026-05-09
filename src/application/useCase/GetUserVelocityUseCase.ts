@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
+import { IAnalyticsRepo } from "../../application/interface/repositories/IAnalyticsRepo";
 import { IGetUserVelocityUseCase } from "../interface/useCases/IGetUserVelocityUseCase";
 import { ILogger } from "../../application/interface/services/ILogger";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
@@ -8,7 +8,7 @@ import { ISecurityService } from "../../application/interface/services/ISecurity
 @injectable()
 export class GetUserVelocityUseCase implements IGetUserVelocityUseCase {
   constructor(
-    @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
+    @inject(TYPES.IAnalyticsRepo) private _analyticsRepo: IAnalyticsRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
   ) {}
@@ -33,7 +33,10 @@ export class GetUserVelocityUseCase implements IGetUserVelocityUseCase {
       days,
       requesterId,
     });
-    const totalPoints = await this._taskRepo.sumDonePointsByUserInRange(
+
+    // Use the unified getDonePointsInRange from AnalyticsRepo
+    const totalPoints = await this._analyticsRepo.getDonePointsInRange(
+      "user",
       userId,
       start,
       end,

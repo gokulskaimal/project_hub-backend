@@ -10,6 +10,8 @@ import { IUpdateSprintUseCase } from "../interface/useCases/IUpdateSprintUseCase
 import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { SPRINT_EVENTS } from "../events/SprintEvents";
 
 @injectable()
 export class UpdateSprintUseCase implements IUpdateSprintUseCase {
@@ -23,29 +25,27 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ISprintDomainService)
     private _sprintDomainService: ISprintDomainService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(
     id: string,
-    updateData: Partial<Sprint>,
+    updateData: Partial<Sprint> & { spilloverDestination?: string },
     requesterId: string,
   ): Promise<Sprint> {
     this._logger.info(`Updating sprint ${id} by user ${requesterId}`);
+    const { spilloverDestination, ...sprintData } = updateData;
 
-    const sprint = await this._sprintRepo.findById(id);
-    if (!sprint) throw new EntityNotFoundError("Sprint", id);
+    const oldSprint = await this._sprintRepo.findById(id);
+    if (!oldSprint) throw new EntityNotFoundError("Sprint", id);
 
-    // RBAC Check
-    const projectCheck = await this._projectRepo.findById(sprint.projectId);
-    if (!projectCheck)
-      throw new EntityNotFoundError("Project", sprint.projectId);
-    await this._securityService.validateOrgManager(
-      requesterId,
-      projectCheck.orgId,
-    );
+    const project = await this._projectRepo.findById(oldSprint.projectId);
+    if (!project) throw new EntityNotFoundError("Project", oldSprint.projectId);
+
+    await this._securityService.validateOrgManager(requesterId, project.orgId);
 
     // [SCURM] Domain Rule: Immutability (Completed sprints are locked)
-    if (sprint.status === "COMPLETED") {
+    if (oldSprint.status === "COMPLETED") {
       try {
         await this._securityService.validateSuperAdmin(requesterId);
       } catch {
@@ -53,71 +53,72 @@ export class UpdateSprintUseCase implements IUpdateSprintUseCase {
       }
     }
 
-    if (updateData.startDate || updateData.endDate) {
-      const project = await this._projectRepo.findById(sprint.projectId);
-      if (project) {
-        const sprintStart = updateData.startDate
-          ? new Date(updateData.startDate)
-          : new Date(sprint.startDate);
-        const sprintEnd = updateData.endDate
-          ? new Date(updateData.endDate)
-          : new Date(sprint.endDate);
-
-        const projectEnd = new Date(project.endDate);
-        const projectStart = project.startDate
-          ? new Date(project.startDate)
-          : null;
-
-        this._authValidationService.validateSprintDates(
-          sprintStart,
-          sprintEnd,
-          projectStart,
-          projectEnd,
-        );
-
-        // [SCURM] Domain Rule: Timebox (1-28 days)
-        this._sprintDomainService.validateTimebox(sprintStart, sprintEnd);
+    if (sprintData.status == "COMPLETED") {
+      const tasks = await this._taskRepo.findAll({ sprintId: id });
+      const unfinishedTasks = tasks.filter(
+        (t) => t.status !== "DONE" && t.type !== "EPIC",
+      );
+      if (unfinishedTasks.length > 0) {
+        if (spilloverDestination) {
+          const destinationId =
+            spilloverDestination == "BACKLOG" ? null : spilloverDestination;
+          await this._taskRepo.bulkUpdateSprint(
+            { sprintId: id, status: { $ne: "DONE" }, type: { $ne: "EPIC" } },
+            destinationId,
+          );
+          this._logger.info(
+            `Migrated ${unfinishedTasks.length} tasks to ${spilloverDestination}`,
+          );
+        } else {
+          throw new Error(
+            `Cannot complete sprint: There are ${unfinishedTasks.length} task(s) that are not 'DONE'. Please complete all tasks or move them out of the sprint first.`,
+          );
+        }
       }
     }
 
-    // [SCURM] Domain Rule: Validate Sprint Start (Cannot start tanpa goal)
-    if (updateData.status === "ACTIVE" && sprint.status !== "ACTIVE") {
-      this._sprintDomainService.validateSprintStart({
-        ...sprint,
-        ...updateData,
-      } as Sprint);
+    if (updateData.startDate || updateData.endDate) {
+      const sprintStart = updateData.startDate
+        ? new Date(updateData.startDate)
+        : new Date(oldSprint.startDate);
+      const sprintEnd = updateData.endDate
+        ? new Date(updateData.endDate)
+        : new Date(oldSprint.endDate);
+
+      const projectEnd = new Date(project.endDate);
+      const projectStart = project.startDate
+        ? new Date(project.startDate)
+        : null;
+
+      this._authValidationService.validateSprintDates(
+        sprintStart,
+        sprintEnd,
+        projectStart,
+        projectEnd,
+      );
+
+      this._sprintDomainService.validateTimebox(sprintStart, sprintEnd);
     }
 
-    const updatedSprint = await this._sprintRepo.update(id, updateData);
+    if (updateData.status === "ACTIVE") {
+      if (oldSprint.status !== "ACTIVE") {
+        this._sprintDomainService.validateSprintStart({
+          ...oldSprint,
+          ...updateData,
+        } as Sprint);
+      }
+    }
+
+    const updatedSprint = await this._sprintRepo.update(id, sprintData);
     if (!updatedSprint) throw new EntityNotFoundError("Sprint", id);
 
-    if (updateData.status === "COMPLETED") {
-      const tasks = await this._taskRepo.findAll({ sprintId: id });
-      const unfinishedTasks = tasks.filter((t) => t.status !== "DONE");
-
-      await Promise.all(
-        unfinishedTasks.map((t) => {
-          let updatedTotalTime = t.totalTimeSpent || 0;
-          const updatedLogs = t.timeLogs ? [...t.timeLogs] : [];
-
-          t.timeLogs?.forEach((log, index) => {
-            if (!log.endTime) {
-              const now = new Date();
-              log.endTime = now;
-              log.duration = now.getTime() - new Date(log.startTime).getTime();
-              updatedTotalTime += log.duration;
-              updatedLogs[index] = log;
-            }
-          });
-
-          return this._taskRepo.update(t.id, {
-            sprintId: null, // Move unfinished items back to Backlog
-            timeLogs: updatedLogs,
-            totalTimeSpent: updatedTotalTime,
-          });
-        }),
-      );
-    }
+    // DISPATCH EVENT - Side effects handled in SprintEventSubscriber
+    this._eventDispatcher.dispatch(SPRINT_EVENTS.UPDATED, {
+      oldSprint,
+      updatedSprint,
+      updaterId: requesterId,
+      changes: updateData,
+    });
 
     return updatedSprint;
   }

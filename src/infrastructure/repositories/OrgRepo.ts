@@ -5,7 +5,6 @@ import {
   OrganizationStatus,
 } from "../../domain/entities/Organization";
 import OrgModel, { IOrgDOc } from "../models/OrgModel";
-import UserModel from "../models/UserModel";
 
 @injectable()
 export class OrgRepo implements IOrgRepo {
@@ -68,19 +67,20 @@ export class OrgRepo implements IOrgRepo {
   }
 
   async findById(id: string): Promise<Organization | null> {
-    const doc = await OrgModel.findById(id);
+    const doc = await OrgModel.findOne({ _id: id, isDeleted: { $ne: true } });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findByName(name: string): Promise<Organization | null> {
     const doc = await OrgModel.findOne({
       name: new RegExp(`^${name.trim()}$`, "i"),
+      isDeleted: { $ne: true },
     });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findAll(): Promise<Organization[]> {
-    const docs = await OrgModel.find();
+    const docs = await OrgModel.find({ isDeleted: { $ne: true } });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -88,8 +88,8 @@ export class OrgRepo implements IOrgRepo {
     id: string,
     data: Partial<Organization>,
   ): Promise<Organization | null> {
-    const updated = await OrgModel.findByIdAndUpdate(
-      id,
+    const updated = await OrgModel.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
       { ...data, updatedAt: new Date() },
       { new: true },
     );
@@ -98,18 +98,15 @@ export class OrgRepo implements IOrgRepo {
 
   async delete(id: string): Promise<boolean> {
     const result = await OrgModel.findByIdAndUpdate(id, {
-      status: OrganizationStatus.INACTIVE,
+      isDeleted: true,
       deletedAt: new Date(),
+      status: OrganizationStatus.INACTIVE,
     });
     return !!result;
   }
 
-  async hardDelete(id: string): Promise<void> {
-    await OrgModel.findByIdAndDelete(id);
-  }
-
   async findByStatus(status: string): Promise<Organization[]> {
-    const docs = await OrgModel.find({ status });
+    const docs = await OrgModel.find({ status, isDeleted: { $ne: true } });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -117,68 +114,49 @@ export class OrgRepo implements IOrgRepo {
     limit: number,
     offset: number,
     searchTerm?: string,
+    status?: string,
   ): Promise<{
     organizations: Organization[];
     total: number;
     hasMore: boolean;
   }> {
-    const query: Record<string, unknown> = {};
+    const query: Record<string, unknown> = { isDeleted: { $ne: true } };
     if (searchTerm) {
       query.name = { $regex: searchTerm, $options: "i" };
     }
+    if (status && status !== "ALL") {
+      query.status = status;
+    }
+
     const [docs, total] = await Promise.all([
       OrgModel.find(query).skip(offset).limit(limit).sort({ createdAt: -1 }),
       OrgModel.countDocuments(query),
     ]);
 
-    // Aggregate user counts for the fetched organizations
-    const orgIds = docs.map((d) => d._id);
-    const userCounts = await UserModel.aggregate([
-      { $match: { orgId: { $in: orgIds } } },
-      { $group: { _id: "$orgId", count: { $sum: 1 } } },
-    ]);
-
-    // Create a map for easy lookup
-    const countMap = new Map<string, number>();
-    userCounts.forEach((c) => {
-      countMap.set(c._id.toString(), c.count);
-    });
-
     return {
-      organizations: docs.map((d) => {
-        const org = this.toDomain(d);
-        org.currentUserCount = countMap.get(org.id) || 0;
-        return org;
-      }),
+      organizations: docs.map((d) => this.toDomain(d)),
       total,
       hasMore: offset + limit < total,
     };
   }
 
   async count(): Promise<number> {
-    return OrgModel.countDocuments();
+    return OrgModel.countDocuments({ isDeleted: { $ne: true } });
   }
 
   async countByStatus(status: string): Promise<number> {
-    return OrgModel.countDocuments({ status });
+    return OrgModel.countDocuments({ status, isDeleted: { $ne: true } });
   }
 
   async nameExists(name: string, excludeId?: string): Promise<boolean> {
     const query: Record<string, unknown> = {
       name: new RegExp(`^${name.trim()}$`, "i"),
+      isDeleted: { $ne: true },
     };
     if (excludeId) {
       query._id = { $ne: excludeId };
     }
     const exists = await OrgModel.findOne(query).select("_id");
     return !!exists;
-  }
-
-  async getStatusDistribution(): Promise<
-    Array<{ _id: string; count: number }>
-  > {
-    return await OrgModel.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]);
   }
 }

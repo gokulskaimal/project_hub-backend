@@ -8,8 +8,8 @@ import { IGetProjectVelocityUseCase } from "../../../application/interface/useCa
 import { IUpdateProjectUseCase } from "../../../application/interface/useCases/IUpdateProjectUseCase";
 import { IDeleteProjectUseCase } from "../../../application/interface/useCases/IDeleteProjectUseCase";
 import { AuthenticatedRequest } from "../../middleware/types/AuthenticatedRequest";
-import { asyncHandler } from "../../middleware/ErrorMiddleware";
-import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
+import { ResponseHandler } from "../../utils/ResponseHandler";
+import { asyncHandler } from "../../../utils/asyncHandler";
 import { ValidationError } from "../../../domain/errors/CommonErrors";
 import { toProjectDTO } from "../../../application/dto/ProjectDTO";
 import { toVelocityDTO } from "../../../application/dto/AnalyticsDTO";
@@ -21,9 +21,10 @@ import {
 import { z } from "zod";
 
 import { ILogger } from "../../../application/interface/services/ILogger";
-import { IUserRepo } from "../../../application/interface/repositories/IUserRepo";
 
 import { IGetMemberProjectsUseCase } from "../../../application/interface/useCases/IGetMemberProjectsUseCase";
+import { IGetProjectMembersUseCase } from "../../../application/interface/useCases/IGetProjectMembersUseCase";
+import { IGetOrgAnalyticsUseCase } from "../../../application/interface/useCases/IGetOrgAnalyticsUseCase";
 
 @injectable()
 export class ProjectController {
@@ -42,36 +43,35 @@ export class ProjectController {
     private _deleteProjectUC: IDeleteProjectUseCase,
     @inject(TYPES.IGetMemberProjectsUseCase)
     private _getMemberProjectsUC: IGetMemberProjectsUseCase,
-    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
+    @inject(TYPES.IGetProjectMembersUseCase)
+    private _getProjectMembersUC: IGetProjectMembersUseCase,
+    @inject(TYPES.IGetOrgAnalyticsUseCase)
+    private _getOrgAnalyticsUC: IGetOrgAnalyticsUseCase,
   ) {}
 
-  private sendSuccess<T>(
-    res: Response,
-    data: T,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ): void {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
+  getEpicAnalytics = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const authReq = req as AuthenticatedRequest;
+    this._logger.info(`Fetching epic analytics for project ${id}`);
+
+    const stats = await this._getOrgAnalyticsUC.getEpicProgress(
+      id,
+      authReq.user!.id,
+    );
+    ResponseHandler.success(res, stats, "Epic analytics retrieved");
+  });
 
   createProject = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user || !authReq.user.orgId)
-      throw new ValidationError("Unauthorized: Missing user context");
+      return ResponseHandler.unauthorized(
+        res,
+        "Unauthorized: Missing user context",
+      );
 
     const validation = ProjectCreateSchema.safeParse(req.body);
     if (!validation.success) {
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Validation Error",
-        errors: validation.error.format(),
-      });
-      return;
+      return ResponseHandler.validationError(res, validation.error.format());
     }
 
     const data = validation.data;
@@ -83,38 +83,62 @@ export class ProjectController {
       authReq.user.orgId,
       data,
     );
-    this.sendSuccess(
-      res,
-      toProjectDTO(project),
-      "Project created",
-      StatusCodes.CREATED,
-    );
+    ResponseHandler.created(res, toProjectDTO(project), "Project created");
   });
 
   getAllProjects = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
-    if (!authReq.user || !authReq.user.orgId)
-      throw new ValidationError("Unauthorized: Missing user context");
-    this._logger.info(`Fetching projects for Org ${authReq.user.orgId}`);
-    const projects = await this._getProjectUC.execute(
-      authReq.user.orgId,
-      authReq.user.id,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
+    const { search = "", status = "ALL", priority = "ALL" } = req.query;
+    const { projects, total } = await this._getProjectUC.executePaginated(
+      limit,
+      offset,
+      {
+        orgId: authReq.user!.orgId!,
+        searchTerm: search as string,
+        status: status as string,
+        priority: priority as string,
+      },
     );
-    this.sendSuccess(res, projects.map(toProjectDTO));
+
+    ResponseHandler.success(
+      res,
+      {
+        items: projects.map(toProjectDTO),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      "Projects fetched successfully",
+    );
   });
 
   getMyProjects = asyncHandler(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
     const userId = authReq.user?.id;
-    if (!userId)
-      throw new ValidationError("Unauthorized: Missing user context");
 
-    this._logger.info(`Fetching projects for user ${userId}`);
-    const projects = await this._getMemberProjectsUC.execute(
-      userId,
-      authReq.user!.id,
-    );
-    this.sendSuccess(res, projects.map(toProjectDTO));
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
+
+    this._logger.info(`Fetching paginated projects for member ${userId}`);
+    const { projects, total } =
+      await this._getMemberProjectsUC.executePaginated(
+        authReq.user!.id,
+        limit,
+        offset,
+      );
+
+    ResponseHandler.success(res, {
+      items: projects.map(toProjectDTO),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   });
 
   getProjectById = asyncHandler(async (req: Request, res: Response) => {
@@ -124,13 +148,10 @@ export class ProjectController {
     const project = await this._getProjectByIdUC.execute(id, authReq.user!.id);
 
     if (!project) {
-      res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ success: false, message: "Project not found" });
-      return;
+      return ResponseHandler.notFound(res, "Project Not found");
     }
 
-    this.sendSuccess(res, toProjectDTO(project));
+    ResponseHandler.success(res, toProjectDTO(project));
   });
 
   updateProject = asyncHandler(async (req: Request, res: Response) => {
@@ -140,12 +161,7 @@ export class ProjectController {
 
     const validation = ProjectUpdateSchema.safeParse(req.body);
     if (!validation.success) {
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Validation Error",
-        errors: validation.error.format(),
-      });
-      return;
+      return ResponseHandler.validationError(res, validation.error.format());
     }
 
     this._logger.info(`Updating project ${id}`);
@@ -154,17 +170,17 @@ export class ProjectController {
       validation.data,
       authReq.user.id,
     );
-    this.sendSuccess(res, toProjectDTO(project), "Project updated");
+    ResponseHandler.success(res, toProjectDTO(project), "Project updated");
   });
 
   deleteProject = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const authReq = req as AuthenticatedRequest;
-    if (!authReq.user) throw new ValidationError("Unauthorized");
+    if (!authReq.user) return ResponseHandler.unauthorized(res, "Unauthorized");
 
     this._logger.info(`Deleting project ${id}`);
     await this._deleteProjectUC.execute(id, authReq.user.id);
-    this.sendSuccess(res, null, "Project deleted successfully");
+    ResponseHandler.success(res, null, "Project deleted successfully");
   });
 
   getProjectVelocity = asyncHandler(async (req: Request, res: Response) => {
@@ -175,12 +191,7 @@ export class ProjectController {
       .object({ days: z.coerce.number().int().min(1).max(365).optional() })
       .safeParse(req.query);
     if (!parsed.success) {
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Validation Error",
-        errors: parsed.error.format(),
-      });
-      return;
+      return ResponseHandler.validationError(res, parsed.error.format());
     }
 
     const days = parsed.data.days ?? 7;
@@ -189,7 +200,7 @@ export class ProjectController {
       days,
       authReq.user!.id,
     );
-    this.sendSuccess(res, toVelocityDTO(result));
+    ResponseHandler.success(res, toVelocityDTO(result));
   });
 
   getProjectMembers = asyncHandler(async (req: Request, res: Response) => {
@@ -197,16 +208,10 @@ export class ProjectController {
     const authReq = req as AuthenticatedRequest;
     this._logger.info(`Fetching members for project ${id}`);
 
-    const project = await this._getProjectByIdUC.execute(id, authReq.user!.id);
-    if (!project) {
-      res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        message: "Project not found",
-      });
-      return;
-    }
-
-    const members = await this._userRepo.findByIds(project.teamMemberIds || []);
-    this.sendSuccess(res, members.map(toUserDTO));
+    const members = await this._getProjectMembersUC.execute(
+      id,
+      authReq.user!.id,
+    );
+    ResponseHandler.success(res, members.map(toUserDTO));
   });
 }

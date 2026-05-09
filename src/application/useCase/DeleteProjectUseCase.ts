@@ -9,6 +9,10 @@ import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { IFileService } from "../../application/interface/services/IFileService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { PROJECT_EVENTS } from "../events/ProjectEvents";
+import { Task } from "../../domain/entities/Task";
 
 @injectable()
 export class DeleteProjectUseCase implements IDeleteProjectUseCase {
@@ -20,6 +24,8 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     @inject(TYPES.ITaskHistoryRepo) private _taskHistoryRepo: ITaskHistoryRepo,
     @inject(TYPES.IChatRepo) private _chatRepo: IChatRepo,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.IFileService) private _fileService: IFileService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(id: string, requesterId: string): Promise<boolean> {
@@ -33,29 +39,34 @@ export class DeleteProjectUseCase implements IDeleteProjectUseCase {
     // RBAC Check
     await this._securityService.validateOrgManager(requesterId, project.orgId);
 
-    const tasks = await this._taskRepo.findByProject(id);
-    if (tasks.length > 0) {
-      this._logger.info(`Deleting ${tasks.length} tasks for project ${id}`);
-      await Promise.all(
-        tasks.map(async (t) => {
-          await this._taskRepo.deleteSubtasks(t.id);
-          await this._taskHistoryRepo.deleteByTaskId(t.id);
-          await this._taskRepo.delete(t.id);
-        }),
-      );
-    }
+    this._logger.info(
+      `Bulk deleting all tasks and related data for project ${id}`,
+    );
 
-    const sprints = await this._sprintRepo.findByProject(id);
-    if (sprints.length > 0) {
-      this._logger.info(`Deleting ${sprints.length} sprints for project ${id}`);
-      await Promise.all(sprints.map((s) => this._sprintRepo.delete(s.id)));
-    }
+    const projectTasks = await this._taskRepo.findByProject(id);
+    const taskIds = projectTasks.map((t: Task) => t.id);
+    const attachmentUrls = projectTasks.flatMap(
+      (t: Task) => t.attachments?.map((a) => a.url) || [],
+    );
 
-    this._logger.info(`Deleting all chat messages for project ${id}`);
-    await this._chatRepo.deleteByProject(id);
+    await Promise.all([
+      this._taskRepo.deleteMany({ projectId: id }),
+      this._taskHistoryRepo.deleteMany({ taskId: { $in: taskIds } }),
+      this._sprintRepo.deleteMany({ projectId: id }),
+      this._chatRepo.deleteByProject(id),
+      ...attachmentUrls.map((url: string) => this._fileService.deleteFile(url)),
+    ]);
 
     const success = await this._projectRepo.delete(id);
     if (!success) throw new EntityNotFoundError("Project", id);
+
+    // DISPATCH EVENT
+    this._eventDispatcher.dispatch(PROJECT_EVENTS.DELETED, {
+      projectId: id,
+      orgId: project.orgId,
+      deleterId: requesterId,
+      projectTitle: project.name,
+    });
 
     return true;
   }

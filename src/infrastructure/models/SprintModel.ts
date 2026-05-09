@@ -12,10 +12,12 @@ const SprintSchema = new Schema<ISprintDoc>(
     endDate: { type: Date, required: true },
     status: {
       type: String,
-      enum: ["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED"],
+      enum: ["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED", "PLANNING"],
       default: "PLANNED",
     },
     goal: { type: String },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

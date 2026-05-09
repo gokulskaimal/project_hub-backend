@@ -25,15 +25,20 @@ export const API_ROUTES = {
     INVITE_MEMBER: "/admin/invite-member",
     BULK_INVITE: "/admin/bulk-invite",
     INVOICES: "/admin/invoices",
+    ANALYTICS: "/admin/analytics",
   },
   MANAGER: {
     BASE: "/manager",
     MEMBERS: "/manager/members",
     INVITATIONS: "/manager/invitations",
+    MEMBERS_STATS: "/manager/members/stats",
+    INVITATIONS_STATS: "/manager/invitations/stats",
     INVITE: "/manager/invite-member",
     BULK_INVITE: "/manager/bulk-invite",
     ORGANIZATION: "/manager/organization",
     INVOICES: "/manager/invoices",
+    DASHBOARD_STATS: "/manager/dashboard/stats",
+    ANALYTICS: "/manager/analytics",
   },
   PROJECTS: {
     BASE: "/projects",
@@ -53,10 +58,20 @@ export const API_ROUTES = {
     TASK_ATTACHMENTS: (id: string) => `/projects/tasks/${id}/attachments`,
     VELOCITY: (projectId: string) => `/projects/${projectId}/velocity`,
     MEMBERS: (projectId: string) => `/projects/${projectId}/members`,
+    EPIC_ANALYTICS: (projectId: string) =>
+      `/projects/${projectId}/epic-analytics`,
     SPRINT_CREATE: "/projects/sprints",
     SPRINTS: (projectId: string) => `/projects/${projectId}/sprints`,
     SPRINT_UPDATE: (id: string) => `/projects/sprints/${id}`,
     SPRINT_DELETE: (id: string) => `/projects/sprints/${id}`,
+    MEETINGS_CREATE: "/projects/meetings",
+    MEETINGS_BY_SPRINT: (sprintId: string) =>
+      `/projects/meetings/sprint/${sprintId}`,
+    MY_MEETINGS: "/projects/meetings/my-meetings",
+    MEETINGS_COMPLETE: (roomId: string) =>
+      `/projects/meetings/${roomId}/complete`,
+    MEETINGS_DELETE: (roomId: string) => `/projects/meetings/${roomId}`,
+    MEETINGS_UPDATE: (roomId: string) => `/projects/meetings/${roomId}`,
   },
   USER: {
     BASE: "/user",
@@ -64,6 +79,7 @@ export const API_ROUTES = {
     CHANGE_PASSWORD: "/user/change-password",
     DELETE_ACCOUNT: "/user/account",
     VELOCITY: "/user/velocity",
+    ANALYTICS: "/user/analytics",
   },
   ORG: {
     BASE: "/organization",

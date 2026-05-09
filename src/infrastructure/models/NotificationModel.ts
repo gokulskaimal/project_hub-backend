@@ -8,6 +8,8 @@ export interface INotificationDoc extends Document {
   type: string;
   link?: string;
   isRead: boolean;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
   createdAt: Date;
 }
 
@@ -24,6 +26,8 @@ const NotificationSchema = new Schema(
     },
     link: { type: String },
     isRead: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

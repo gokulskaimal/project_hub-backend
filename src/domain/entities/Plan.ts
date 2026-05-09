@@ -1,7 +1,7 @@
 export interface Plan {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   currency: string;
   features: string[];
@@ -14,7 +14,10 @@ export interface Plan {
     members: number;
     storage?: number;
     messages?: number;
+    sprints?: number;
   };
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

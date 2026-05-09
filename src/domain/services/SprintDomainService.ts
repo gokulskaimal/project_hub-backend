@@ -6,8 +6,13 @@ import { ISprintDomainService } from "../interface/services/ISprintDomainService
 @injectable()
 export class SprintDomainService implements ISprintDomainService {
   public validateSprintStart(sprint: Sprint): void {
-    if (sprint.status !== "PLANNED") {
-      throw new ValidationError("Sprint must be in PLANNED state to start");
+    const validInitialStatuses = ["PLANNED", "PLANNING"];
+    if (sprint.status === "ACTIVE") return; // Already started, allow updates
+
+    if (!validInitialStatuses.includes(sprint.status)) {
+      throw new ValidationError(
+        `Sprint must be in a PLANNED or PLANNING state to start. Current status: ${sprint.status}`,
+      );
     }
 
     if (!sprint.goal || sprint.goal.trim() === "") {

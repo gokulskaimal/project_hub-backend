@@ -12,14 +12,57 @@ export interface ITaskRepo extends IBaseRepository<Task> {
     start: Date,
     end: Date,
   ): Promise<number>;
-  sumDonePointsByUserInRange(
+  findPaginatedByAssignee(
     userId: string,
-    start: Date,
-    end: Date,
-  ): Promise<number>;
-  sumDonePointsByProjectInRange(
+    limit: number,
+    offset: number,
+  ): Promise<Task[]>;
+  countByAssignee(userId: string): Promise<number>;
+  findPaginatedByOrg(
+    orgId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Task[]>;
+  countByOrg(orgId: string): Promise<number>;
+  findPaginatedByProject(
     projectId: string,
-    start: Date,
-    end: Date,
+    limit: number,
+    offset: number,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<Task[]>;
+  countByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<number>;
+
+  findAllByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<Task[]>;
+
+  findByParent(parentId: string): Promise<Task[]>;
+  findByEpic(epicId: string): Promise<Task[]>;
+  bulkUpdateSprint(
+    filter: {
+      sprintId: string;
+      status: { $ne: string };
+      type?: { $ne: string };
+    },
+    newSprintId: string | null,
   ): Promise<number>;
 }

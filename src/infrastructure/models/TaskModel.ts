@@ -53,7 +53,12 @@ const TaskSchema = new Schema<ITaskDoc>(
       enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
       default: "MEDIUM",
     },
-    type: { type: String, enum: ["STORY", "BUG", "TASK"], default: "STORY" },
+    type: {
+      type: String,
+      enum: ["STORY", "BUG", "TASK", "EPIC"],
+      default: "STORY",
+    },
+    epicId: { type: String, index: true },
     parentTaskId: { type: String },
     dependencies: [TaskDependencySchema],
     storyPoints: { type: Number, default: 0 },
@@ -66,10 +71,23 @@ const TaskSchema = new Schema<ITaskDoc>(
     timeLogs: [TimeLogSchema],
     totalTimeSpent: { type: Number, default: 0 },
     attachments: [AttachmentSchema],
+    acceptanceCriteria: [
+      {
+        text: { type: String, required: true },
+        completed: { type: Boolean, default: false },
+      },
+    ],
     comments: [TaskCommentSchema],
+    progress: { type: Number, default: 0 },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
+
+TaskSchema.index({ orgId: 1, createdAt: -1 });
+TaskSchema.index({ orgId: 1, status: 1 });
+TaskSchema.index({ assignedTo: 1, status: 1 });
 
 TaskSchema.virtual("project", {
   ref: "Project",

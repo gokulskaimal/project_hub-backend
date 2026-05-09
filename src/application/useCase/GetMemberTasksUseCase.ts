@@ -25,4 +25,16 @@ export class GetMemberTasksUseCase implements IGetMemberTasksUseCase {
 
     return await this._taskRepo.findByAssignee(userId);
   }
+
+  async executePaginated(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<{ tasks: Task[]; total: number }> {
+    const [tasks, total] = await Promise.all([
+      this._taskRepo.findPaginatedByAssignee(userId, limit, offset),
+      this._taskRepo.countByAssignee(userId),
+    ]);
+    return { tasks, total };
+  }
 }

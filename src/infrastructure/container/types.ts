@@ -32,6 +32,7 @@ export const TYPES = {
   IChatRepo: Symbol.for("IChatRepo"),
   ISprintRepo: Symbol.for("ISprintRepo"),
   ITaskHistoryRepo: Symbol.for("ITaskHistoryRepo"),
+  IMeetingRepo: Symbol.for("IMeetingRepo"),
 
   // ===== USE CASES =====
   ILoginUseCase: Symbol.for("ILoginUseCase"),
@@ -79,6 +80,9 @@ export const TYPES = {
   IGetProjectUseCase: Symbol.for("IGetProjectUseCase"),
   IGetProjectByIdUseCase: Symbol.for("IGetProjectByIdUseCase"),
   IGetProjectVelocityUseCase: Symbol.for("IGetProjectVelocityUseCase"),
+  IGetAdminAnalyticsUseCase: Symbol.for("IGetAdminAnalyticsUseCase"),
+  IGetMemberAnalyticsUseCase: Symbol.for("IGetMemberAnalyticsUseCase"),
+  IGetManagerAnalyticsUseCase: Symbol.for("IGetManagerAnalyticsUseCase"),
   IUpdateProjectUseCase: Symbol.for("IUpdateProjectUseCase"),
   IDeleteProjectUseCase: Symbol.for("IDeleteProjectUseCase"),
   ICreateNotificationUseCase: Symbol.for("ICreateNotificationUseCase"),
@@ -87,10 +91,23 @@ export const TYPES = {
   IMarkAllNotificationsReadUseCase: Symbol.for(
     "IMarkAllNotificationsReadUseCase",
   ),
+  IAddCommentUseCase: Symbol.for("IAddCommentUseCase"),
+  IAddAttachmentUseCase: Symbol.for("IAddAttachmentUseCase"),
   ISendMessageUseCase: Symbol.for("ISendMessageUseCase"),
   IGetProjectMessagesUseCase: Symbol.for("IGetProjectMessagesUseCase"),
   IEditMessageUseCase: Symbol.for("IEditMessageUseCase"),
   IDeleteMessageUseCase: Symbol.for("IDeleteMessageUseCase"),
+  IHandleRazorpayWebhookUseCase: Symbol.for("IHandleRazorpayWebhookUseCase"),
+  IGetProjectMembersUseCase: Symbol.for("IGetProjectMembersUseCase"),
+  IInvitationQueryUseCase: Symbol.for("IInvitationQueryUseCase"),
+  IGetOrgAnalyticsUseCase: Symbol.for("IGetOrgAnalyticsUseCase"),
+  ICreateMeetingUseCase: Symbol.for("ICreateMeetingUseCase"),
+  IGetMeetingUseCase: Symbol.for("IGetMeetingUseCase"),
+  IGetSprintMeetingsUseCase: Symbol.for("IGetSprintMeetingsUseCase"),
+  IUpdateMeetingUseCase: Symbol.for("IUpdateMeetingUseCase"),
+  IGetMyMeetingsUseCase: Symbol.for("IGetMyMeetingsUseCase"),
+  ICompleteMeetingUseCase: Symbol.for("ICompleteMeetingUseCase"),
+  IDeleteMeetingUseCase: Symbol.for("IDeleteMeetingUseCase"),
 
   // ===== CONTROLLERS =====
   // AuthController: Symbol.for("AuthController"),
@@ -115,6 +132,7 @@ export const TYPES = {
   SprintController: Symbol.for("SprintController"),
   AdminInvoiceController: Symbol.for("AdminInvoiceController"),
   ManagerInvoiceController: Symbol.for("ManagerInvoiceController"),
+  MeetingController: Symbol.for("MeetingController"),
 
   // ===== MIDDLEWARES =====
   AuthMiddleware: Symbol.for("AuthMiddleware"),
@@ -138,30 +156,11 @@ export const TYPES = {
   IInvoiceRepo: Symbol.for("IInvoiceRepo"),
   IGetAdminInvoicesUseCase: Symbol.for("IGetAdminInvoicesUseCase"),
   IGetOrgInvoicesUseCase: Symbol.for("IGetOrgInvoicesUseCase"),
+  IEventDispatcher: Symbol.for("IEventDispatcher"),
+  IAnalyticsRepo: Symbol.for("IAnalyticsRepo"),
+  TaskEventSubscriber: Symbol.for("TaskEventSubscriber"),
+  ProjectEventSubscriber: Symbol.for("ProjectEventSubscriber"),
+  SprintEventSubscriber: Symbol.for("SprintEventSubscriber"),
+  ChatEventSubscriber: Symbol.for("ChatEventSubscriber"),
+  MeetingEventSubscriber: Symbol.for("MeetingEventSubscriber"),
 } as const;
-
-/**
- * Type guard to check if a type identifier exists
- * @param typeId - The type identifier to check
- * @returns True if the type exists
- */
-export function isValidType(typeId: symbol): boolean {
-  return Object.values(TYPES).includes(typeId);
-}
-
-/**
- * Get all available type identifiers
- * @returns Array of all type identifiers
- */
-export function getAllTypes(): symbol[] {
-  return Object.values(TYPES);
-}
-
-/**
- * Get type identifier by name
- * @param name - The name of the type
- * @returns The symbol identifier or undefined if not found
- */
-export function getTypeByName(name: keyof typeof TYPES): symbol {
-  return TYPES[name];
-}

@@ -21,6 +21,8 @@ const TaskHistorySchema = new Schema<ITaskHistoryDoc>(
     details: { type: String },
     previousValue: { type: String },
     newValue: { type: String },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

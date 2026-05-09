@@ -7,6 +7,8 @@ import { ILogger } from "../../application/interface/services/ILogger";
 import { IDeleteSprintUseCase } from "../interface/useCases/IDeleteSprintUseCase";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { SPRINT_EVENTS } from "../events/SprintEvents";
 
 @injectable()
 export class DeleteSprintUseCase implements IDeleteSprintUseCase {
@@ -16,6 +18,7 @@ export class DeleteSprintUseCase implements IDeleteSprintUseCase {
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(id: string, requesterId: string): Promise<boolean> {
@@ -38,6 +41,16 @@ export class DeleteSprintUseCase implements IDeleteSprintUseCase {
     );
 
     await this._sprintRepo.delete(id);
+
+    // Dispatch event for side effects (notifications, sockets)
+    await this._eventDispatcher.dispatch(SPRINT_EVENTS.DELETED, {
+      sprintId: id,
+      projectId: project.id,
+      orgId: project.orgId,
+      deleterId: requesterId,
+      sprintTitle: sprint.name,
+    });
+
     return true;
   }
 }

@@ -10,6 +10,8 @@ export interface TaskComment {
   userId: string;
   text: string;
   createdAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }
 
 export interface TaskDependency {
@@ -23,28 +25,35 @@ export interface Task {
   orgId: string;
   taskKey?: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" | "BACKLOG";
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-  type: "STORY" | "BUG" | "TASK";
-  parentTaskId?: string;
-  dependencies?: TaskDependency[];
-  storyPoints?: number;
+  type: "STORY" | "BUG" | "TASK" | "EPIC";
+  epicId?: string | null;
+  parentTaskId?: string | null;
+  dependencies?: TaskDependency[] | null;
+  storyPoints?: number | null;
   sprintId?: string | null;
-  sprintAssignedAt?: Date;
-  dueDate?: Date;
-  assignedTo?: string;
+  sprintAssignedAt?: Date | null;
+  dueDate?: Date | null;
+  assignedTo?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  completedAt?: Date;
+  completedAt?: Date | null;
   createdBy?: string;
-  timeLogs?: TimeLog[];
-  totalTimeSpent?: number;
+  timeLogs?: TimeLog[] | null;
+  totalTimeSpent?: number | null;
   attachments?: Array<{
     name: string;
     url: string;
     size?: number;
     type?: string;
   }>;
+  acceptanceCriteria?: Array<{ text: string; completed: boolean }>;
   comments?: TaskComment[];
+  progress?: number;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }
+
+export const TASK_TYPES = ["STORY", "BUG", "TASK", "EPIC"] as const;

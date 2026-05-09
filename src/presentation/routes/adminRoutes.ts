@@ -96,5 +96,10 @@ export function createAdminRoutes(container: Container): Router {
     invoiceController.getInvoices(req, res, next),
   );
 
+  // Analytics
+  router.get(API_ROUTES.ADMIN.ANALYTICS, (req, res, next) =>
+    orgController.getAnalytics(req, res, next),
+  );
+
   return router;
 }

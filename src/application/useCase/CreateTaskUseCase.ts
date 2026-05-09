@@ -4,20 +4,21 @@ import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { ISprintRepo } from "../../application/interface/repositories/ISprintRepo";
 import { ICreateTaskUseCase } from "../interface/useCases/ICreateTaskUseCase";
-import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { ITaskDomainService } from "../../domain/interface/services/ITaskDomainService";
 import { Task } from "../../domain/entities/Task";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
-import { UserRole } from "../../domain/enums/UserRole";
 import {
   EntityNotFoundError,
   ValidationError,
+  ForbiddenError,
 } from "../../domain/errors/CommonErrors";
-import { User } from "../../domain/entities/User";
+import { UserRole } from "../../domain/enums/UserRole";
+
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 
 import { ILogger } from "../../application/interface/services/ILogger";
-import { ISocketService } from "../../application/interface/services/ISocketService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { TASK_EVENTS } from "../events/TaskEvents";
 
 @injectable()
 export class CreateTaskUseCase implements ICreateTaskUseCase {
@@ -26,9 +27,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
     @inject(TYPES.ISprintRepo) private _sprintRepo: ISprintRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.INotificationService)
-    private _notificationService: INotificationService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
     @inject(TYPES.ITaskDomainService)
     private _taskDomainService: ITaskDomainService,
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
@@ -39,12 +38,38 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     if (data.orgId) {
       await this._securityService.validateOrgAccess(creatorId, data.orgId);
     }
+
+    const creator = await this._userRepo.findById(creatorId);
+    if (!creator) throw new EntityNotFoundError("User", creatorId);
+    if (creator.role === UserRole.TEAM_MEMBER) {
+      if (data.type == "EPIC") {
+        throw new ForbiddenError("Team member cannot create epic");
+      }
+      if (data.storyPoints !== undefined) {
+        throw new ForbiddenError("Only managers can estimate story points");
+      }
+      if (data.assignedTo && data.assignedTo !== creatorId) {
+        throw new ForbiddenError(
+          "Team member cannot assign tasks to other users",
+        );
+      }
+    }
+
     if (!data.projectId) throw new ValidationError("Project Id is required");
     const project = await this._projectRepo.findById(data.projectId);
     if (!project)
       throw new EntityNotFoundError("Project Not Found", data.projectId);
     if (project.orgId !== data.orgId)
       throw new ValidationError("Project does not belong to this organization");
+
+    let parentTask = null;
+    if (data.parentTaskId) {
+      parentTask = await this._taskRepo.findById(data.parentTaskId);
+      if (!parentTask)
+        throw new EntityNotFoundError("Parent Task", data.parentTaskId);
+    }
+
+    this._taskDomainService.validateHierarchy(data as Task, parentTask);
 
     if (data.dueDate) {
       const sprint = data.sprintId
@@ -57,28 +82,11 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       );
     }
 
-    if (data.sprintId) {
-      const sprint = await this._sprintRepo.findById(data.sprintId);
-      if (!sprint) throw new ValidationError("Sprint not found");
-
-      // [SCURM] Domain Rule: Assignment to Sprint (Must be estimated)
-      this._taskDomainService.validateAssignmentToSprint(data as Task);
-
-      const capacity = this._taskDomainService.calculateSprintCapacity(
-        sprint,
-        project.tasksPerWeek,
-      );
-      const currentCount = await this._taskRepo.countBySprint(data.sprintId);
-      if (currentCount >= capacity) {
-        throw new ValidationError("Sprint task capacity exceeded.");
-      }
-    }
-
-    const getDayRangeLocal = (): { start: Date; end: Date } => {
+    const getDayRangeUTC = (): { start: Date; end: Date } => {
       const start = new Date();
-      start.setHours(0, 0, 0, 0);
+      start.setUTCHours(0, 0, 0, 0);
       const end = new Date();
-      end.setHours(23, 59, 59, 999);
+      end.setUTCHours(23, 59, 59, 999);
       return { start, end };
     };
 
@@ -88,7 +96,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     };
 
     if (data.sprintId) {
-      const { start, end } = getDayRangeLocal();
+      const { start, end } = getDayRangeUTC();
       const dailyCount = await this._taskRepo.countBySprintAssignedAtRange(
         data.sprintId,
         start,
@@ -142,48 +150,14 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
 
     const newTask = await this._taskRepo.create(taskData);
 
-    // [NEW] Targeted Real-time Alerts
-    // 1. Project Room (Project Details Live Update)
-    this._socketService.emitToProject(
-      newTask.projectId,
-      "task:created",
-      newTask,
-    );
+    // Dispatch Domain Event for side effects (Sockets, Notifications, History)
+    await this._eventDispatcher.dispatch(TASK_EVENTS.CREATED, {
+      task: newTask,
+      creatorId,
+    });
 
-    // 2. Org Managers (Manager Dashboard Live Update)
-    this._socketService.emitToRoleInOrg(
-      data.orgId!,
-      UserRole.ORG_MANAGER,
-      "task:created",
-      newTask,
-    );
-
-    if (newTask.assignedTo) {
-      // Validate that the assignee belongs to this organization
-      await this._securityService.validateUserBelongsToOrg(
-        newTask.assignedTo,
-        data.orgId!,
-      );
-
-      this._socketService.emitToUser(
-        newTask.assignedTo,
-        "task:assigned",
-        newTask,
-      );
-
-      const creator = await this._userRepo.findById(creatorId);
-      if (creator) {
-        await this._notificationService.notifyTaskAssignment(newTask, creator);
-      }
-    }
+    await this._projectRepo.incrementStats(project.id, { totalTasks: 1 });
 
     return newTask;
-  }
-
-  private formatUserName(user: User): string {
-    if (user.firstName) {
-      return `${user.firstName} ${user.lastName || ""}`.trim();
-    }
-    return user.name || "User";
   }
 }

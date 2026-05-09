@@ -29,7 +29,10 @@ export class ChatRepo implements IChatRepo {
   }
 
   async countByProjectId(projectId: string): Promise<number> {
-    return await ChatModel.countDocuments({ projectId });
+    return await ChatModel.countDocuments({
+      projectId,
+      isDeleted: { $ne: true },
+    });
   }
 
   async findByProjectId(
@@ -37,7 +40,10 @@ export class ChatRepo implements IChatRepo {
     limit = 50,
     before?: string,
   ): Promise<{ messages: ChatMessage[]; nextCursor: string | null }> {
-    const query: Record<string, unknown> = { projectId };
+    const query: Record<string, unknown> = {
+      projectId,
+      isDeleted: { $ne: true },
+    };
 
     if (before) {
       query.createdAt = { $lt: new Date(before) };
@@ -98,10 +104,10 @@ export class ChatRepo implements IChatRepo {
   }
 
   async findById(id: string): Promise<ChatMessage | null> {
-    const doc = await ChatModel.findById(id).populate(
-      "senderId",
-      "firstName lastName name",
-    );
+    const doc = await ChatModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    }).populate("senderId", "firstName lastName name");
     if (!doc) return null;
 
     const entity = this.toEntity(doc);
@@ -119,8 +125,8 @@ export class ChatRepo implements IChatRepo {
     id: string,
     content: string,
   ): Promise<ChatMessage | null> {
-    const doc = await ChatModel.findByIdAndUpdate(
-      id,
+    const doc = await ChatModel.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
       { content },
       { new: true },
     ).populate("senderId", "firstName lastName name");
@@ -137,12 +143,18 @@ export class ChatRepo implements IChatRepo {
   }
 
   async deleteMessage(id: string): Promise<boolean> {
-    const result = await ChatModel.findByIdAndDelete(id);
+    const result = await ChatModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+      deletedAt: new Date(),
+    });
     return !!result;
   }
 
   async deleteByProject(projectId: string): Promise<boolean> {
-    const result = await ChatModel.deleteMany({ projectId });
+    const result = await ChatModel.updateMany(
+      { projectId, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
     return result.acknowledged;
   }
 }

@@ -6,8 +6,8 @@ import { IGetProjectMessagesUseCase } from "../../application/interface/useCases
 import { IEditMessageUseCase } from "../../application/interface/useCases/IEditMessageUseCase";
 import { IDeleteMessageUseCase } from "../../application/interface/useCases/IDeleteMessageUseCase";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
-import { asyncHandler } from "../middleware/ErrorMiddleware";
+import { ResponseHandler } from "../utils/ResponseHandler";
+import { asyncHandler } from "../../utils/asyncHandler";
 import { toChatMessageDTO } from "../../application/dto/ChatMessageDTO";
 
 @injectable()
@@ -23,20 +23,6 @@ export class ChatController {
     private _deleteMessageUC: IDeleteMessageUseCase,
   ) {}
 
-  private sendSuccess<T>(
-    res: Response,
-    data: T,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ): void {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   sendMessage = asyncHandler(async (req: Request, res: Response) => {
     const { projectId } = req.params;
     const { content, type, fileUrl } = req.body;
@@ -50,7 +36,7 @@ export class ChatController {
       fileUrl,
     );
 
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       toChatMessageDTO(message),
       "Message sent successfully",
@@ -69,7 +55,7 @@ export class ChatController {
       before as string | undefined,
     );
 
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       {
         messages: result.messages.map(toChatMessageDTO),
@@ -89,7 +75,7 @@ export class ChatController {
       content,
     );
 
-    this.sendSuccess(
+    ResponseHandler.success(
       res,
       toChatMessageDTO(message),
       "Message updated successfully",
@@ -101,6 +87,6 @@ export class ChatController {
     const userId = (req as AuthenticatedRequest).user!.id;
     await this._deleteMessageUC.execute(messageId, userId);
 
-    this.sendSuccess(res, null, "Message deleted successfully");
+    ResponseHandler.success(res, null, "Message deleted successfully");
   });
 }

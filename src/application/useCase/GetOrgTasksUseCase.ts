@@ -21,4 +21,16 @@ export class GetOrgTasksUseCase implements IGetOrgTasksUseCase {
     await this._securityService.validateOrgAccess(requesterId, orgId);
     return this._taskRepo.findByOrganization(orgId);
   }
+
+  async executePaginated(
+    orgId: string,
+    limit: number,
+    offset: number,
+  ): Promise<{ tasks: Task[]; total: number }> {
+    const [tasks, total] = await Promise.all([
+      this._taskRepo.findPaginatedByOrg(orgId, limit, offset),
+      this._taskRepo.countByOrg(orgId),
+    ]);
+    return { tasks, total };
+  }
 }

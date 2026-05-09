@@ -1,12 +1,12 @@
 import { inject, injectable } from "inversify";
-import { INotificationService } from "../interface/services/INotificationService";
+import { INotificationService } from "../../domain/interface/services/INotificationService";
 import { INotificationRepo } from "../../application/interface/repositories/INotificationRepo";
 import { ISocketService } from "../../application/interface/services/ISocketService";
-import { TYPES } from "../../infrastructure/container/types";
-import { NotificationType } from "../enums/NotificationType";
-import { Task } from "../entities/Task";
-import { User } from "../entities/User";
-import { Notification } from "../entities/Notification";
+import { TYPES } from "../container/types";
+import { NotificationType } from "../../domain/enums/NotificationType";
+import { Task } from "../../domain/entities/Task";
+import { User } from "../../domain/entities/User";
+import { Notification } from "../../domain/entities/Notification";
 
 @injectable()
 export class NotificationService implements INotificationService {

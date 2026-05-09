@@ -2,20 +2,21 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IDeleteMessageUseCase } from "../interface/useCases/IDeleteMessageUseCase";
 import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
-import { ISocketService } from "../../application/interface/services/ISocketService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import {
   EntityNotFoundError,
   ForbiddenError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { CHAT_EVENTS } from "../events/ChatEvents";
 
 @injectable()
 export class DeleteMessageUseCase implements IDeleteMessageUseCase {
   constructor(
     @inject(TYPES.IChatRepo) private _chatRepo: IChatRepo,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(messageId: string, userId: string): Promise<void> {
@@ -44,6 +45,10 @@ export class DeleteMessageUseCase implements IDeleteMessageUseCase {
     const projectId = message.projectId;
     await this._chatRepo.deleteMessage(messageId);
 
-    this._socketService.emitToProject(projectId, "chat:deleted", { messageId });
+    // DISPATCH EVENT
+    this._eventDispatcher.dispatch(CHAT_EVENTS.MESSAGE_DELETED, {
+      messageId,
+      projectId,
+    });
   }
 }

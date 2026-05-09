@@ -47,12 +47,6 @@ export interface IOrgRepo {
   delete(id: string): Promise<boolean>;
 
   /**
-   * Permanently delete organization
-   * @param id - Organization ID
-   */
-  hardDelete(id: string): Promise<void>;
-
-  /**
    * Find organizations by status
    * @param status - Organization status
    * @returns Array of organizations with the status
@@ -70,6 +64,7 @@ export interface IOrgRepo {
     limit: number,
     offset: number,
     searchTerm?: string,
+    status?: string,
   ): Promise<{
     organizations: Organization[];
     total: number;
@@ -88,16 +83,4 @@ export interface IOrgRepo {
    * @returns Organization count
    */
   countByStatus(status: string): Promise<number>;
-
-  /**
-   * Check if organization name exists
-   * @param name - Organization name to check
-   * @param excludeId - Organization ID to exclude from check
-   * @returns Whether name exists
-   */
-  /**
-   * Get distribution of organizations by status
-   * @returns Array of status counts
-   */
-  getStatusDistribution(): Promise<Array<{ _id: string; count: number }>>;
 }

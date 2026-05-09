@@ -87,19 +87,6 @@ export interface IInviteRepo {
   isValidInvitation(token: string): Promise<boolean>;
 
   /**
-   * Get invitation statistics for organization
-   * @param orgId - Organization ID
-   * @returns Invitation statistics
-   */
-  getInvitationStats(orgId: string): Promise<{
-    total: number;
-    pending: number;
-    accepted: number;
-    expired: number;
-    cancelled: number;
-  }>;
-
-  /**
    * Find invitation by ID
    * @param id - Invitation ID
    */
@@ -116,6 +103,27 @@ export interface IInviteRepo {
    * @param id - Invitation ID
    */
   deleteById(id: string): Promise<boolean>;
+
+  /**
+   * Find invitations with pagination
+   * @param limit - Number of invitations to return
+   * @param offset - Number of invitations to skip
+   * @param searchTerm - Optional search term
+   * @param filters - Optional filters (orgId, status)
+   * @returns Paginated invitations
+   */
+  findPaginated(
+    limit: number,
+    offset: number,
+    searchTerm?: string,
+    filters?: {
+      orgId?: string;
+      status?: string;
+    },
+  ): Promise<{
+    invites: Invite[];
+    total: number;
+  }>;
 
   /**
    * Delete all invitations for an organization

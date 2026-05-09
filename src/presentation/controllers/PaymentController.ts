@@ -3,10 +3,9 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ICreateSubscriptionUseCase } from "../../application/interface/useCases/ICreateSubscriptionUseCase";
 import { IVerifyPaymentUseCase } from "../../application/interface/useCases/IVerifyPaymentUseCase";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
+import { ResponseHandler } from "../utils/ResponseHandler";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
-import { ValidationError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class PaymentController {
@@ -17,34 +16,21 @@ export class PaymentController {
     private _verifyPaymentUC: IVerifyPaymentUseCase,
   ) {}
 
-  private sendSuccess<T>(
-    res: Response,
-    data: T,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ): void {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   createSubscription = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const { planId } = req.body;
       const userId = req.user!.id;
 
       if (!planId) {
-        throw new ValidationError("Plan ID is required");
+        ResponseHandler.validationError(res, "Plan ID is required");
+        return;
       }
 
       const subscription = await this._createSubscriptionUC.execute(
         userId,
         planId,
       );
-      this.sendSuccess(res, subscription, "Subscription initiated");
+      ResponseHandler.created(res, subscription, "Subscription created");
     },
   );
 
@@ -61,7 +47,8 @@ export class PaymentController {
       const orderId = razorpay_order_id || razorpay_subscription_id;
 
       if (!orderId || !razorpay_payment_id || !razorpay_signature) {
-        throw new ValidationError("Missing payment details");
+        ResponseHandler.validationError(res, "Missing payment details");
+        return;
       }
 
       const isValid = await this._verifyPaymentUC.execute(
@@ -72,15 +59,14 @@ export class PaymentController {
       );
 
       if (isValid) {
-        this.sendSuccess(
+        ResponseHandler.success(
           res,
           null,
           "Payment verified and subscription updated",
         );
       } else {
-        res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ success: false, message: "Invalid signature" });
+        ResponseHandler.validationError(res, "Payment signature not found");
+        return;
       }
     },
   );

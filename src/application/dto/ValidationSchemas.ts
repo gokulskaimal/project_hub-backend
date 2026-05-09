@@ -4,7 +4,7 @@ import { UserRole } from "../../domain/enums/UserRole";
 
 // Task Priorities and Types must strictly match application ENUMs
 export const PRIORITY_LEVELS = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
-export const TASK_TYPES = ["STORY", "BUG", "TASK"] as const;
+export const TASK_TYPES = ["STORY", "BUG", "TASK", "EPIC"] as const;
 export const STORY_POINTS = [0, 1, 2, 3, 5, 8, 13] as const;
 export const TASK_STATUS = [
   "TODO",
@@ -24,16 +24,50 @@ export const TaskBaseSchema = z.object({
   type: z.enum(TASK_TYPES, {
     errorMap: () => ({ message: "Invalid task type" }),
   }),
+  epicId: z.string().nullable().optional(),
   storyPoints: z
     .number()
     .int()
-    .refine((v) => STORY_POINTS.includes(v as (typeof STORY_POINTS)[number]), {
-      message: "Story points must be one of 0,1,2,3,5,8,13",
-    })
+    .refine(
+      (v) =>
+        v === null ||
+        v === undefined ||
+        STORY_POINTS.includes(v as (typeof STORY_POINTS)[number]),
+      {
+        message: "Story points must be one of 0,1,2,3,5,8,13",
+      },
+    )
     .nullable()
     .optional(),
   assignedTo: z.string().nullable().optional(),
   parentTaskId: z.string().nullable().optional(),
+  dueDate: z
+    .preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.union([z.string(), z.date()]).optional(),
+    )
+    .refine((v) => {
+      if (!v) return true;
+      if (v instanceof Date) return !isNaN(v.getTime());
+      return !isNaN(Date.parse(v));
+    }, "Invalid due date")
+    .optional(),
+  acceptanceCriteria: z
+    .array(
+      z.object({
+        text: z.string().min(1, "Criteria text required"),
+        completed: z.boolean().default(false),
+      }),
+    )
+    .optional(),
+  dependencies: z
+    .array(
+      z.object({
+        taskId: z.string().min(1, "Dependency Task ID is required"),
+        type: z.enum(["BLOCKS", "IS_BLOCKED_BY", "RELATES_TO"]),
+      }),
+    )
+    .optional(),
 });
 
 export const TaskCreateSchema = TaskBaseSchema.refine(
@@ -54,22 +88,39 @@ export const TaskCreateSchema = TaskBaseSchema.refine(
   },
 );
 
-export const TaskUpdateSchema = TaskBaseSchema.partial().extend({
-  status: z.enum(TASK_STATUS).optional(),
-  sprintId: z.string().nullable().optional(),
-  attachments: z
-    .array(
-      z.object({
-        name: z.string(),
-        url: z.string().url(),
-        size: z.number().optional(),
-        type: z.string().optional(),
-      }),
-    )
-    .optional(),
-  comments: z.array(z.any()).optional(),
-  parentTaskId: z.string().optional(),
-});
+export const TaskUpdateSchema = TaskBaseSchema.partial()
+  .extend({
+    status: z.enum(TASK_STATUS).optional(),
+    sprintId: z.string().nullable().optional(),
+    attachments: z
+      .array(
+        z.object({
+          name: z.string(),
+          url: z.string().url(),
+          size: z.number().optional(),
+          type: z.string().optional(),
+        }),
+      )
+      .optional(),
+
+    parentTaskId: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      // For updates, we ONLY validate if storyPoints is explicitly provided.
+      // If it's undefined, we assume the existing value is preserved.
+      if (data.type === "STORY" && data.storyPoints !== undefined) {
+        if (data.storyPoints === null || data.storyPoints === 0) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: "User Stories must have story points assigned (> 0)",
+      path: ["storyPoints"],
+    },
+  );
 
 export const TaskCommentCreateSchema = z.object({
   text: z
@@ -96,11 +147,46 @@ export const SprintCreateSchema = z
     path: ["endDate"],
   });
 
+export const SprintUpdateSchema = z
+  .object({
+    projectId: z.string().min(1, "Project ID is required").optional(),
+    name: z
+      .string()
+      .min(3, "Sprint name must be at least 3 characters")
+      .optional(),
+    description: z.string().nullable().optional(),
+    startDate: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), "Invalid start date")
+      .optional(),
+    endDate: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), "Invalid end date")
+      .optional(),
+    goal: z.string().nullable().optional(),
+    status: z
+      .enum(["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED", "PLANNING"])
+      .optional(),
+    spilloverDestination: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: "End date must be after or equal to start date",
+      path: ["endDate"],
+    },
+  );
+
 // Organization Validation
 export const OrgCreateSchema = z.object({
   name: z.string().min(3, "Organization name must be at least 3 characters"),
   description: z.string().optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.record(z.unknown()).optional(),
 });
 
 export const OrgUpdateSchema = OrgCreateSchema.partial().extend({
@@ -123,6 +209,21 @@ export const BulkInviteSchema = z.object({
   role: z.nativeEnum(UserRole).optional(),
   expiresIn: z.number().min(1).max(365).optional(),
 });
+
+export const AcceptInviteSchema = z
+  .object({
+    token: z.string().min(1, "Token is required"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z
+      .string()
+      .min(6, "Confirm Password must be at least 6 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 // Project Validation
 export const ProjectCreateSchema = z
@@ -249,3 +350,26 @@ export const DeleteAccountSchema = z.object({
     errorMap: () => ({ message: "Must type 'DELETE' to confirm" }),
   }),
 });
+// Plan Validation
+export const PlanCreateSchema = z.object({
+  name: z.string().min(3, "Plan name must be at least 3 characters"),
+  description: z.string().optional(),
+  price: z.number().min(0, "Price must be a positive number"),
+  currency: z.string().default("INR"),
+  features: z.array(z.string()).min(1, "At least one feature is required"),
+  duration: z
+    .number()
+    .int()
+    .positive("Duration must be at least 1 day")
+    .optional(),
+  type: z.enum(["STARTER", "PRO", "ENTERPRISE"]),
+  isActive: z.boolean().default(true),
+  limits: z.object({
+    projects: z.number().int().min(1, "Must allow at least 1 project"),
+    members: z.number().int().min(1, "Must allow at least 1 member"),
+    storage: z.number().int().optional(),
+    messages: z.number().int().optional(),
+  }),
+});
+
+export const PlanUpdateSchema = PlanCreateSchema.partial();

@@ -7,9 +7,12 @@ export interface TaskHistory {
     | "STATUS_CHANGED"
     | "ASSIGNEE_CHANGED"
     | "SPRINT_CHANGED"
-    | "UPDATED";
+    | "UPDATED"
+    | "DELETED";
   details?: string;
   previousValue?: string;
   newValue?: string;
   createdAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

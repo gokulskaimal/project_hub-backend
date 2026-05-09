@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Invite {
   id: string;
 
@@ -34,7 +33,11 @@ export interface Invite {
 
   updatedAt?: Date;
 
-  metadata?: Record<string, any>;
+  isDeleted?: boolean;
+
+  deletedAt?: Date | null;
+
+  metadata?: Record<string, unknown>;
 
   createdFromIp?: string;
 

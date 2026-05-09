@@ -6,5 +6,5 @@ export interface IManagerInvoiceController {
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction,
-  ): Promise<void>;
+  ): void | Promise<void>;
 }

@@ -2,30 +2,17 @@ import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IFileService } from "../../application/interface/services/IFileService";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
-import { asyncHandler } from "../middleware/ErrorMiddleware";
+import { ResponseHandler } from "../utils/ResponseHandler";
+import { asyncHandler } from "../../utils/asyncHandler";
 import { AuthenticatedRequest } from "../middleware/types/AuthenticatedRequest";
 
 @injectable()
 export class UploadController {
   constructor(@inject(TYPES.IFileService) private _fileService: IFileService) {}
 
-  private sendSuccess<T>(res: Response, data: T, message: string = "Success") {
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   uploadFile = asyncHandler(async (req: Request, res: Response) => {
     if (!req.file) {
-      res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "No file uploaded",
-      });
-      return;
+      return ResponseHandler.validationError(res, "No file uploaded");
     }
 
     const allowedFolders = ["chat", "task", "profile", "organization"];
@@ -40,6 +27,6 @@ export class UploadController {
 
     const url = await this._fileService.uploadFile(req.file, folder, ownerId);
 
-    this.sendSuccess(res, { url }, "File uploaded successfully");
+    ResponseHandler.success(res, { url }, "File uploaded successfully");
   });
 }

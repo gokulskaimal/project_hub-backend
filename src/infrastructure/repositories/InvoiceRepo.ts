@@ -29,7 +29,10 @@ export class InvoiceRepo implements IInvoiceRepo {
   }
 
   async findById(id: string): Promise<Invoice | null> {
-    const doc = await InvoiceModel.findById(id);
+    const doc = await InvoiceModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    });
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -39,7 +42,7 @@ export class InvoiceRepo implements IInvoiceRepo {
     limit: number,
   ): Promise<{ items: Invoice[]; total: number }> {
     const pipeline: PipelineStage[] = [
-      { $match: { orgId } },
+      { $match: { orgId, isDeleted: { $ne: true } } },
       {
         $addFields: {
           planObjectId: { $toObjectId: "$planId" },
@@ -48,8 +51,15 @@ export class InvoiceRepo implements IInvoiceRepo {
       {
         $lookup: {
           from: "plans",
-          localField: "planObjectId",
-          foreignField: "_id",
+          let: { planIdObj: "$planObjectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$planIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "plan",
         },
       },
@@ -84,6 +94,7 @@ export class InvoiceRepo implements IInvoiceRepo {
     planType?: string,
   ): Promise<{ items: Invoice[]; total: number; totalRevenue: number }> {
     const pipeline: PipelineStage[] = [
+      { $match: { isDeleted: { $ne: true } } },
       {
         $addFields: {
           orgObjectId: { $toObjectId: "$orgId" },
@@ -93,8 +104,15 @@ export class InvoiceRepo implements IInvoiceRepo {
       {
         $lookup: {
           from: "organizations",
-          localField: "orgObjectId",
-          foreignField: "_id",
+          let: { orgIdObj: "$orgObjectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$orgIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "org",
         },
       },
@@ -107,8 +125,15 @@ export class InvoiceRepo implements IInvoiceRepo {
       {
         $lookup: {
           from: "plans",
-          localField: "planObjectId",
-          foreignField: "_id",
+          let: { planIdObj: "$planObjectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$planIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "plan",
         },
       },
@@ -140,32 +165,38 @@ export class InvoiceRepo implements IInvoiceRepo {
     else if (sort === "amount_desc") sortStage.amount = -1;
     else sortStage.createdAt = -1;
 
-    const countPipeline = [
+    // Use facets to get total count, total revenue, and paginated items in ONE call
+    const facetPipeline: PipelineStage[] = [
       ...pipeline,
       {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          totalRevenue: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "PAID"] }, "$amount", 0],
+        $facet: {
+          metadata: [
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                totalRevenue: { $sum: "$amount" },
+              },
             },
-          },
+          ],
+          data: [{ $sort: sortStage }, { $skip: skip }, { $limit: limit }],
         },
       },
     ];
-    const countResult = await InvoiceModel.aggregate(countPipeline);
-    const total = countResult[0]?.total || 0;
-    const totalRevenue = countResult[0]?.totalRevenue || 0;
 
-    pipeline.push({ $sort: sortStage });
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
+    const [result] = await InvoiceModel.aggregate<{
+      metadata: Array<{ total: number; totalRevenue: number }>;
+      data: AggregatedInvoiceDoc[];
+    }>(facetPipeline);
 
-    const docs = await InvoiceModel.aggregate<AggregatedInvoiceDoc>(pipeline);
+    const metadata = result.metadata[0] || { total: 0, totalRevenue: 0 };
+    const items = result.data.map((doc) => this.toDomain(doc));
 
-    const items = docs.map((doc) => this.toDomain(doc));
-    return { items, total, totalRevenue };
+    return {
+      items,
+      total: metadata.total,
+      totalRevenue: metadata.totalRevenue,
+    };
   }
 
   private toDomain(doc: AggregatedInvoiceDoc): Invoice {
@@ -189,5 +220,13 @@ export class InvoiceRepo implements IInvoiceRepo {
       planName: doc.plan?.name,
       planType: doc.plan?.type,
     };
+  }
+
+  async deleteByOrgId(orgId: string): Promise<boolean> {
+    const result = await InvoiceModel.updateMany(
+      { orgId, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
+    return result.acknowledged;
   }
 }

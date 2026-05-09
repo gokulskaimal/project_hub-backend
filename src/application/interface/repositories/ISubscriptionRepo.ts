@@ -10,4 +10,5 @@ export interface ISubscriptionRepo extends IBaseRepository<Subscription> {
     razorpayId: string,
     subscription: Partial<Subscription>,
   ): Promise<Subscription | null>;
+  deleteByUserId(userId: string): Promise<boolean>;
 }

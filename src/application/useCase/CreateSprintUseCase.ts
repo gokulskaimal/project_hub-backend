@@ -9,6 +9,8 @@ import { IAuthValidationService } from "../../application/interface/services/IAu
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ICreateSprintUseCase } from "../interface/useCases/ICreateSprintUseCase";
 import { ISprintDomainService } from "../../domain/interface/services/ISprintDomainService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { SPRINT_EVENTS } from "../events/SprintEvents";
 
 @injectable()
 export class CreateSprintUseCase implements ICreateSprintUseCase {
@@ -21,6 +23,7 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
     @inject(TYPES.ISprintDomainService)
     private _sprintDomainService: ISprintDomainService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(data: Partial<Sprint>, requesterId: string): Promise<Sprint> {
@@ -89,6 +92,13 @@ export class CreateSprintUseCase implements ICreateSprintUseCase {
       status: data.status || "PLANNED",
     };
 
-    return await this._sprintRepo.create(sprintData);
+    const newSprint = await this._sprintRepo.create(sprintData);
+
+    this._eventDispatcher.dispatch(SPRINT_EVENTS.CREATED, {
+      sprint: newSprint,
+      creatorId: requesterId,
+    });
+
+    return newSprint;
   }
 }

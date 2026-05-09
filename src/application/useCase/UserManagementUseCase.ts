@@ -3,8 +3,12 @@ import { TYPES } from "../../infrastructure/container/types";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { IUserManagementUseCase } from "../interface/useCases/IUserManagementUseCase";
 import { User } from "../../domain/entities/User";
-import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
+import {
+  EntityNotFoundError,
+  ForbiddenError,
+} from "../../domain/errors/CommonErrors";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { UserRole } from "../../domain/enums/UserRole";
 
 @injectable()
 export class UserManagementUseCase implements IUserManagementUseCase {
@@ -20,8 +24,6 @@ export class UserManagementUseCase implements IUserManagementUseCase {
     requesterId: string,
   ): Promise<User> {
     await this._securityService.validateSuperAdmin(requesterId);
-    // Ensure sensitive fields are not updated blindly
-    // Typically the repo handles checking, but here we can add business rules
     return this._userRepo.updateProfile(userId, data);
   }
 
@@ -30,20 +32,42 @@ export class UserManagementUseCase implements IUserManagementUseCase {
     status: string,
     requesterId: string,
   ): Promise<User> {
-    await this._securityService.validateSuperAdmin(requesterId);
     const user = await this._userRepo.findById(userId);
-    if (!user) {
-      throw new EntityNotFoundError("User", userId);
+    if (!user) throw new EntityNotFoundError("User", userId);
+
+    const requester = await this._userRepo.findById(requesterId);
+    if (!requester) throw new ForbiddenError("Requester not found");
+
+    // RBAC: Super Admin OR (Org Manager of the same Org)
+    if (requester.role !== UserRole.SUPER_ADMIN) {
+      if (requester.role !== UserRole.ORG_MANAGER)
+        throw new ForbiddenError("Access denied");
+      if (user.orgId !== requester.orgId)
+        throw new ForbiddenError("Member not in your organization");
+      if (userId === requesterId)
+        throw new ForbiddenError("Cannot change your own status");
     }
+
     return this._userRepo.updateStatus(userId, status);
   }
 
   async deleteUser(userId: string, requesterId: string): Promise<void> {
-    await this._securityService.validateSuperAdmin(requesterId);
     const user = await this._userRepo.findById(userId);
-    if (!user) {
-      throw new EntityNotFoundError("User", userId);
+    if (!user) throw new EntityNotFoundError("User", userId);
+
+    const requester = await this._userRepo.findById(requesterId);
+    if (!requester) throw new ForbiddenError("Requester not found");
+
+    // RBAC: Super Admin OR (Org Manager of the same Org)
+    if (requester.role !== UserRole.SUPER_ADMIN) {
+      if (requester.role !== UserRole.ORG_MANAGER)
+        throw new ForbiddenError("Access denied");
+      if (user.orgId !== requester.orgId)
+        throw new ForbiddenError("Member not in your organization");
+      if (userId === requesterId)
+        throw new ForbiddenError("Cannot remove yourself");
     }
+
     await this._userRepo.delete(userId);
   }
 }

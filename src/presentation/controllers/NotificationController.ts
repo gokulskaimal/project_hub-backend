@@ -5,9 +5,9 @@ import { TYPES } from "../../infrastructure/container/types";
 import { IGetNotificationsUseCase } from "../../application/interface/useCases/IGetNotificationsUseCase";
 import { IMarkNotificationReadUseCase } from "../../application/interface/useCases/IMarkNotificationReadUseCase";
 import { IMarkAllNotificationsReadUseCase } from "../../application/interface/useCases/IMarkAllNotificationsReadUseCase";
-import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { toNotificationDTO } from "../../application/dto/NotificationDTO";
-import { asyncHandler } from "../middleware/ErrorMiddleware";
+import { ResponseHandler } from "../utils/ResponseHandler";
+import { asyncHandler } from "../../utils/asyncHandler";
 
 @injectable()
 export class NotificationController {
@@ -20,25 +20,11 @@ export class NotificationController {
     private _markAllReadUC: IMarkAllNotificationsReadUseCase,
   ) {}
 
-  private sendSuccess<T>(
-    res: Response,
-    data: T,
-    message: string = "Success",
-    status: number = StatusCodes.OK,
-  ): void {
-    res.status(status).json({
-      success: true,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   getNotification = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
       const notifications = await this._getNotificationsUC.execute(userId);
-      this.sendSuccess(
+      ResponseHandler.success(
         res,
         notifications.map(toNotificationDTO),
         "Notifications fetched successfully",
@@ -50,14 +36,14 @@ export class NotificationController {
     const { id } = req.params;
     const userId = req.user!.id;
     await this._markReadUC.execute(id, userId);
-    this.sendSuccess(res, null, "Notification marked as read");
+    ResponseHandler.success(res, null, "Notification marked as read");
   });
 
   markAllRead = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.id;
       await this._markAllReadUC.execute(userId);
-      this.sendSuccess(res, null, "All notifications marked as read");
+      ResponseHandler.success(res, null, "All notifications marked as read");
     },
   );
 }

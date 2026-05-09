@@ -1,23 +1,44 @@
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../infrastructure/container/types";
 import { BaseRepository } from "./BaseRepo";
 import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { Task } from "../../domain/entities/Task";
 import { TaskModel, ITaskDoc } from "../models/TaskModel";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { Model } from "mongoose";
 
+@injectable()
 export class TaskRepo
   extends BaseRepository<Task, ITaskDoc>
   implements ITaskRepo
 {
-  constructor() {
+  constructor(@inject(TYPES.ILogger) private readonly _logger: ILogger) {
     super(TaskModel as unknown as Model<ITaskDoc>);
   }
 
   protected toDomain(doc: ITaskDoc): Task {
-    const obj = doc.toObject() as ITaskDoc;
+    const obj = doc.toObject() as Record<string, unknown>;
+    const raw =
+      (doc as unknown as { _doc: Record<string, unknown> })._doc || {};
+
+    const assignedTo =
+      obj.assignedTo || doc.get("assignedTo") || raw.assignedTo || raw.assignee;
+    const sprintId = obj.sprintId || doc.get("sprintId") || raw.sprintId;
+    const createdBy = obj.createdBy || doc.get("createdBy") || raw.createdBy;
+    const projectId = obj.projectId || doc.get("projectId") || raw.projectId;
+    const orgId = obj.orgId || doc.get("orgId") || raw.orgId;
+    const parentTaskId =
+      obj.parentTaskId || doc.get("parentTaskId") || raw.parentTaskId;
+    const epicId = obj.epicId || doc.get("epicId") || raw.epicId;
+
+    if (epicId) {
+      this._logger.info(`Mapping Task ${obj.taskKey} with EpicId: ${epicId}`);
+    }
+
     return {
-      id: obj._id.toString(),
-      projectId: obj.projectId,
-      orgId: obj.orgId,
+      id: doc._id.toString(),
+      projectId: projectId?.toString(),
+      orgId: orgId?.toString(),
       taskKey: obj.taskKey,
       title: obj.title,
       description: obj.description,
@@ -25,36 +46,47 @@ export class TaskRepo
       priority: obj.priority,
       type: obj.type,
       storyPoints: obj.storyPoints,
-      sprintId: obj.sprintId?.toString(),
+      sprintId: sprintId?.toString(),
       sprintAssignedAt: obj.sprintAssignedAt,
-      assignedTo: obj.assignedTo,
+      assignedTo: assignedTo?.toString(),
       dueDate: obj.dueDate,
       timeLogs: obj.timeLogs,
       totalTimeSpent: obj.totalTimeSpent,
       attachments: obj.attachments,
-      comments: obj.comments?.map((comment) => {
-        const commentId = (comment as { _id?: { toString(): string } })._id;
-        return {
-          id: commentId?.toString(),
-          userId: comment.userId,
-          text: comment.text,
-          createdAt: comment.createdAt,
-        };
-      }),
+      comments: (obj.comments as Array<Record<string, unknown>>)?.map(
+        (comment: Record<string, unknown>) => {
+          const commentId = (comment as { _id?: { toString(): string } })._id;
+          return {
+            id: commentId?.toString(),
+            userId: comment.userId,
+            text: comment.text,
+            createdAt: comment.createdAt,
+          };
+        },
+      ),
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
       completedAt: obj.completedAt,
-      createdBy: obj.createdBy,
+      createdBy: createdBy?.toString(),
+      parentTaskId: parentTaskId?.toString(),
+      epicId: epicId?.toString(),
+      dependencies: obj.dependencies || [],
+      acceptanceCriteria: obj.acceptanceCriteria || [],
     } as Task;
   }
 
   async findByProject(projectId: string): Promise<Task[]> {
-    const docs = await this.model.find({ projectId }).sort({ createdAt: -1 });
+    const docs = await this.model
+      .find({ projectId, isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 });
     return docs.map((d) => this.toDomain(d));
   }
 
   async findByAssignee(userId: string, orgId?: string): Promise<Task[]> {
-    const query: Record<string, unknown> = { assignedTo: userId };
+    const query: Record<string, unknown> = {
+      assignedTo: userId,
+      isDeleted: { $ne: true },
+    };
     if (orgId) query.orgId = orgId;
 
     const docs = await this.model
@@ -66,14 +98,14 @@ export class TaskRepo
 
   async findByOrganization(orgId: string): Promise<Task[]> {
     const docs = await this.model
-      .find({ orgId })
+      .find({ orgId, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .populate("project", "name");
     return docs.map((d) => this.toDomain(d));
   }
 
   async countBySprint(sprintId: string): Promise<number> {
-    return this.model.countDocuments({ sprintId });
+    return this.model.countDocuments({ sprintId, isDeleted: { $ne: true } });
   }
 
   async countBySprintAssignedAtRange(
@@ -84,47 +116,168 @@ export class TaskRepo
     return this.model.countDocuments({
       sprintId,
       sprintAssignedAt: { $gte: start, $lte: end },
+      isDeleted: { $ne: true },
     });
   }
 
-  async sumDonePointsByUserInRange(
-    userId: string,
-    start: Date,
-    end: Date,
-  ): Promise<number> {
-    const result = await this.model.aggregate([
-      {
-        $match: {
-          assignedTo: userId,
-          status: "DONE",
-          completedAt: { $gte: start, $lte: end },
-        },
-      },
-      { $group: { _id: null, total: { $sum: "$storyPoints" } } },
-    ]);
-    return result[0]?.total || 0;
-  }
-
-  async sumDonePointsByProjectInRange(
-    projectId: string,
-    start: Date,
-    end: Date,
-  ): Promise<number> {
-    const result = await this.model.aggregate([
-      {
-        $match: {
-          projectId,
-          status: "DONE",
-          completedAt: { $gte: start, $lte: end },
-        },
-      },
-      { $group: { _id: null, total: { $sum: "$storyPoints" } } },
-    ]);
-    return result[0]?.total || 0;
-  }
-
   async deleteSubtasks(parentId: string): Promise<boolean> {
-    await this.model.deleteMany({ parentTaskId: parentId });
+    await this.model.updateMany(
+      { parentTaskId: parentId },
+      { $set: { isDeleted: true, deletedAt: new Date() } },
+    );
     return true;
+  }
+
+  async findPaginatedByAssignee(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Task[]> {
+    const docs = await this.model
+      .find({ assignedTo: userId, isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .populate("project", "name");
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async countByAssignee(userId: string): Promise<number> {
+    return await this.model.countDocuments({
+      assignedTo: userId,
+      isDeleted: { $ne: true },
+    });
+  }
+
+  async findPaginatedByOrg(
+    orgId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Task[]> {
+    const docs = await this.model
+      .find({ orgId, isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .populate("project", "name");
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async countByOrg(orgId: string): Promise<number> {
+    return await this.model.countDocuments({ orgId, isDeleted: { $ne: true } });
+  }
+
+  private _buildQuery(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Record<string, unknown> {
+    const query: Record<string, unknown> = {
+      projectId,
+      isDeleted: { $ne: true },
+    };
+    if (filters?.epicId) {
+      query.epicId = filters.epicId;
+    }
+    if (filters?.parentTaskId) {
+      query.parentTaskId = filters.parentTaskId;
+    }
+    if (filters?.type) {
+      query.type = filters.type;
+    }
+    if (filters?.isInBacklog) {
+      query.sprintId = null;
+      if (!filters.type) {
+        query.type = { $ne: "EPIC" };
+      }
+    }
+    return query;
+  }
+
+  async findPaginatedByProject(
+    projectId: string,
+    limit: number,
+    offset: number,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<Task[]> {
+    const query = this._buildQuery(projectId, filters);
+    const docs = await this.model
+      .find(query)
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit);
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async findAllByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<Task[]> {
+    const query = this._buildQuery(projectId, filters);
+    const docs = await this.model.find(query).sort({ createdAt: -1 });
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async countByProject(
+    projectId: string,
+    filters?: {
+      epicId?: string;
+      parentTaskId?: string;
+      isInBacklog?: boolean;
+      type?: string;
+    },
+  ): Promise<number> {
+    const query = this._buildQuery(projectId, filters);
+    return await this.model.countDocuments(query);
+  }
+
+  async findByParent(parentId: string): Promise<Task[]> {
+    const docs = await this.model.find({
+      parentTaskId: parentId,
+      isDeleted: { $ne: true },
+    });
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async findByEpic(epicId: string): Promise<Task[]> {
+    const docs = await this.model.find({
+      epicId: epicId,
+      isDeleted: { $ne: true },
+    });
+    return docs.map((d) => this.toDomain(d));
+  }
+
+  async bulkUpdateSprint(
+    filter: {
+      sprintId: string;
+      status: { $ne: string };
+      type?: { $ne: string };
+    },
+    newSprintId: string | null,
+  ): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        { ...filter, isDeleted: { $ne: true } },
+        { $set: { sprintId: newSprintId, updatedAt: new Date() } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      this._logger.error("Error in bulkUpdateSprint", error as Error);
+      throw error;
+    }
   }
 }

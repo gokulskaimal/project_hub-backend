@@ -2,7 +2,6 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IEditMessageUseCase } from "../interface/useCases/IEditMessageUseCase";
 import { IChatRepo } from "../../application/interface/repositories/IChatRepo";
-import { ISocketService } from "../../application/interface/services/ISocketService";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
 import { ChatMessage } from "../../domain/entities/ChatMessage";
 import {
@@ -10,13 +9,15 @@ import {
   ForbiddenError,
   ValidationError,
 } from "../../domain/errors/CommonErrors";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { CHAT_EVENTS } from "../events/ChatEvents";
 
 @injectable()
 export class EditMessageUseCase implements IEditMessageUseCase {
   constructor(
     @inject(TYPES.IChatRepo) private _chatRepo: IChatRepo,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
   ) {}
 
   async execute(
@@ -52,11 +53,10 @@ export class EditMessageUseCase implements IEditMessageUseCase {
     );
 
     if (updatedMessage) {
-      this._socketService.emitToProject(
-        updatedMessage.projectId,
-        "chat:updated",
-        updatedMessage,
-      );
+      // DISPATCH EVENT
+      this._eventDispatcher.dispatch(CHAT_EVENTS.MESSAGE_EDITED, {
+        message: updatedMessage,
+      });
     }
 
     return updatedMessage!;

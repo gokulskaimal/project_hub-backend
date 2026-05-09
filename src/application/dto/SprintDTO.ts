@@ -21,11 +21,11 @@ export function toSprintDTO(sprint: Sprint): SprintDTO {
     id: sprint.id,
     projectId: sprint.projectId,
     name: sprint.name,
-    description: sprint.description,
+    description: sprint.description || "",
     startDate: toIso(sprint.startDate),
     endDate: toIso(sprint.endDate),
     status: sprint.status,
-    goal: sprint.goal,
+    goal: sprint.goal ?? undefined,
     createdAt: toIso(sprint.createdAt),
     updatedAt: toIso(sprint.updatedAt),
   };

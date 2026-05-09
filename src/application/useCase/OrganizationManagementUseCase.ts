@@ -13,6 +13,8 @@ import { OrganizationNotFoundError } from "../../domain/errors/AuthErrors";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { IDeleteProjectUseCase } from "../interface/useCases/IDeleteProjectUseCase";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
+import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
 
 @injectable()
 export class OrganizationManagementUseCase implements IOrganizationManagementUseCase {
@@ -26,6 +28,9 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     private readonly _deleteProjectUseCase: IDeleteProjectUseCase,
     @inject(TYPES.ISecurityService)
     private readonly _securityService: ISecurityService,
+    @inject(TYPES.ISubscriptionRepo)
+    private readonly _subscriptionRepo: ISubscriptionRepo,
+    @inject(TYPES.IInvoiceRepo) private readonly _invoiceRepo: IInvoiceRepo,
   ) {}
 
   /**
@@ -42,6 +47,11 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
       this._logger.info("Deleting organization with cascading deletion", {
         orgId,
       });
+
+      const organization = await this._orgRepo.findById(orgId);
+      if (!organization) {
+        throw new OrganizationNotFoundError();
+      }
 
       // Get all users in this organization
       const usersInOrg = await this._userRepo.findByOrg(orgId);
@@ -79,8 +89,21 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
         );
       }
 
+      // Delete all invoices for this organization
+      await this._invoiceRepo.deleteByOrgId(orgId);
+      this._logger.info("Deleted invoices for organization", { orgId });
+
+      // Delete subscription if exists
+      if (organization.createdBy) {
+        await this._subscriptionRepo.deleteByUserId(organization.createdBy);
+        this._logger.info("Deleted subscription for organization creator", {
+          orgId,
+          creatorId: organization.createdBy,
+        });
+      }
+
       // Delete the organization
-      await this._orgRepo.hardDelete(orgId);
+      await this._orgRepo.delete(orgId);
 
       this._logger.info(
         "Organization deleted successfully with all users and invites",
@@ -182,7 +205,12 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     requesterId: string,
   ): Promise<Organization> {
     await this._securityService.validateSuperAdmin(requesterId);
-    return this._orgRepo.create(data);
+    const orgData = {
+      ...data,
+      status: OrganizationStatus.ACTIVE,
+      createdAt: new Date(),
+    };
+    return this._orgRepo.create(orgData);
   }
 
   async updateOrganization(
@@ -190,6 +218,15 @@ export class OrganizationManagementUseCase implements IOrganizationManagementUse
     data: Partial<Organization>,
     requesterId: string,
   ): Promise<Organization> {
+    await this._securityService.validateSuperAdmin(requesterId);
+    if (data.status) {
+      this._logger.info("Status Changed ", {
+        orgId,
+        status: data.status,
+        requesterId,
+      });
+      await this.updateOrganizationStatus(orgId, data.status, requesterId);
+    }
     await this._securityService.validateOrgManager(requesterId, orgId);
     const updatedOrg = await this._orgRepo.update(orgId, data);
     if (!updatedOrg) {

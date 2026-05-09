@@ -1,0 +1,7 @@
+node_modules
+container
+dist
+.env
+*.log
+coverage
+.husky

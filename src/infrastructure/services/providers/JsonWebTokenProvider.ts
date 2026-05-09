@@ -1,7 +1,9 @@
 import jwt, { SignOptions, VerifyOptions } from "jsonwebtoken";
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../container/types";
 import { IJwtProvider } from "../../../application/interface/services/IJwtProvider";
 import { JwtPayload, JwtOptions } from "../../../domain/types/jwt.types";
+import { ILogger } from "../../../application/interface/services/ILogger";
 
 /**
  * Default JWT Provider implementation using jsonwebtoken library
@@ -9,6 +11,7 @@ import { JwtPayload, JwtOptions } from "../../../domain/types/jwt.types";
  */
 @injectable()
 export class JsonWebTokenProvider implements IJwtProvider {
+  constructor(@inject(TYPES.ILogger) private readonly _logger: ILogger) {}
   /**
    * Sign a JWT token with the given payload and options
    * @param payload Data to include in the token
@@ -46,7 +49,7 @@ export class JsonWebTokenProvider implements IJwtProvider {
 
       return decoded as JwtPayload;
     } catch (error) {
-      console.warn("JWT verification failed:", (error as Error).message);
+      this._logger.warn("JWT verification failed" + error);
       return null;
     }
   }
@@ -69,8 +72,8 @@ export class JsonWebTokenProvider implements IJwtProvider {
       }
 
       return decoded as JwtPayload;
-    } catch (error) {
-      console.warn("JWT decoding failed:", (error as Error).message);
+    } catch {
+      this._logger.warn("JWT decoding failed");
       return null;
     }
   }

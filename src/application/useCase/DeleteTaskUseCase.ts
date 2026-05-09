@@ -1,14 +1,16 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
-import { UserRole } from "../../domain/enums/UserRole";
+import { Task } from "../../domain/entities/Task";
 import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
+import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { IDeleteTaskUseCase } from "../interface/useCases/IDeleteTaskUseCase";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 import { ILogger } from "../../application/interface/services/ILogger";
-import { ISocketService } from "../../application/interface/services/ISocketService";
-import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { ISecurityService } from "../../application/interface/services/ISecurityService";
+import { IFileService } from "../../application/interface/services/IFileService";
+import { IEventDispatcher } from "../interface/services/IEventDispatcher";
+import { TASK_EVENTS } from "../events/TaskEvents";
 
 @injectable()
 export class DeleteTaskUseCase implements IDeleteTaskUseCase {
@@ -16,10 +18,10 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
     @inject(TYPES.ITaskHistoryRepo) private _taskHistoryRepo: ITaskHistoryRepo,
     @inject(TYPES.ILogger) private _logger: ILogger,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService,
-    @inject(TYPES.ICreateNotificationUseCase)
-    private _createNotificationUC: ICreateNotificationUseCase,
+    @inject(TYPES.IEventDispatcher) private _eventDispatcher: IEventDispatcher,
     @inject(TYPES.ISecurityService) private _securityService: ISecurityService,
+    @inject(TYPES.IFileService) private _fileService: IFileService,
+    @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
   ) {}
 
   async execute(id: string, requesterId: string): Promise<boolean> {
@@ -28,40 +30,59 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     const task = await this._taskRepo.findById(id);
     if (!task) throw new EntityNotFoundError("Task Not Found", id);
 
-    // RBAC Check
+    // RBAC Check (Strict: Manager only for deletion)
     if (task.orgId) {
-      await this._securityService.validateOrgAccess(requesterId, task.orgId);
+      await this._securityService.validateOrgManager(requesterId, task.orgId);
+    }
+
+    if (task.attachments && task.attachments.length > 0) {
+      this._logger.info(
+        `Cleaning up ${task.attachments.length} attachments for task ${id}`,
+      );
+      await Promise.all(
+        task.attachments.map((attr) => this._fileService.deleteFile(attr.url)),
+      );
     }
 
     // 2. Delete task
     const success = await this._taskRepo.delete(id);
     if (!success) throw new EntityNotFoundError("Task Not Found", id);
 
-    await this._taskRepo.deleteSubtasks(id);
+    // Recursively find ALL descendants (handles grandchildren too)
+    const getAllDescendants = async (parentId: string): Promise<Task[]> => {
+      const children = await this._taskRepo.findByParent(parentId);
+      if (children.length === 0) return [];
+      const grandchildren = await Promise.all(
+        children.map((child) => getAllDescendants(child.id)),
+      );
+      return [...children, ...grandchildren.flat()];
+    };
 
+    const allDescendants = await getAllDescendants(id);
+    const completedSubtasksCount = allDescendants.filter(
+      (s) => s.status === "DONE",
+    ).length;
+
+    await this._taskRepo.deleteSubtasks(id);
     await this._taskHistoryRepo.deleteByTaskId(id);
 
-    // 3. Notify Project & Managers (for Kanban refresh)
-    if (task.orgId) {
-      this._socketService.emitToProject(task.projectId, "task:deleted", id);
-      this._socketService.emitToRoleInOrg(
-        task.orgId,
-        UserRole.ORG_MANAGER,
-        "task:deleted",
-        id,
-      );
-    }
+    // Dispatch Domain Event for side effects
+    await this._eventDispatcher.dispatch(TASK_EVENTS.DELETED, {
+      taskId: id,
+      projectId: task.projectId,
+      orgId: task.orgId || "",
+      deleterId: requesterId,
+      taskTitle: task.title,
+    });
 
-    // 4. Notify Assignee
-    if (task.assignedTo) {
-      await this._createNotificationUC.execute(
-        task.assignedTo,
-        "Task Deleted",
-        `Task '${task.title}' has been deleted.`,
-        "WARNING",
-        task.orgId || "",
-      );
-    }
+    // Decrement by 1 (parent) + ALL descendants (not just immediate children)
+    const totalToDelete = 1 + allDescendants.length;
+    let completedToDelete = task.status === "DONE" ? 1 : 0;
+    completedToDelete += completedSubtasksCount;
+    await this._projectRepo.incrementStats(task.projectId, {
+      totalTasks: -totalToDelete,
+      completedTasks: -completedToDelete,
+    });
 
     return true;
   }

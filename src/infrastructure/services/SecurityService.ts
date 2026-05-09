@@ -3,6 +3,7 @@ import { ISecurityService } from "../../application/interface/services/ISecurity
 import { TYPES } from "../container/types";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 import { UserRole } from "../../domain/enums/UserRole";
 import {
   ForbiddenError,
@@ -14,6 +15,7 @@ export class SecurityService implements ISecurityService {
   constructor(
     @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+    @inject(TYPES.IOrgRepo) private _orgRepo: IOrgRepo,
   ) {}
 
   async validateOrgAccess(userId: string, orgId: string): Promise<void> {
@@ -112,6 +114,30 @@ export class SecurityService implements ISecurityService {
           `User ${member.id} does not belong to this organization`,
         );
       }
+    }
+  }
+
+  async validatePlan(orgId: string): Promise<void> {
+    const org = await this._orgRepo.findById(orgId);
+    if (!org) throw new EntityNotFoundError("Organization", orgId);
+
+    // 1. Mandatory Plan Check
+    if (!org.planId) {
+      throw new ForbiddenError(
+        "You must select a plan to continue. Please visit the billing section to choose a suitable plan.",
+      );
+    }
+
+    // 2. Expiry Check
+    const now = new Date();
+    const isExpired =
+      org.subscriptionStatus === "EXPIRED" ||
+      (org.subscriptionEndsAt && new Date(org.subscriptionEndsAt) < now);
+
+    if (isExpired) {
+      throw new ForbiddenError(
+        "Your current plan has expired. Please renew your subscription to continue enjoying benefits.",
+      );
     }
   }
 }
