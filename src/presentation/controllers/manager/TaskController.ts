@@ -13,7 +13,7 @@ import { ResponseHandler } from "../../utils/ResponseHandler";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { StatusCodes } from "../../../infrastructure/config/statusCodes.enum";
 import { ILogger } from "../../../application/interface/services/ILogger";
-import { ISendMessageUseCase } from "../../../application/interface/useCases/ISendMessageUseCase";
+
 import { IAddCommentUseCase } from "../../../application/interface/useCases/IAddCommentUseCase";
 import { IAddAttachmentUseCase } from "../../../application/interface/useCases/IAddAttachmentUseCase";
 import { toTaskDTO } from "../../../application/dto/TaskDTO";
@@ -49,8 +49,7 @@ export class TaskController {
     private _toggleTimerUC: IToggleTimerUseCase,
     @inject(TYPES.IGetTaskHistoryUseCase)
     private _getTaskHistoryUC: IGetTaskHistoryUseCase,
-    @inject(TYPES.ISendMessageUseCase)
-    private _sendMessageUC: ISendMessageUseCase,
+
     @inject(TYPES.IAddCommentUseCase)
     private _addCommnetUseCase: IAddCommentUseCase,
     @inject(TYPES.IAddAttachmentUseCase)
@@ -128,7 +127,7 @@ export class TaskController {
 
     if (page && limit) {
       const p = parseInt(page as string) || 1;
-      const l = parseInt(limit as string) || 10;
+      const l = parseInt(limit as string) || 12;
       const offset = (p - 1) * l;
       const result = await this._getTaskUC.executePaginated(
         projectId,
@@ -217,10 +216,9 @@ export class TaskController {
 
     const validation = TaskUpdateSchema.safeParse(req.body);
     if (!validation.success) {
-      console.error(
-        "[TaskController] Validation Failed:",
-        JSON.stringify(validation.error.format(), null, 2),
-      );
+      this._logger.warn("[TaskController] Validation Failed:", {
+        details: validation.error.format(),
+      });
       return ResponseHandler.validationError(res, validation.error.format());
     }
 

@@ -20,6 +20,8 @@ const MeetingSchema = new Schema<IMeetingDoc>(
       enum: ["SCHEDULED", "LIVE", "COMPLETED"],
       default: "SCHEDULED",
     },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

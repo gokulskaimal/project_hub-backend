@@ -33,5 +33,7 @@ export interface User {
   emailVerificationExpires?: Date;
   createdAt: Date;
   updatedAt?: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
   lastLoginAt?: Date;
 }

@@ -47,12 +47,6 @@ export interface IOrgRepo {
   delete(id: string): Promise<boolean>;
 
   /**
-   * Permanently delete organization
-   * @param id - Organization ID
-   */
-  hardDelete(id: string): Promise<void>;
-
-  /**
    * Find organizations by status
    * @param status - Organization status
    * @returns Array of organizations with the status

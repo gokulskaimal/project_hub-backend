@@ -30,12 +30,18 @@ export class SprintRepo
   }
 
   async findByProject(projectId: string): Promise<Sprint[]> {
-    const docs = await this.model.find({ projectId }).sort({ startDate: 1 });
+    const docs = await this.model
+      .find({ projectId, isDeleted: { $ne: true } })
+      .sort({ startDate: 1 });
     return docs.map((doc) => this.toDomain(doc));
   }
 
   async findActiveSprint(projectId: string): Promise<Sprint | null> {
-    const doc = await this.model.findOne({ projectId, status: "ACTIVE" });
+    const doc = await this.model.findOne({
+      projectId,
+      status: "ACTIVE",
+      isDeleted: { $ne: true },
+    });
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -47,6 +53,7 @@ export class SprintRepo
     const count = await this.model.countDocuments({
       projectId,
       createdAt: { $gte: start, $lte: end },
+      isDeleted: { $ne: true },
     });
     return count;
   }

@@ -29,7 +29,10 @@ export class InvoiceRepo implements IInvoiceRepo {
   }
 
   async findById(id: string): Promise<Invoice | null> {
-    const doc = await InvoiceModel.findById(id);
+    const doc = await InvoiceModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    });
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -39,7 +42,7 @@ export class InvoiceRepo implements IInvoiceRepo {
     limit: number,
   ): Promise<{ items: Invoice[]; total: number }> {
     const pipeline: PipelineStage[] = [
-      { $match: { orgId } },
+      { $match: { orgId, isDeleted: { $ne: true } } },
       {
         $addFields: {
           planObjectId: { $toObjectId: "$planId" },
@@ -48,8 +51,15 @@ export class InvoiceRepo implements IInvoiceRepo {
       {
         $lookup: {
           from: "plans",
-          localField: "planObjectId",
-          foreignField: "_id",
+          let: { planIdObj: "$planObjectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$planIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "plan",
         },
       },
@@ -84,6 +94,7 @@ export class InvoiceRepo implements IInvoiceRepo {
     planType?: string,
   ): Promise<{ items: Invoice[]; total: number; totalRevenue: number }> {
     const pipeline: PipelineStage[] = [
+      { $match: { isDeleted: { $ne: true } } },
       {
         $addFields: {
           orgObjectId: { $toObjectId: "$orgId" },
@@ -93,8 +104,15 @@ export class InvoiceRepo implements IInvoiceRepo {
       {
         $lookup: {
           from: "organizations",
-          localField: "orgObjectId",
-          foreignField: "_id",
+          let: { orgIdObj: "$orgObjectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$orgIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "org",
         },
       },
@@ -107,8 +125,15 @@ export class InvoiceRepo implements IInvoiceRepo {
       {
         $lookup: {
           from: "plans",
-          localField: "planObjectId",
-          foreignField: "_id",
+          let: { planIdObj: "$planObjectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$planIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "plan",
         },
       },
@@ -195,5 +220,13 @@ export class InvoiceRepo implements IInvoiceRepo {
       planName: doc.plan?.name,
       planType: doc.plan?.type,
     };
+  }
+
+  async deleteByOrgId(orgId: string): Promise<boolean> {
+    const result = await InvoiceModel.updateMany(
+      { orgId, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
+    return result.acknowledged;
   }
 }

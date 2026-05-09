@@ -28,6 +28,8 @@ const ProjectSchema = new Schema<IProjectDoc>(
     totalTasks: { type: Number, default: 0 },
     completedTasks: { type: Number, default: 0 },
     progress: { type: Number, default: 0 },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

@@ -63,6 +63,7 @@ export interface IJwtService {
    */
   decodeToken(token: string): JwtPayload | null;
 
-  revokeRefreshToken?: (token: string) => Promise<void> | void;
-  revokeAllForUser?: (userId: string) => Promise<void> | void;
+  revokeRefreshToken: (token: string) => Promise<void> | void;
+  revokeAllForUser: (userId: string) => Promise<void> | void;
+  isTokenRevoked: (token: string) => Promise<boolean> | boolean;
 }

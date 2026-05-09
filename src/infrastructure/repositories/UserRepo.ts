@@ -80,17 +80,20 @@ export class UserRepo
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ email, isDeleted: { $ne: true } });
     return user ? this.toDomainUser(user) : null;
   }
 
   async findById(id: string): Promise<User | null> {
-    const doc = await this.model.findById(id);
+    const doc = await this.model.findOne({ _id: id, isDeleted: { $ne: true } });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findByIds(ids: string[]): Promise<User[]> {
-    const docs = await this.model.find({ _id: { $in: ids } });
+    const docs = await this.model.find({
+      _id: { $in: ids },
+      isDeleted: { $ne: true },
+    });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -103,29 +106,37 @@ export class UserRepo
   }
 
   async updateProfile(id: string, data: Partial<User>): Promise<User> {
-    const updated = await UserModel.findByIdAndUpdate(id, data, { new: true });
-    if (!updated) throw new Error("User not found");
+    const updated = await UserModel.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
+      data,
+      { new: true },
+    );
+    if (!updated) throw new Error("User not found or deleted");
     return this.toDomainUser(updated);
   }
 
   async findByOrg(orgId: string): Promise<User[]> {
-    const users = await UserModel.find({ orgId });
+    const users = await UserModel.find({ orgId, isDeleted: { $ne: true } });
     return users.map((u) => this.toDomainUser(u));
   }
 
   async findAll(): Promise<User[]> {
-    const users = await UserModel.find();
+    const users = await UserModel.find({ isDeleted: { $ne: true } });
     return users.map((u) => this.toDomainUser(u));
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await UserModel.findByIdAndDelete(id);
+    const result = await UserModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+      deletedAt: new Date(),
+      status: "INACTIVE",
+    });
     return !!result;
   }
 
   async findByRole(role: string): Promise<User[]> {
     try {
-      const users = await UserModel.find({ role });
+      const users = await UserModel.find({ role, isDeleted: { $ne: true } });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
       this._logger.error("Error finding users by role:", error as Error, {
@@ -137,7 +148,11 @@ export class UserRepo
 
   async findByOrgAndRole(orgId: string, role: string): Promise<User[]> {
     try {
-      const users = await UserModel.find({ orgId, role });
+      const users = await UserModel.find({
+        orgId,
+        role,
+        isDeleted: { $ne: true },
+      });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
       this._logger.error(
@@ -153,6 +168,7 @@ export class UserRepo
     const user = await UserModel.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: new Date() },
+      isDeleted: { $ne: true },
     });
     return user ? this.toDomainUser(user) : null;
   }
@@ -162,6 +178,7 @@ export class UserRepo
       email,
       otp,
       otpExpiry: { $gt: new Date() },
+      isDeleted: { $ne: true },
     });
     return user ? this.toDomainUser(user) : null;
   }
@@ -172,14 +189,14 @@ export class UserRepo
     expiry: Date | undefined,
   ): Promise<void> {
     await UserModel.findOneAndUpdate(
-      { email },
+      { email, isDeleted: { $ne: true } },
       { $set: { resetPasswordToken: token, resetPasswordExpires: expiry } },
     );
   }
 
   async updatePassword(email: string, passwordHash: string): Promise<void> {
     await UserModel.findOneAndUpdate(
-      { email },
+      { email, isDeleted: { $ne: true } },
       {
         $set: { password: passwordHash },
         $unset: { resetPasswordToken: 1, resetPasswordExpires: 1 },
@@ -189,14 +206,14 @@ export class UserRepo
 
   async updateOtp(email: string, otp: string, expiry: Date): Promise<void> {
     await UserModel.findOneAndUpdate(
-      { email },
+      { email, isDeleted: { $ne: true } },
       { $set: { otp, otpExpiry: expiry } },
     );
   }
 
   async clearOtp(email: string): Promise<void> {
     await UserModel.findOneAndUpdate(
-      { email },
+      { email, isDeleted: { $ne: true } },
       { $unset: { otp: 1, otpExpiry: 1 } },
     );
   }
@@ -229,21 +246,24 @@ export class UserRepo
   }
 
   async countByStatus(status: string): Promise<number> {
-    return await UserModel.countDocuments({ status });
+    return await UserModel.countDocuments({ status, isDeleted: { $ne: true } });
   }
 
   async countVerified(): Promise<number> {
-    return await UserModel.countDocuments({ emailVerified: true });
+    return await UserModel.countDocuments({
+      emailVerified: true,
+      isDeleted: { $ne: true },
+    });
   }
 
   async updateStatus(id: string, status: string): Promise<User> {
     try {
-      const updated = await UserModel.findByIdAndUpdate(
-        id,
+      const updated = await UserModel.findOneAndUpdate(
+        { _id: id, isDeleted: { $ne: true } },
         { status },
         { new: true },
       );
-      if (!updated) throw new Error("User not found");
+      if (!updated) throw new Error("User not found or deleted");
       return this.toDomainUser(updated);
     } catch (error) {
       this._logger.error(`Failed to update user status`, error as Error, {
@@ -256,9 +276,12 @@ export class UserRepo
 
   async removeFromOrg(userId: string, _orgId: string): Promise<void> {
     try {
-      await UserModel.findByIdAndUpdate(userId, {
-        orgId: null,
-      });
+      await UserModel.findOneAndUpdate(
+        { _id: userId, isDeleted: { $ne: true } },
+        {
+          orgId: null,
+        },
+      );
     } catch (error) {
       this._logger.error(`Failed to remove user from org`, error as Error, {
         userId,
@@ -270,9 +293,12 @@ export class UserRepo
 
   async updateLastLogin(id: string, loginTime: Date): Promise<void> {
     try {
-      await UserModel.findByIdAndUpdate(id, {
-        lastLoginAt: loginTime,
-      });
+      await UserModel.findOneAndUpdate(
+        { _id: id, isDeleted: { $ne: true } },
+        {
+          lastLoginAt: loginTime,
+        },
+      );
     } catch (error) {
       this._logger.error("Error updating last login:", error as Error, {
         userId: id,
@@ -299,6 +325,7 @@ export class UserRepo
       const query: Record<string, unknown> = {
         // Exclude super admins from listing
         role: { $ne: UserRole.SUPER_ADMIN },
+        isDeleted: { $ne: true },
       };
 
       if (searchTerm) {
@@ -347,7 +374,10 @@ export class UserRepo
 
   async countByOrg(orgId: string): Promise<number> {
     try {
-      return await UserModel.countDocuments({ orgId });
+      return await UserModel.countDocuments({
+        orgId,
+        isDeleted: { $ne: true },
+      });
     } catch (error) {
       this._logger.error("Error counting users by org:", error as Error, {
         orgId,
@@ -358,7 +388,7 @@ export class UserRepo
 
   async countByRole(role: string): Promise<number> {
     try {
-      return await UserModel.countDocuments({ role });
+      return await UserModel.countDocuments({ role, isDeleted: { $ne: true } });
     } catch (error) {
       this._logger.error("Error counting users by role:", error as Error, {
         role,
@@ -369,7 +399,7 @@ export class UserRepo
 
   async count(): Promise<number> {
     try {
-      return await UserModel.countDocuments();
+      return await UserModel.countDocuments({ isDeleted: { $ne: true } });
     } catch (error) {
       this._logger.error("Error counting users:", error as Error);
       throw error;
@@ -378,7 +408,7 @@ export class UserRepo
 
   async findByStatus(status: string): Promise<User[]> {
     try {
-      const users = await UserModel.find({ status });
+      const users = await UserModel.find({ status, isDeleted: { $ne: true } });
       return users.map((u) => this.toDomainUser(u));
     } catch (error) {
       this._logger.error("Error finding users by status:", error as Error, {
@@ -390,7 +420,10 @@ export class UserRepo
 
   async emailExists(email: string, excludeUserId?: string): Promise<boolean> {
     try {
-      const query: Record<string, unknown> = { email };
+      const query: Record<string, unknown> = {
+        email,
+        isDeleted: { $ne: true },
+      };
       if (excludeUserId) {
         query._id = { $ne: excludeUserId };
       }
@@ -410,7 +443,7 @@ export class UserRepo
     expiry: Date,
   ): Promise<void> {
     await UserModel.findOneAndUpdate(
-      { email },
+      { email, isDeleted: { $ne: true } },
       {
         $set: {
           emailVerificationToken: token,
@@ -424,6 +457,7 @@ export class UserRepo
     const user = await UserModel.findOne({
       emailVerificationToken: token,
       emailVerificationExpires: { $gt: new Date() },
+      isDeleted: { $ne: true },
     });
     return user ? this.toDomain(user) : null;
   }
@@ -436,6 +470,7 @@ export class UserRepo
       const user = await UserModel.findOne({
         orgId,
         firstName: { $regex: new RegExp(`^${firstName}$`, "i") },
+        isDeleted: { $ne: true },
       });
       return user ? this.toDomain(user) : null;
     } catch (error) {

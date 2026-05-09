@@ -103,6 +103,12 @@ export interface IUserWriteRepo {
   delete(id: string): Promise<boolean>;
 
   /**
+   * Soft deletes a user by its ID
+   * @param id - User ID
+   */
+  softDelete(id: string): Promise<void>;
+
+  /**
    * Remove user from organization
    * @param userId - User ID
    * @param orgId - Organization ID

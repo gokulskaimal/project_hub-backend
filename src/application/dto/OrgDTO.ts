@@ -19,6 +19,7 @@ export interface OrgDTO {
   planName?: string;
   industry?: string;
   size?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt?: string;
 }
@@ -40,6 +41,7 @@ export function toOrgDTO(org: Organization): OrgDTO {
     planName: org.planName,
     industry: org.industry,
     size: org.size,
+    metadata: org.metadata,
     createdAt: org.createdAt
       ? org.createdAt.toISOString()
       : new Date().toISOString(),

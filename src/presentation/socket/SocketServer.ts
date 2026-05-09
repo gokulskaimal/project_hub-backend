@@ -5,7 +5,8 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ILogger } from "../../application/interface/services/ILogger";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
-
+import { IJwtService } from "../../application/interface/services/IJwtService";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { AppConfig } from "../../config/AppConfig";
 
 import { UserRole } from "../../domain/enums/UserRole";
@@ -24,6 +25,8 @@ export class SocketServer {
   constructor(
     @inject(TYPES.ILogger) private _logger: ILogger,
     @inject(TYPES.IProjectRepo) private _projectRepo: IProjectRepo,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService,
+    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
     @inject(TYPES.AppConfig) private config: AppConfig,
   ) {}
 
@@ -36,7 +39,7 @@ export class SocketServer {
       },
     });
 
-    this.io.use((socket, next) => {
+    this.io.use(async (socket, next) => {
       const token = socket.handshake.auth.token;
       if (!token) {
         return next(new Error("Authentication error: Token not found"));
@@ -47,7 +50,21 @@ export class SocketServer {
           token,
           this.config.jwt.accessSecret,
         ) as AuthenticatedUser;
+
+        const isRevoked = await this._jwtService.isTokenRevoked(token);
+        if (isRevoked) {
+          return next(
+            new Error("Authentication error : Token has been revoked"),
+          );
+        }
+
+        const user = await this._userRepo.findById(decoded.id);
+        if (!user || user.status !== "ACTIVE") {
+          return next(new Error("Authentication error : Account is suspended"));
+        }
+
         socket.data.user = decoded;
+        socket.data.token = token;
         next();
       } catch {
         next(new Error("Authentication error: Invalid token"));
@@ -118,11 +135,45 @@ export class SocketServer {
       this._logger.info(
         `User joined role-specific room: org:${user.orgId}:role:${user.role}`,
       );
-    } else {
-      this._logger.warn(`User ${user.id} has no orgId, not joining org room`);
     }
 
+    const securityInterval = setInterval(
+      async () => {
+        try {
+          const token = socket.data.token;
+          const isRevoked = await this._jwtService.isTokenRevoked(token);
+
+          if (isRevoked) {
+            this._logger.warn(
+              `Forcibly disconnecting ${user.id} (Token Revoked)`,
+            );
+            socket.emit("session_expired", {
+              message: "Your session has expired. Please login again",
+            });
+            socket.disconnect(true);
+            clearInterval(securityInterval);
+          }
+          const dbUser = await this._userRepo.findById(user.id);
+          if (!dbUser || dbUser.status !== "ACTIVE") {
+            this._logger.warn(
+              `Forcibly disconnecting ${user.id} (User Not Found or Suspended)`,
+            );
+            socket.emit("session_expired", {
+              message:
+                "Your account is no longer active. Please contact support",
+            });
+            socket.disconnect(true);
+            clearInterval(securityInterval);
+          }
+        } catch (error) {
+          this._logger.error("Token Check failed : " + error);
+        }
+      },
+      5 * 60 * 1000,
+    );
+
     socket.on("disconnect", () => {
+      clearInterval(securityInterval);
       this._logger.info(`User ${user.id} disconnected`);
     });
   }

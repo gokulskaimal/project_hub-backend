@@ -10,6 +10,8 @@ export interface TaskComment {
   userId: string;
   text: string;
   createdAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }
 
 export interface TaskDependency {
@@ -49,6 +51,9 @@ export interface Task {
   }>;
   acceptanceCriteria?: Array<{ text: string; completed: boolean }>;
   comments?: TaskComment[];
+  progress?: number;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }
 
 export const TASK_TYPES = ["STORY", "BUG", "TASK", "EPIC"] as const;

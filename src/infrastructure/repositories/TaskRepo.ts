@@ -32,9 +32,7 @@ export class TaskRepo
     const epicId = obj.epicId || doc.get("epicId") || raw.epicId;
 
     if (epicId) {
-      console.log(
-        `[TaskRepo] Mapping Task ${obj.taskKey} with EpicId: ${epicId}`,
-      );
+      this._logger.info(`Mapping Task ${obj.taskKey} with EpicId: ${epicId}`);
     }
 
     return {
@@ -78,12 +76,17 @@ export class TaskRepo
   }
 
   async findByProject(projectId: string): Promise<Task[]> {
-    const docs = await this.model.find({ projectId }).sort({ createdAt: -1 });
+    const docs = await this.model
+      .find({ projectId, isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 });
     return docs.map((d) => this.toDomain(d));
   }
 
   async findByAssignee(userId: string, orgId?: string): Promise<Task[]> {
-    const query: Record<string, unknown> = { assignedTo: userId };
+    const query: Record<string, unknown> = {
+      assignedTo: userId,
+      isDeleted: { $ne: true },
+    };
     if (orgId) query.orgId = orgId;
 
     const docs = await this.model
@@ -95,14 +98,14 @@ export class TaskRepo
 
   async findByOrganization(orgId: string): Promise<Task[]> {
     const docs = await this.model
-      .find({ orgId })
+      .find({ orgId, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .populate("project", "name");
     return docs.map((d) => this.toDomain(d));
   }
 
   async countBySprint(sprintId: string): Promise<number> {
-    return this.model.countDocuments({ sprintId });
+    return this.model.countDocuments({ sprintId, isDeleted: { $ne: true } });
   }
 
   async countBySprintAssignedAtRange(
@@ -113,11 +116,15 @@ export class TaskRepo
     return this.model.countDocuments({
       sprintId,
       sprintAssignedAt: { $gte: start, $lte: end },
+      isDeleted: { $ne: true },
     });
   }
 
   async deleteSubtasks(parentId: string): Promise<boolean> {
-    await this.model.deleteMany({ parentTaskId: parentId });
+    await this.model.updateMany(
+      { parentTaskId: parentId },
+      { $set: { isDeleted: true, deletedAt: new Date() } },
+    );
     return true;
   }
 
@@ -127,7 +134,7 @@ export class TaskRepo
     offset: number,
   ): Promise<Task[]> {
     const docs = await this.model
-      .find({ assignedTo: userId })
+      .find({ assignedTo: userId, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit)
@@ -136,7 +143,10 @@ export class TaskRepo
   }
 
   async countByAssignee(userId: string): Promise<number> {
-    return await this.model.countDocuments({ assignedTo: userId });
+    return await this.model.countDocuments({
+      assignedTo: userId,
+      isDeleted: { $ne: true },
+    });
   }
 
   async findPaginatedByOrg(
@@ -145,7 +155,7 @@ export class TaskRepo
     offset: number,
   ): Promise<Task[]> {
     const docs = await this.model
-      .find({ orgId })
+      .find({ orgId, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit)
@@ -154,7 +164,7 @@ export class TaskRepo
   }
 
   async countByOrg(orgId: string): Promise<number> {
-    return await this.model.countDocuments({ orgId });
+    return await this.model.countDocuments({ orgId, isDeleted: { $ne: true } });
   }
 
   private _buildQuery(
@@ -166,7 +176,10 @@ export class TaskRepo
       type?: string;
     },
   ): Record<string, unknown> {
-    const query: Record<string, unknown> = { projectId };
+    const query: Record<string, unknown> = {
+      projectId,
+      isDeleted: { $ne: true },
+    };
     if (filters?.epicId) {
       query.epicId = filters.epicId;
     }
@@ -182,7 +195,6 @@ export class TaskRepo
         query.type = { $ne: "EPIC" };
       }
     }
-    console.log("[TaskRepo] Final Query:", JSON.stringify(query, null, 2));
     return query;
   }
 
@@ -234,12 +246,18 @@ export class TaskRepo
   }
 
   async findByParent(parentId: string): Promise<Task[]> {
-    const docs = await this.model.find({ parentTaskId: parentId });
+    const docs = await this.model.find({
+      parentTaskId: parentId,
+      isDeleted: { $ne: true },
+    });
     return docs.map((d) => this.toDomain(d));
   }
 
   async findByEpic(epicId: string): Promise<Task[]> {
-    const docs = await this.model.find({ epicId: epicId });
+    const docs = await this.model.find({
+      epicId: epicId,
+      isDeleted: { $ne: true },
+    });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -252,9 +270,10 @@ export class TaskRepo
     newSprintId: string | null,
   ): Promise<number> {
     try {
-      const result = await this.model.updateMany(filter, {
-        $set: { sprintId: newSprintId, updatedAt: new Date() },
-      });
+      const result = await this.model.updateMany(
+        { ...filter, isDeleted: { $ne: true } },
+        { $set: { sprintId: newSprintId, updatedAt: new Date() } },
+      );
       return result.modifiedCount;
     } catch (error) {
       this._logger.error("Error in bulkUpdateSprint", error as Error);

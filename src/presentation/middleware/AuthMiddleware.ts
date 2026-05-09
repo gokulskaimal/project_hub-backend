@@ -4,13 +4,13 @@ import { AuthenticatedRequest } from "./types/AuthenticatedRequest";
 import { AuthenticatedUser } from "./types/AuthenticatedUser";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { COMMON_MESSAGES } from "../../infrastructure/config/common.constants";
-import UserModel from "../../infrastructure/models/UserModel";
-import OrgModel from "../../infrastructure/models/OrgModel";
 import { OrganizationStatus } from "../../domain/entities/Organization";
 import { UserRole } from "../../domain/enums/UserRole";
 import { container } from "../../infrastructure/container/Container";
 import { TYPES } from "../../infrastructure/container/types";
 import { AppConfig } from "../../config/AppConfig";
+import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
+import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
 
 export async function authMiddleware(
   req: AuthenticatedRequest,
@@ -38,11 +38,14 @@ export async function authMiddleware(
       config.jwt.accessSecret,
     ) as AuthenticatedUser;
 
-    // Allow super-admin tokens (synthetic user) to bypass DB checks
+    // Allow super-admin tokens to bypass DB checks
     if (payload.role !== UserRole.SUPER_ADMIN) {
-      // Fetch latest user state from DB to ensure status/org checks
-      const userDoc = await UserModel.findById(payload.id);
-      if (!userDoc) {
+      const userRepo = container.get<IUserRepo>(TYPES.IUserRepo);
+      const orgRepo = container.get<IOrgRepo>(TYPES.IOrgRepo);
+
+      // Uses repository layer — respects isDeleted: { $ne: true } guard
+      const user = await userRepo.findById(payload.id);
+      if (!user) {
         res.status(StatusCodes.UNAUTHORIZED).json({
           success: false,
           error: {
@@ -53,8 +56,7 @@ export async function authMiddleware(
         return;
       }
 
-      // If user is not ACTIVE, deny access
-      if (userDoc.status !== "ACTIVE") {
+      if (user.status !== "ACTIVE") {
         res.status(StatusCodes.FORBIDDEN).json({
           success: false,
           error: {
@@ -65,10 +67,9 @@ export async function authMiddleware(
         return;
       }
 
-      // If user's organization exists and is not ACTIVE, deny access
-      if (userDoc.orgId) {
-        const orgDoc = await OrgModel.findById(userDoc.orgId);
-        if (!orgDoc) {
+      if (user.orgId) {
+        const org = await orgRepo.findById(user.orgId);
+        if (!org) {
           res.status(StatusCodes.FORBIDDEN).json({
             success: false,
             error: {
@@ -78,7 +79,7 @@ export async function authMiddleware(
           });
           return;
         }
-        if (orgDoc.status !== OrganizationStatus.ACTIVE) {
+        if (org.status !== OrganizationStatus.ACTIVE) {
           res.status(StatusCodes.FORBIDDEN).json({
             success: false,
             error: {
@@ -94,7 +95,6 @@ export async function authMiddleware(
     req.user = payload;
     next();
   } catch (error: unknown) {
-    // Check if the error is a JWT expiration error
     if (error instanceof jwt.TokenExpiredError) {
       res.status(StatusCodes.UNAUTHORIZED).json({
         success: false,

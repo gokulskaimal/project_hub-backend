@@ -1,20 +1,15 @@
 /**
  * Base Repository Interface
- *
- * Defines the contract for repository implementations providing CRUD operations
- * This interface ensures consistent data access patterns across the application
- *
- * @template T - The domain entity type
- * @template ID - The type of the entity's identifier (defaults to string)
  */
 export interface IBaseRepository<T, ID = string> {
   /**
    * Creates a new entity
    *
    * @param data - The data to create the entity with
+   * @param session - Optional database transaction session
    * @returns A promise resolving to the created entity
    */
-  create(data: Partial<T>): Promise<T>;
+  create(data: Partial<T>, session?: unknown): Promise<T>;
   /**
    * Finds an entity by its ID
    *
@@ -34,21 +29,27 @@ export interface IBaseRepository<T, ID = string> {
    *
    * @param id - The ID of the entity to update
    * @param data - The data to update the entity with
+   * @param session - Optional database transaction session
    * @returns A promise resolving to the updated entity
    */
-  update(id: ID, data: Partial<T>): Promise<T | null>;
+  update(id: ID, data: Partial<T>, session?: unknown): Promise<T | null>;
   /**
    * Deletes an entity by its ID
    *
    * @param id - The ID of the entity to delete
+   * @param session - Optional database transaction session
    * @returns A promise that resolves when the entity is deleted
    */
-  delete(id: ID): Promise<boolean>;
+  delete(id: ID, session?: unknown): Promise<boolean>;
   /**
    * Deletes multiple documents matching a filter
    * @param filter - The filter query
+   * @param session - Optional database transaction session
    */
-  deleteMany(filter: Record<string, unknown>): Promise<boolean>;
+  deleteMany(
+    filter: Record<string, unknown>,
+    session?: unknown,
+  ): Promise<boolean>;
   /**
    * Counts entities matching the filter
    *
@@ -69,7 +70,8 @@ export interface IBaseRepository<T, ID = string> {
    * Sets isDeleted flag to true and records deletion time
    *
    * @param id - The ID of the entity to soft delete
+   * @param session - Optional database transaction session
    * @returns A promise that resolves when the entity is soft deleted
    */
-  softDelete(id: ID): Promise<void>;
+  softDelete(id: ID, session?: unknown): Promise<void>;
 }

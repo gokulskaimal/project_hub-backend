@@ -12,6 +12,8 @@ const inviteSchema = new mongoose.Schema(
     },
     expiry: { type: Date, required: true },
     role: { type: String, required: false },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

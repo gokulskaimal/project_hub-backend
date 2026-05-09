@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export interface AppConfig {
   // Server Configuration
   port: number;
@@ -457,13 +459,49 @@ export function validateConfig(config: AppConfig): void {
   if (errors.length > 0) {
     throw new Error(`Configuration validation failed:\n${errors.join("\n")}`);
   }
+
+  const SecuritySchema = z.object({
+    accessSecret: z
+      .string()
+      .min(
+        32,
+        "JWT_ACCESS_SECRET must be at least 32 characters long for cryptographic security",
+      ),
+    refreshSecret: z
+      .string()
+      .min(32, "JWT_REFRESH_SECRET must be at least 32 characters long"),
+    resetSecret: z
+      .string()
+      .min(32, "JWT_RESET_SECRET must be at least 32 characters long"),
+    cookieSecret: z
+      .string()
+      .min(32, "COOKIE_SECRET must be at least 32 characters long"),
+  });
+
+  if (config.nodeEnv === "production") {
+    try {
+      SecuritySchema.parse({
+        accessSecret: config.jwt.accessSecret,
+        refreshSecret: config.jwt.refreshSecret,
+        resetSecret: config.jwt.resetSecret,
+        cookieSecret: config.security.cookieSecret,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        throw new Error(
+          `Cryptographic Security validation failed in Production:\n${err.errors.map((e) => e.message).join("\n")}`,
+        );
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 // Validate configuration on load
 try {
   validateConfig(config);
-  console.log("✅ Configuration loaded and validated successfully");
 } catch (error) {
-  console.error("❌ Configuration validation failed:", error);
+  console.error("Critical configuration error:", error);
   process.exit(1);
 }

@@ -164,29 +164,3 @@ export const TYPES = {
   ChatEventSubscriber: Symbol.for("ChatEventSubscriber"),
   MeetingEventSubscriber: Symbol.for("MeetingEventSubscriber"),
 } as const;
-
-/**
- * Type guard to check if a type identifier exists
- * @param typeId - The type identifier to check
- * @returns True if the type exists
- */
-export function isValidType(typeId: symbol): boolean {
-  return Object.values(TYPES).includes(typeId);
-}
-
-/**
- * Get all available type identifiers
- * @returns Array of all type identifiers
- */
-export function getAllTypes(): symbol[] {
-  return Object.values(TYPES);
-}
-
-/**
- * Get type identifier by name
- * @param name - The name of the type
- * @returns The symbol identifier or undefined if not found
- */
-export function getTypeByName(name: keyof typeof TYPES): symbol {
-  return TYPES[name];
-}

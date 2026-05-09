@@ -36,7 +36,7 @@ export const completeSignupSchema = z.object({
       ),
     firstName: z.string().min(2).max(100),
     lastName: z.string().min(2).max(100),
-    additionalData: z.record(z.any()).optional(),
+    additionalData: z.record(z.unknown()).optional(),
   }),
 });
 

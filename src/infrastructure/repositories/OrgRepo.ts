@@ -67,19 +67,20 @@ export class OrgRepo implements IOrgRepo {
   }
 
   async findById(id: string): Promise<Organization | null> {
-    const doc = await OrgModel.findById(id);
+    const doc = await OrgModel.findOne({ _id: id, isDeleted: { $ne: true } });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findByName(name: string): Promise<Organization | null> {
     const doc = await OrgModel.findOne({
       name: new RegExp(`^${name.trim()}$`, "i"),
+      isDeleted: { $ne: true },
     });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findAll(): Promise<Organization[]> {
-    const docs = await OrgModel.find();
+    const docs = await OrgModel.find({ isDeleted: { $ne: true } });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -87,8 +88,8 @@ export class OrgRepo implements IOrgRepo {
     id: string,
     data: Partial<Organization>,
   ): Promise<Organization | null> {
-    const updated = await OrgModel.findByIdAndUpdate(
-      id,
+    const updated = await OrgModel.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
       { ...data, updatedAt: new Date() },
       { new: true },
     );
@@ -97,18 +98,15 @@ export class OrgRepo implements IOrgRepo {
 
   async delete(id: string): Promise<boolean> {
     const result = await OrgModel.findByIdAndUpdate(id, {
-      status: OrganizationStatus.INACTIVE,
+      isDeleted: true,
       deletedAt: new Date(),
+      status: OrganizationStatus.INACTIVE,
     });
     return !!result;
   }
 
-  async hardDelete(id: string): Promise<void> {
-    await OrgModel.findByIdAndDelete(id);
-  }
-
   async findByStatus(status: string): Promise<Organization[]> {
-    const docs = await OrgModel.find({ status });
+    const docs = await OrgModel.find({ status, isDeleted: { $ne: true } });
     return docs.map((d) => this.toDomain(d));
   }
 
@@ -122,7 +120,7 @@ export class OrgRepo implements IOrgRepo {
     total: number;
     hasMore: boolean;
   }> {
-    const query: Record<string, unknown> = {};
+    const query: Record<string, unknown> = { isDeleted: { $ne: true } };
     if (searchTerm) {
       query.name = { $regex: searchTerm, $options: "i" };
     }
@@ -143,16 +141,17 @@ export class OrgRepo implements IOrgRepo {
   }
 
   async count(): Promise<number> {
-    return OrgModel.countDocuments();
+    return OrgModel.countDocuments({ isDeleted: { $ne: true } });
   }
 
   async countByStatus(status: string): Promise<number> {
-    return OrgModel.countDocuments({ status });
+    return OrgModel.countDocuments({ status, isDeleted: { $ne: true } });
   }
 
   async nameExists(name: string, excludeId?: string): Promise<boolean> {
     const query: Record<string, unknown> = {
       name: new RegExp(`^${name.trim()}$`, "i"),
+      isDeleted: { $ne: true },
     };
     if (excludeId) {
       query._id = { $ne: excludeId };

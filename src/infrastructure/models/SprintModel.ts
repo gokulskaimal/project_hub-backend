@@ -16,6 +16,8 @@ const SprintSchema = new Schema<ISprintDoc>(
       default: "PLANNED",
     },
     goal: { type: String },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

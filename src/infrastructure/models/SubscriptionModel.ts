@@ -27,6 +27,8 @@ const subscriptionSchema = new Schema(
     currentPeriodStart: { type: Date, required: true },
     currentPeriodEnd: { type: Date, required: true },
     cancelAtPeriodEnd: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

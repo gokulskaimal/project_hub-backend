@@ -60,6 +60,14 @@ export const TaskBaseSchema = z.object({
       }),
     )
     .optional(),
+  dependencies: z
+    .array(
+      z.object({
+        taskId: z.string().min(1, "Dependency Task ID is required"),
+        type: z.enum(["BLOCKS", "IS_BLOCKED_BY", "RELATES_TO"]),
+      }),
+    )
+    .optional(),
 });
 
 export const TaskCreateSchema = TaskBaseSchema.refine(
@@ -94,7 +102,7 @@ export const TaskUpdateSchema = TaskBaseSchema.partial()
         }),
       )
       .optional(),
-    comments: z.array(z.any()).optional(),
+
     parentTaskId: z.string().nullable().optional(),
   })
   .refine(
@@ -178,7 +186,7 @@ export const SprintUpdateSchema = z
 export const OrgCreateSchema = z.object({
   name: z.string().min(3, "Organization name must be at least 3 characters"),
   description: z.string().optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.record(z.unknown()).optional(),
 });
 
 export const OrgUpdateSchema = OrgCreateSchema.partial().extend({

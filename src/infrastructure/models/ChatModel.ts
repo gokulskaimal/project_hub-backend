@@ -7,6 +7,8 @@ export interface IChatMessageDoc extends Document {
   type: "TEXT" | "FILE" | "IMAGE" | "SYSTEM" | "ACTIVITY";
   fileUrl: string | null;
   createdAt: Date;
+  isDeleted: boolean;
+  deletedAt: Date | null;
 }
 
 const ChatSchema = new Schema(
@@ -25,6 +27,8 @@ const ChatSchema = new Schema(
       default: "TEXT",
     },
     fileUrl: { type: String, default: null },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

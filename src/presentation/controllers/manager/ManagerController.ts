@@ -93,7 +93,7 @@ export class ManagerController {
   listInvitations = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const orgId = req.user!.orgId!;
-      const { limit = 10, page = 1, search = "", status = "ALL" } = req.query;
+      const { limit = 12, page = 1, search = "", status = "ALL" } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
       const { invites, total } = await this._invitationQueryUC.listInvitations(

@@ -948,7 +948,7 @@ class DIContainer {
         }
       }
     } catch (err) {
-      console.error("Cache initialization failed:", err);
+      throw new Error(`Cache service failed to start :` + err);
     }
   }
 

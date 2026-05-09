@@ -51,13 +51,13 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       await this._securityService.validateOrgAccess(updaterId, task.orgId);
     }
 
+    // Fetch updater ONCE here and reuse below to avoid duplicate DB queries
+    const updater = updaterId ? await this._userRepo.findById(updaterId) : null;
+
     // Sprint Immutability Check (Velocity Protection)
     if (task.sprintId) {
       const currentSprint = await this._sprintRepo.findById(task.sprintId);
       if (currentSprint && currentSprint.status === "COMPLETED") {
-        const updater = updaterId
-          ? await this._userRepo.findById(updaterId)
-          : null;
         if (updater?.role !== UserRole.SUPER_ADMIN) {
           throw new ValidationError(
             "Tasks in completed sprints are locked and cannot be modified.",
@@ -66,44 +66,40 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       }
     }
 
-    // 1. Validation
-    if (updaterId) {
-      const updater = await this._userRepo.findById(updaterId);
-      if (updater) {
-        //Strict Role Control
-        if (
-          updater.role !== UserRole.ORG_MANAGER &&
-          updater.role !== UserRole.SUPER_ADMIN
-        ) {
-          // If NOT a manager
-          const allowedFields = [
-            "status",
-            "timeLogs",
-            "totalTimeSpent",
-            "completedAt",
-            "comments",
-            "attachments",
-          ];
-          const attemptedFields = Object.keys(data).filter(
-            (key) => data[key as keyof Partial<Task>] !== undefined,
-          );
-          const hasUnauthorizedFields = attemptedFields.some(
-            (field) => !allowedFields.includes(field),
-          );
-
-          if (hasUnauthorizedFields) {
-            throw new ForbiddenError(
-              "Members can only update task status, comments, and attachments. Core details are reserved for Managers.",
-            );
-          }
-        }
-
-        this._taskDomainService.validateStatusTransition(
-          task,
-          data.status,
-          updater,
+    // 1. Role-Based Field & Status Validation
+    if (updater) {
+      if (
+        updater.role !== UserRole.ORG_MANAGER &&
+        updater.role !== UserRole.SUPER_ADMIN
+      ) {
+        // Team members can only touch these fields
+        const allowedFields = [
+          "status",
+          "timeLogs",
+          "totalTimeSpent",
+          "completedAt",
+          "comments",
+          "attachments",
+        ];
+        const attemptedFields = Object.keys(data).filter(
+          (key) => data[key as keyof Partial<Task>] !== undefined,
         );
+        const hasUnauthorizedFields = attemptedFields.some(
+          (field) => !allowedFields.includes(field),
+        );
+
+        if (hasUnauthorizedFields) {
+          throw new ForbiddenError(
+            "Members can only update task status, comments, and attachments. Core details are reserved for Managers.",
+          );
+        }
       }
+
+      this._taskDomainService.validateStatusTransition(
+        task,
+        data.status,
+        updater,
+      );
     }
 
     const filteredData = Object.fromEntries(
@@ -175,11 +171,11 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
         throw new ValidationError(`Cannot assign tasks to a completed sprint.`);
       }
 
-      // Daily limit check
+      // Daily limit check (UTC-based to avoid server timezone offset bugs)
       const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
+      startOfDay.setUTCHours(0, 0, 0, 0);
       const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
+      endOfDay.setUTCHours(23, 59, 59, 999);
 
       const dailyCount = await this._taskRepo.countBySprintAssignedAtRange(
         data.sprintId,
@@ -207,7 +203,7 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       data.sprintAssignedAt = new Date();
     }
 
-    //Time Tracking Logic
+    // Time Tracking Logic
     if (data.status && data.status !== task.status && updaterId) {
       this._timeTrackingService.updateTimeLogs(task, data.status, updaterId);
       data.timeLogs = task.timeLogs;
@@ -218,17 +214,17 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       data.completedAt = new Date();
     }
 
-    // Perform Update
-    const updated = await this._taskRepo.update(id, data);
-    if (!updated) throw new EntityNotFoundError("Task Not Found", id);
-
-    // Validate assignee if it's being changed
+    // Validate assignee BEFORE saving — ensures invalid assignees never persist
     if (data.assignedTo && task.orgId) {
       await this._securityService.validateUserBelongsToOrg(
         data.assignedTo,
         task.orgId,
       );
     }
+
+    // Perform Update
+    const updated = await this._taskRepo.update(id, data);
+    if (!updated) throw new EntityNotFoundError("Task Not Found", id);
 
     // 3. Dispatch Domain Event
     this._eventDispatcher.dispatch(TASK_EVENTS.UPDATED, {
@@ -238,23 +234,13 @@ export class UpdateTaskUseCase implements IUpdateTaskUseCase {
       changes: data,
     });
 
-    // Synchronize Denormalized Stats
     if (data.status && data.status !== task.status) {
-      const project = await this._projectRepo.findById(task.projectId);
-      if (project) {
-        let newCompleted = project.completedTasks || 0;
-        if (data.status === "DONE") newCompleted++;
-        if (task.status === "DONE") newCompleted--;
-
-        const total = project.totalTasks || 0;
-        const progress =
-          total > 0 ? Math.round((newCompleted / total) * 100) : 0;
-
-        await this._projectRepo.update(project.id, {
-          completedTasks: newCompleted,
-          progress,
-        });
-      }
+      let completedTasksInc = 0;
+      if (data.status === "DONE") completedTasksInc = 1;
+      else if (task.status === "DONE") completedTasksInc = -1;
+      await this._projectRepo.incrementStats(task.projectId, {
+        completedTasks: completedTasksInc,
+      });
     }
 
     return updated;

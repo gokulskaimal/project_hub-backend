@@ -1,16 +1,18 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../container/types";
 import { BaseRepository } from "./BaseRepo";
 import { Plan } from "../../domain/entities/Plan";
 import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
 import PlanModel, { IPlanDoc } from "../models/PlanModel";
 import { Model } from "mongoose";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
 export class PlanRepo
   extends BaseRepository<Plan, IPlanDoc>
   implements IPlanRepo
 {
-  constructor() {
+  constructor(@inject(TYPES.ILogger) private _logger: ILogger) {
     super(PlanModel as unknown as Model<IPlanDoc>);
   }
 
@@ -46,32 +48,46 @@ export class PlanRepo
 
   async findAll(filter?: Partial<Plan>): Promise<Plan[]> {
     try {
-      const query = filter === undefined ? { isActive: true } : filter;
+      const query = { ...(filter || {}), isDeleted: { $ne: true } };
       const docs = await this.model.find(query);
       return docs.map((d) => this.toDomain(d));
     } catch (error) {
-      console.error("PlanRepo.findAll failed:", error);
+      this._logger.error("PlanRepo.findAll failed:", error as Error);
       throw error;
     }
   }
 
   async findById(id: string): Promise<Plan | null> {
-    const docs = await this.model.findById(id);
+    const docs = await this.model.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    });
     return docs ? this.toDomain(docs) : null;
   }
 
   async update(id: string, plan: Partial<Plan>): Promise<Plan | null> {
-    const doc = await this.model.findByIdAndUpdate(id, plan, { new: true });
+    const doc = await this.model.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
+      plan,
+      { new: true },
+    );
     return doc ? this.toDomain(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.model.findByIdAndUpdate(id, { isActive: false });
+    const result = await this.model.findByIdAndUpdate(id, {
+      isActive: false,
+      isDeleted: true,
+      deletedAt: new Date(),
+    });
     return !!result;
   }
 
   async findByRazorpayId(razorpayPlanId: string): Promise<Plan | null> {
-    const doc = await this.model.findOne({ razorpayPlanId });
+    const doc = await this.model.findOne({
+      razorpayPlanId,
+      isDeleted: { $ne: true },
+    });
     return doc ? this.toDomain(doc) : null;
   }
 }

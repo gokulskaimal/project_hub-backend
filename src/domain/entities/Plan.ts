@@ -18,4 +18,6 @@ export interface Plan {
   };
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

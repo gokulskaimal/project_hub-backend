@@ -23,6 +23,8 @@ export interface IUserDoc extends Document {
   emailVerificationExpires?: Date;
   status?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING_VERIFICATION";
   lastLoginAt?: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }
 
 const UserSchema = new mongoose.Schema<IUserDoc>(
@@ -51,6 +53,8 @@ const UserSchema = new mongoose.Schema<IUserDoc>(
       default: "PENDING_VERIFICATION",
     },
     lastLoginAt: { type: Date },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

@@ -9,4 +9,6 @@ export interface Sprint {
   goal?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

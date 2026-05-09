@@ -29,18 +29,24 @@ export class MeetingRepo
   }
 
   async findBySprint(sprintId: string): Promise<Meeting[]> {
-    const docs = await MeetingModel.find({ sprintId });
+    const docs = await MeetingModel.find({
+      sprintId,
+      isDeleted: { $ne: true },
+    });
     return docs.map((doc) => this.toDomain(doc));
   }
 
   async findByRoomId(roomId: string): Promise<Meeting | null> {
-    const doc = await MeetingModel.findOne({ roomId });
+    const doc = await MeetingModel.findOne({
+      roomId,
+      isDeleted: { $ne: true },
+    });
     return doc ? this.toDomain(doc) : null;
   }
 
   async updateStatus(roomId: string, status: string): Promise<Meeting | null> {
     const doc = await MeetingModel.findOneAndUpdate(
-      { roomId },
+      { roomId, isDeleted: { $ne: true } },
       { status },
       { new: true },
     );
@@ -52,15 +58,22 @@ export class MeetingRepo
     roomId: string,
     data: Partial<Meeting>,
   ): Promise<Meeting | null> {
-    const doc = await MeetingModel.findOneAndUpdate({ roomId }, data, {
-      new: true,
-    });
+    const doc = await MeetingModel.findOneAndUpdate(
+      { roomId, isDeleted: { $ne: true } },
+      data,
+      {
+        new: true,
+      },
+    );
     if (!doc) return null;
     return this.toDomain(doc);
   }
 
   async deleteByRoomId(roomId: string): Promise<boolean> {
-    const result = await MeetingModel.findOneAndDelete({ roomId });
+    const result = await MeetingModel.findOneAndUpdate(
+      { roomId, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
     return result !== null;
   }
 
@@ -70,7 +83,10 @@ export class MeetingRepo
     offset: number,
     status?: "SCHEDULED" | "HISTORY",
   ): Promise<{ meetings: Meeting[]; total: number }> {
-    const query: Record<string, unknown> = { projectId: { $in: projectIds } };
+    const query: Record<string, unknown> = {
+      projectId: { $in: projectIds },
+      isDeleted: { $ne: true },
+    };
 
     const now = new Date();
 

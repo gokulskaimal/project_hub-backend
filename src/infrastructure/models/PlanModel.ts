@@ -24,6 +24,8 @@ const planSchema = new Schema(
       messages: { type: Number, default: 0 },
       sprints: { type: Number, default: 0 },
     },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

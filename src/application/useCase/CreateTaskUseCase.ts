@@ -82,28 +82,11 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       );
     }
 
-    if (data.sprintId) {
-      const sprint = await this._sprintRepo.findById(data.sprintId);
-      if (!sprint) throw new ValidationError("Sprint not found");
-
-      // [SCURM] Domain Rule: Assignment to Sprint (Must be estimated)
-      this._taskDomainService.validateAssignmentToSprint(data as Task);
-
-      const capacity = this._taskDomainService.calculateSprintCapacity(
-        sprint,
-        project.tasksPerWeek,
-      );
-      const currentCount = await this._taskRepo.countBySprint(data.sprintId);
-      if (currentCount >= capacity) {
-        throw new ValidationError("Sprint task capacity exceeded.");
-      }
-    }
-
-    const getDayRangeLocal = (): { start: Date; end: Date } => {
+    const getDayRangeUTC = (): { start: Date; end: Date } => {
       const start = new Date();
-      start.setHours(0, 0, 0, 0);
+      start.setUTCHours(0, 0, 0, 0);
       const end = new Date();
-      end.setHours(23, 59, 59, 999);
+      end.setUTCHours(23, 59, 59, 999);
       return { start, end };
     };
 
@@ -113,7 +96,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
     };
 
     if (data.sprintId) {
-      const { start, end } = getDayRangeLocal();
+      const { start, end } = getDayRangeUTC();
       const dailyCount = await this._taskRepo.countBySprintAssignedAtRange(
         data.sprintId,
         start,
@@ -173,17 +156,7 @@ export class CreateTaskUseCase implements ICreateTaskUseCase {
       creatorId,
     });
 
-    // Synchronize Denormalized Stats
-    const totalTasks = (project.totalTasks || 0) + 1;
-    const completedTasks = project.completedTasks || 0;
-    const progress =
-      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    await this._projectRepo.update(project.id, {
-      totalTasks,
-      completedTasks,
-      progress,
-    });
+    await this._projectRepo.incrementStats(project.id, { totalTasks: 1 });
 
     return newTask;
   }

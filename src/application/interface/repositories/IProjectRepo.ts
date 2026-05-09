@@ -18,4 +18,9 @@ export interface IProjectRepo extends IBaseRepository<Project> {
     projects: Project[];
     total: number;
   }>;
+  incrementStats(
+    projectId: string,
+    stats: { totalTasks?: number; completedTasks?: number },
+    session?: unknown,
+  ): Promise<Project | null>;
 }

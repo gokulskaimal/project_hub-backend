@@ -1,5 +1,6 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "./types/AuthenticatedRequest";
+import { ILogger } from "../../application/interface/services/ILogger";
 import { StatusCodes } from "../../infrastructure/config/statusCodes.enum";
 import { container } from "../../infrastructure/container/Container";
 import { TYPES } from "../../infrastructure/container/types";
@@ -7,7 +8,10 @@ import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { IOrgRepo } from "../../application/interface/repositories/IOrgRepo";
+import { ICacheService } from "../../application/interface/services/ICacheService";
 import { PLAN_DEFAULTS } from "../../infrastructure/config/common.constants";
+
+const SUBSCRIPTION_CACHE_TTL = 5 * 60;
 
 export async function subscriptionLockMiddleware(
   req: AuthenticatedRequest,
@@ -33,11 +37,38 @@ export async function subscriptionLockMiddleware(
     const projectRepo = container.get<IProjectRepo>(TYPES.IProjectRepo);
     const userRepo = container.get<IUserRepo>(TYPES.IUserRepo);
     const orgRepo = container.get<IOrgRepo>(TYPES.IOrgRepo);
+    const cacheService = container.get<ICacheService>(TYPES.ICacheService);
+
+    const cacheKey = `subscription_lock_${orgId}`;
+    const cached = await cacheService.get(cacheKey);
+
+    if (cached) {
+      const { isLocked, message } = JSON.parse(cached) as {
+        isLocked: boolean;
+        message: string;
+      };
+      if (isLocked) {
+        res.status(StatusCodes.FORBIDDEN).json({
+          success: false,
+          error: {
+            code: "WORKSPACE_LOCKED",
+            message,
+          },
+        });
+        return;
+      }
+      return next();
+    }
 
     const organization = await orgRepo.findById(orgId);
 
     // If their subscription is Active, the lock is completely bypassed!
     if (organization && organization.subscriptionStatus === "ACTIVE") {
+      await cacheService.set(
+        cacheKey,
+        JSON.stringify({ isLocked: false, message: "" }),
+        SUBSCRIPTION_CACHE_TTL,
+      );
       return next();
     }
 
@@ -55,11 +86,24 @@ export async function subscriptionLockMiddleware(
     }
 
     // Measure their current active workspace size
-    const liveProjects = await projectRepo.countByOrg(orgId);
-    const liveMembers = await userRepo.countByOrg(orgId);
+    const [liveProjects, liveMembers] = await Promise.all([
+      projectRepo.countByOrg(orgId),
+      userRepo.countByOrg(orgId),
+    ]);
+
+    const isOverQuota = liveProjects > maxProjects || liveMembers > maxMembers;
+
+    const lockMessage =
+      "Your organization is over quota. The workspace is in Read-Only mode until you upgrade your plan or remove excess members/projects.";
+
+    await cacheService.set(
+      cacheKey,
+      JSON.stringify({ isLocked: isOverQuota, message: lockMessage }),
+      SUBSCRIPTION_CACHE_TTL,
+    );
 
     // If they have MORE data than the Free Tier allows, they are OVER QUOTA
-    if (liveProjects > maxProjects || liveMembers > maxMembers) {
+    if (isOverQuota) {
       res.status(StatusCodes.FORBIDDEN).json({
         success: false,
         error: {
@@ -74,8 +118,8 @@ export async function subscriptionLockMiddleware(
     // If they are expired but under the Free Tier limits, let them continue building for free
     next();
   } catch (error) {
-    console.error("[SubscriptionLockMiddleware] Error:", error);
-    // On unexpected errors, let traffic through so we don't accidentally block paying customers
+    const logger = container.get<ILogger>(TYPES.ILogger);
+    logger.error("[SubscriptionLockMiddleware] Error:" + error);
     next();
   }
 }

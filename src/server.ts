@@ -29,7 +29,7 @@ import {
 } from "./presentation/middleware/ErrorMiddleware"; // Correct path to robust handlers
 import { IBootstrapService } from "./application/interface/services/IBootstrapService";
 
-let logger: ILogger;
+const logger = container.get<ILogger>(TYPES.ILogger);
 const port = config.port;
 
 function setupMiddleware(app: express.Application): void {
@@ -205,12 +205,12 @@ async function connectDatabase(): Promise<void> {
  */
 
 process.on("uncaughtException", (error) => {
-  console.error("UNCAUGHT EXCEPTION! Shutting down...", error);
+  logger.error("UNCAUGHT EXCEPTION! Shutting down...", error);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("UNHANDLED REJECTION! Shutting down...", reason);
+  logger.error("UNHANDLED REJECTION! Shutting down...", reason as Error);
   process.exit(1);
 });
 
@@ -221,8 +221,6 @@ async function startServer(): Promise<void> {
     }
 
     await diContainer.init();
-
-    logger = diContainer.get<ILogger>(TYPES.ILogger);
 
     const app = express();
 
@@ -287,7 +285,7 @@ async function startServer(): Promise<void> {
     process.on("SIGTERM", () => shutdown("SIGTERM"));
     process.on("SIGINT", () => shutdown("SIGINT"));
   } catch (error) {
-    console.error("Failed to start server:", error);
+    logger.error("Failed to start server:", error as Error);
     process.exit(1);
   }
 }

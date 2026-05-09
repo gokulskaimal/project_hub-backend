@@ -17,4 +17,6 @@ export interface Project {
   progress: number;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

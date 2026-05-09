@@ -13,4 +13,6 @@ export interface TaskHistory {
   previousValue?: string;
   newValue?: string;
   createdAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

@@ -14,7 +14,7 @@ export class NotificationRepo implements INotificationRepo {
   }
 
   async findByUser(userId: string, orgId?: string): Promise<Notification[]> {
-    const query: Record<string, unknown> = { userId };
+    const query: Record<string, unknown> = { userId, isDeleted: { $ne: true } };
     if (orgId) query.orgId = orgId;
 
     const docs = await NotificationModel.find(query)
@@ -24,12 +24,15 @@ export class NotificationRepo implements INotificationRepo {
   }
 
   async markAsRead(id: string, userId: string): Promise<void> {
-    await NotificationModel.updateOne({ _id: id, userId }, { isRead: true });
+    await NotificationModel.updateOne(
+      { _id: id, userId, isDeleted: { $ne: true } },
+      { isRead: true },
+    );
   }
 
   async markAllAsRead(userId: string): Promise<void> {
     await NotificationModel.updateMany(
-      { userId, isRead: false },
+      { userId, isRead: false, isDeleted: { $ne: true } },
       { isRead: true },
     );
   }
@@ -45,6 +48,8 @@ export class NotificationRepo implements INotificationRepo {
       doc.isRead,
       doc.createdAt,
       doc.orgId,
+      doc.isDeleted || false,
+      doc.deletedAt || null,
     );
   }
 }

@@ -41,14 +41,17 @@ export class SubscriptionRepo
   }
 
   async findByUserId(userId: string): Promise<Subscription | null> {
-    const doc = await this.model.findOne({ userId });
+    const doc = await this.model.findOne({ userId, isDeleted: { $ne: true } });
     return doc ? this.toDomain(doc) : null;
   }
 
   async findByRazorpaySubscriptionId(
     razorpaySubscriptionId: string,
   ): Promise<Subscription | null> {
-    const doc = await this.model.findOne({ razorpaySubscriptionId });
+    const doc = await this.model.findOne({
+      razorpaySubscriptionId,
+      isDeleted: { $ne: true },
+    });
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -56,9 +59,11 @@ export class SubscriptionRepo
     id: string,
     subscription: Partial<Subscription>,
   ): Promise<Subscription | null> {
-    const doc = await this.model.findByIdAndUpdate(id, subscription, {
-      new: true,
-    });
+    const doc = await this.model.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
+      subscription,
+      { new: true },
+    );
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -67,10 +72,18 @@ export class SubscriptionRepo
     subscription: Partial<Subscription>,
   ): Promise<Subscription | null> {
     const doc = await this.model.findOneAndUpdate(
-      { razorpaySubscriptionId: razorpayId },
+      { razorpaySubscriptionId: razorpayId, isDeleted: { $ne: true } },
       subscription,
       { new: true },
     );
     return doc ? this.toDomain(doc) : null;
+  }
+
+  async deleteByUserId(userId: string): Promise<boolean> {
+    const result = await this.model.updateMany(
+      { userId, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
+    return result.acknowledged;
   }
 }

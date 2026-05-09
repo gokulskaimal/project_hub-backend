@@ -9,4 +9,6 @@ export interface Meeting {
   status: "SCHEDULED" | "LIVE" | "COMPLETED";
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

@@ -18,13 +18,20 @@ export class TaskHistoryRepo
   }
 
   async findByTaskId(taskId: string): Promise<TaskHistory[]> {
-    const historyLogs = await TaskHistoryModel.find({ taskId }).sort({
+    const historyLogs = await TaskHistoryModel.find({
+      taskId,
+      isDeleted: { $ne: true },
+    }).sort({
       createdAt: -1,
     });
     return historyLogs.map((log) => this.toDomain(log));
   }
 
   async deleteByTaskId(taskId: string): Promise<boolean> {
-    return await this.deleteMany({ taskId: taskId });
+    await TaskHistoryModel.updateMany(
+      { taskId, isDeleted: { $ne: true } },
+      { isDeleted: true, deletedAt: new Date() },
+    );
+    return true;
   }
 }

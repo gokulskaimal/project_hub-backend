@@ -16,4 +16,5 @@ export interface IInvoiceRepo {
     sort?: string,
     planType?: string,
   ): Promise<{ items: Invoice[]; total: number; totalRevenue: number }>;
+  deleteByOrgId(orgId: string): Promise<boolean>;
 }

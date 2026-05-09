@@ -13,10 +13,13 @@ export interface Subscription {
     | "incomplete_expired"
     | "past_due"
     | "trialing"
-    | "unpaid";
+    | "unpaid"
+    | "halted";
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   cancelAtPeriodEnd: boolean;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

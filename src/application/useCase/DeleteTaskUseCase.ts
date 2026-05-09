@@ -1,5 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
+import { Task } from "../../domain/entities/Task";
 import { ITaskRepo } from "../../application/interface/repositories/ITaskRepo";
 import { ITaskHistoryRepo } from "../../application/interface/repositories/ITaskHistoryRepo";
 import { IProjectRepo } from "../../application/interface/repositories/IProjectRepo";
@@ -47,11 +48,25 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
     const success = await this._taskRepo.delete(id);
     if (!success) throw new EntityNotFoundError("Task Not Found", id);
 
-    await this._taskRepo.deleteSubtasks(id);
+    // Recursively find ALL descendants (handles grandchildren too)
+    const getAllDescendants = async (parentId: string): Promise<Task[]> => {
+      const children = await this._taskRepo.findByParent(parentId);
+      if (children.length === 0) return [];
+      const grandchildren = await Promise.all(
+        children.map((child) => getAllDescendants(child.id)),
+      );
+      return [...children, ...grandchildren.flat()];
+    };
 
+    const allDescendants = await getAllDescendants(id);
+    const completedSubtasksCount = allDescendants.filter(
+      (s) => s.status === "DONE",
+    ).length;
+
+    await this._taskRepo.deleteSubtasks(id);
     await this._taskHistoryRepo.deleteByTaskId(id);
 
-    // Dispatch Domain Event for side effects (Sockets, Notifications, History logging)
+    // Dispatch Domain Event for side effects
     await this._eventDispatcher.dispatch(TASK_EVENTS.DELETED, {
       taskId: id,
       projectId: task.projectId,
@@ -60,23 +75,14 @@ export class DeleteTaskUseCase implements IDeleteTaskUseCase {
       taskTitle: task.title,
     });
 
-    // Synchronize Denormalized Stats
-    const project = await this._projectRepo.findById(task.projectId);
-    if (project) {
-      const totalTasks = Math.max(0, (project.totalTasks || 0) - 1);
-      let completedTasks = project.completedTasks || 0;
-      if (task.status === "DONE")
-        completedTasks = Math.max(0, completedTasks - 1);
-
-      const progress =
-        totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-      await this._projectRepo.update(project.id, {
-        totalTasks,
-        completedTasks,
-        progress,
-      });
-    }
+    // Decrement by 1 (parent) + ALL descendants (not just immediate children)
+    const totalToDelete = 1 + allDescendants.length;
+    let completedToDelete = task.status === "DONE" ? 1 : 0;
+    completedToDelete += completedSubtasksCount;
+    await this._projectRepo.incrementStats(task.projectId, {
+      totalTasks: -totalToDelete,
+      completedTasks: -completedToDelete,
+    });
 
     return true;
   }

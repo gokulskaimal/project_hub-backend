@@ -9,5 +9,7 @@ export class Notification {
     public readonly isRead: boolean,
     public readonly createdAt: Date,
     public readonly orgId?: string,
+    public readonly isDeleted: boolean = false,
+    public readonly deletedAt: Date | null = null,
   ) {}
 }

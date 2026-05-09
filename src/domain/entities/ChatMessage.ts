@@ -9,5 +9,7 @@ export class ChatMessage {
     public createdAt: Date,
     public senderName?: string, // Populated field
     public senderAvatar?: string, // Populated field
+    public isDeleted?: boolean,
+    public deletedAt?: Date | null,
   ) {}
 }

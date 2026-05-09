@@ -13,4 +13,6 @@ export interface Invoice {
   invoicePdfUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
 }

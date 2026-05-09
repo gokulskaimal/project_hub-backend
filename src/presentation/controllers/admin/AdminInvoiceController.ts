@@ -18,7 +18,7 @@ export class AdminInvoiceController implements IAdminInvoiceController {
     async (req: Request, res: Response): Promise<void> => {
       const authReq = req as AuthenticatedRequest;
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 12;
       const search = req.query.search as string | undefined;
       const status = req.query.status as string | undefined;
       const sort = req.query.sort as string | undefined;

@@ -27,8 +27,8 @@ export interface Organization {
     | "INACTIVE"
     | "TRIAL"
     | "EXPIRED"
-    | "EXPIRED"
-    | "CANCELLED";
+    | "CANCELLED"
+    | "SUSPENDED"; // Covers payment-failure-halted state
 
   subscriptionStartsAt?: Date;
   subscriptionEndsAt?: Date;

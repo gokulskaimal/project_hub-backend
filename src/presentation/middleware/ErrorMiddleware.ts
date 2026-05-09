@@ -44,7 +44,7 @@ export function errorHandler(
   err: Error | HttpError | AppError,
   req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   _next: NextFunction,
 ): void {
   // 1. Default fallback
@@ -69,8 +69,7 @@ export function errorHandler(
     errCode === "TOO_MANY_REQUESTS" ||
     isValidationError ||
     errCode === "ENTITY_NOT_FOUND" ||
-    errCode === "CONFLICT_ERROR" ||
-    errName.includes("Error") // Catch-all for our custom Error classes
+    errCode === "CONFLICT_ERROR"
   ) {
     code =
       errCode || (isValidationError ? "VALIDATION_ERROR" : "INTERNAL_ERROR");

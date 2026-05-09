@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Invoice } from "../../domain/entities/Invoice";
 
-export interface IInvoiceDoc
+interface IInvoiceDoc
   extends Omit<Invoice, "id" | "createdAt" | "updatedAt">, Document {
   createdAt?: Date;
   updatedAt?: Date;
@@ -21,6 +21,8 @@ const InvoiceSchema = new Schema<IInvoiceDoc>(
     },
     billingDate: { type: Date, required: true, default: Date.now },
     invoicePdfUrl: { type: String },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

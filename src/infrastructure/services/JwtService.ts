@@ -7,6 +7,7 @@ import { ICacheService } from "../../application/interface/services/ICacheServic
 import { IJwtProvider } from "../../application/interface/services/IJwtProvider";
 import { TYPES } from "../container/types";
 import { AppConfig } from "../../config/AppConfig";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 /**
  * JWT Service Implementation
@@ -38,6 +39,7 @@ export class JwtService implements IJwtService {
     @inject(TYPES.IJwtProvider) private readonly jwtProvider: IJwtProvider,
     @inject(TYPES.ICacheService) private readonly cacheService: ICacheService,
     @inject(TYPES.AppConfig) private readonly config: AppConfig,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
   ) {
     // Get secrets from injected configuration
     this._accessTokenSecret = this.config.jwt.accessSecret;
@@ -243,8 +245,8 @@ export class JwtService implements IJwtService {
           ttlSeconds,
         );
       }
-    } catch (err) {
-      console.warn("Failed to revoke refresh token ", (err as Error).message);
+    } catch {
+      this._logger.warn("Failed to revoke refresh token ");
     }
   }
 
@@ -256,11 +258,36 @@ export class JwtService implements IJwtService {
         String(now),
         30 * 24 * 60 * 60, // Keep revocation record for 30 days
       );
-    } catch (err) {
-      console.warn(
-        "Failed to revoke all tokens for user ",
-        (err as Error).message,
+    } catch {
+      this._logger.warn("Failed to revoke all tokens for user");
+    }
+  }
+
+  async isTokenRevoked(token: string): Promise<boolean> {
+    try {
+      const revokedToken = await this.cacheService.get(
+        `${this.REVOCATION_PREFIX}${token}`,
       );
+      if (revokedToken) return true;
+      const decoded = this.decodeToken(token);
+      if (decoded && decoded.id) {
+        const revokedAtStr = await this.cacheService.get(
+          `${this.USER_REVOCATION_PREFIX}${decoded.id}`,
+        );
+        if (revokedAtStr) {
+          const revokedAt = parseInt(revokedAtStr, 10);
+          if (decoded.iat && typeof decoded.iat === "number") {
+            const issuedAtMs = decoded.iat * 1000;
+            if (revokedAt && issuedAtMs < revokedAt) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    } catch {
+      this._logger.warn("Failed to check token revocation status: ");
+      return false;
     }
   }
 }

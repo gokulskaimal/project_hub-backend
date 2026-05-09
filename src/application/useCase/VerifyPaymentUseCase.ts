@@ -10,6 +10,7 @@ import { UserRole } from "../../domain/enums/UserRole";
 import { ICreateNotificationUseCase } from "../interface/useCases/ICreateNotificationUseCase";
 import { ISocketService } from "../../application/interface/services/ISocketService";
 import { IInvoiceRepo } from "../../application/interface/repositories/IInvoiceRepo";
+import { ILogger } from "../interface/services/ILogger";
 
 @injectable()
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
@@ -24,6 +25,7 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     private _createNotificationUseCase: ICreateNotificationUseCase,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.IInvoiceRepo) private _invoiceRepo: IInvoiceRepo,
+    @inject(TYPES.ILogger) private _logger: ILogger,
   ) {}
 
   async execute(
@@ -98,10 +100,10 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
           );
         }
       } else {
-        console.warn("Local subscription record not found for order:", orderId);
+        this._logger.error(`Subscription not found for order : ${orderId}`);
       }
-    } catch (error) {
-      console.error("Failed to verify payment and update subscription", error);
+    } catch {
+      this._logger.error(`Error fetching plan for order : ${orderId}`);
       return false;
     }
 

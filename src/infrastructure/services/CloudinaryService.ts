@@ -3,10 +3,14 @@ import { IFileService } from "../../application/interface/services/IFileService"
 import { v2 as cloudinary } from "cloudinary";
 import { TYPES } from "../container/types";
 import { AppConfig } from "../../config/AppConfig";
+import { ILogger } from "../../application/interface/services/ILogger";
 
 @injectable()
 export class CloudinaryService implements IFileService {
-  constructor(@inject(TYPES.AppConfig) private readonly config: AppConfig) {
+  constructor(
+    @inject(TYPES.AppConfig) private readonly config: AppConfig,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
+  ) {
     cloudinary.config({
       cloud_name: this.config.upload.cloudName,
       api_key: this.config.upload.apiKey,
@@ -37,14 +41,23 @@ export class CloudinaryService implements IFileService {
 
   async deleteFile(fileUrl: string): Promise<void> {
     try {
-      const regex = /\/upload\/v\d+\/(.+)\.[a-z]+$/;
+      const regex = /\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?$/;
       const match = fileUrl.match(regex);
       const publicId = match ? match[1] : null;
       if (publicId) {
-        await cloudinary.uploader.destroy(publicId);
+        const result = await cloudinary.uploader.destroy(publicId);
+        if (result.result === "ok") {
+          this._logger.info(`Deleted file from Cloudinary: ${publicId}`);
+        } else {
+          this._logger.warn(
+            `Failed to delete file from Cloudinary: ${publicId}`,
+          );
+        }
+      } else {
+        this._logger.warn(`Could not extract publicId from URL: ${fileUrl}`);
       }
     } catch (error) {
-      console.error("Error deleting file from Cloudinary", error);
+      this._logger.error(`Error deleting file from Cloudinary: ${error}`);
     }
   }
 }

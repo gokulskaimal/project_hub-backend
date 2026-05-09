@@ -1,5 +1,3 @@
-// src/application/useCase/HandleRazorpayWebhookUseCase.ts
-
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { IHandleRazorpayWebhookUseCase } from "../interface/useCases/IHandleRazorpayWebhookUseCase";
@@ -32,6 +30,9 @@ export class HandleRazorpayWebhookUseCase implements IHandleRazorpayWebhookUseCa
         break;
       case "subscription.cancelled":
         await this._handleSubscriptionCancelled(subscription);
+        break;
+      case "subscription.halted":
+        await this._handleSubscriptionHalted(subscription);
         break;
       default:
         this._logger.warn(`Unhandled Razorpay event type: ${event}`);
@@ -71,18 +72,53 @@ export class HandleRazorpayWebhookUseCase implements IHandleRazorpayWebhookUseCa
   private async _handleSubscriptionCancelled(
     subscription: RazorpaySubscription,
   ): Promise<void> {
+    const currentEnd = subscription.current_end
+      ? new Date(subscription.current_end * 1000)
+      : new Date();
+    const isPeriodEndinFuture = currentEnd.getTime() > Date.now();
     const localSub = await this._subRepo.updateByRazorpayId(subscription.id, {
       status: "canceled",
-      cancelAtPeriodEnd: false,
+      cancelAtPeriodEnd: isPeriodEndinFuture,
+    });
+
+    if (localSub) {
+      const user = await this._userRepo.findById(localSub.userId);
+      if (user?.orgId) {
+        if (!isPeriodEndinFuture) {
+          // Billing cycle is over — revoke access immediately
+          await this._orgRepo.update(user.orgId, {
+            subscriptionStatus: "CANCELLED",
+          });
+          this._logger.info(
+            `Org ${user.orgId} access REVOKED — subscription cancelled, billing period ended.`,
+          );
+        } else {
+          // User paid for this period — retain access until it ends naturally
+          this._logger.info(
+            `Org ${user.orgId} subscription cancelled but retaining ACTIVE access until period end (${currentEnd.toISOString()}).`,
+          );
+        }
+      }
+    }
+  }
+
+  private async _handleSubscriptionHalted(
+    subscription: RazorpaySubscription,
+  ): Promise<void> {
+    // Razorpay fires "halted" after exhausting all payment retry attempts
+    const localSub = await this._subRepo.updateByRazorpayId(subscription.id, {
+      status: "halted",
     });
 
     if (localSub) {
       const user = await this._userRepo.findById(localSub.userId);
       if (user?.orgId) {
         await this._orgRepo.update(user.orgId, {
-          subscriptionStatus: "CANCELLED",
+          subscriptionStatus: "SUSPENDED",
         });
-        this._logger.info(`Synchronized Org ${user.orgId} to CANCELLED.`);
+        this._logger.warn(
+          `Org ${user.orgId} SUSPENDED due to payment failure (subscription halted).`,
+        );
       }
     }
   }

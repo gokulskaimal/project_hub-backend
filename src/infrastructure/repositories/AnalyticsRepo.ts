@@ -38,6 +38,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     byRole: Record<string, number>;
   }> {
     const results = await UserModel.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
       {
         $facet: {
           total: [{ $count: "count" }],
@@ -83,27 +84,28 @@ export class AnalyticsRepo implements IAnalyticsRepo {
   }> {
     const [statusDistribution, planPerformance] = await Promise.all([
       OrgModel.aggregate([
+        { $match: { isDeleted: { $ne: true } } },
         { $group: { _id: "$status", count: { $sum: 1 } } },
         { $project: { status: "$_id", count: 1, _id: 0 } },
       ]),
       OrgModel.aggregate([
-        { $group: { _id: "$planId", count: { $sum: 1 } } },
+        { $match: { isDeleted: { $ne: true } } },
         {
           $lookup: {
             from: "plans",
-            localField: "_id",
+            localField: "planId",
             foreignField: "_id",
             as: "plan",
           },
         },
         { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
         {
-          $project: {
-            planName: { $ifNull: ["$plan.name", "Basic / No Plan"] },
-            count: 1,
-            _id: 0,
+          $group: {
+            _id: { $ifNull: ["$plan.name", "Basic / No Plan"] },
+            count: { $sum: 1 },
           },
         },
+        { $project: { planName: "$_id", count: 1, _id: 0 } },
       ]),
     ]);
     return { statusDistribution, planPerformance };
@@ -119,6 +121,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
         $match: {
           orgId: new mongoose.Types.ObjectId(orgId),
           role: { $nin: [UserRole.SUPER_ADMIN, UserRole.ORG_MANAGER] },
+          isDeleted: { $ne: true },
         },
       },
       {
@@ -149,7 +152,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     userId?: string,
     timeFrame?: TimeFrame,
   ): Promise<StatusDistributionItem[]> {
-    const match: Record<string, unknown> = { orgId };
+    const match: Record<string, unknown> = { orgId, isDeleted: { $ne: true } };
     if (userId) match.assignedTo = userId;
 
     if (timeFrame) {
@@ -176,6 +179,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     const match: Record<string, unknown> = {
       status: "DONE",
       completedAt: { $gte: startDate, $ne: null },
+      isDeleted: { $ne: true },
     };
     if (orgId) match.orgId = orgId;
     if (userId) match.assignedTo = userId;
@@ -209,6 +213,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
       orgId,
       status: "DONE",
       completedAt: { $exists: true },
+      isDeleted: { $ne: true },
     };
 
     if (timeFrame) {
@@ -260,6 +265,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     const match: Record<string, unknown> = {
       status: "DONE",
       completedAt: { $gte: start, $lte: end },
+      isDeleted: { $ne: true },
     };
 
     if (scope === "user") match.assignedTo = id;
@@ -274,7 +280,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
 
   async getProjectStats(orgId: string): Promise<Record<string, number>> {
     const stats = await ProjectModel.aggregate([
-      { $match: { orgId } },
+      { $match: { orgId, isDeleted: { $ne: true } } },
       {
         $facet: {
           total: [{ $count: "count" }],
@@ -304,7 +310,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     orgId: string,
   ): Promise<ProjectProgressItem[]> {
     return await ProjectModel.aggregate([
-      { $match: { orgId } },
+      { $match: { orgId, isDeleted: { $ne: true } } },
       {
         $project: {
           name: 1,
@@ -317,7 +323,9 @@ export class AnalyticsRepo implements IAnalyticsRepo {
   }
 
   async getInvitationStats(orgId?: string): Promise<Record<string, number>> {
-    const match = orgId ? { orgId } : {};
+    const match: Record<string, unknown> = orgId
+      ? { orgId, isDeleted: { $ne: true } }
+      : { isDeleted: { $ne: true } };
     const stats = await InviteModel.aggregate([
       { $match: match },
       { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -352,6 +360,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     const match: Record<string, unknown> = {
       status: "PAID",
       createdAt: { $gte: startDate },
+      isDeleted: { $ne: true },
     };
     if (orgId) match.orgId = orgId;
 
@@ -378,7 +387,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     Array<{ planName: string; count: number; totalRevenue: number }>
   > {
     return await InvoiceModel.aggregate([
-      { $match: { status: "PAID" } },
+      { $match: { status: "PAID", isDeleted: { $ne: true } } },
       {
         $group: {
           _id: "$planId",
@@ -390,7 +399,14 @@ export class AnalyticsRepo implements IAnalyticsRepo {
         $lookup: {
           from: "plans",
           let: { planIdObj: { $toObjectId: "$_id" } },
-          pipeline: [{ $match: { $expr: { $eq: ["$_id", "$planIdObj"] } } }],
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$planIdObj"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "planDetails",
         },
       },
@@ -413,6 +429,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
           orgId: {
             $in: orgIds.map((id) => new mongoose.Types.ObjectId(id)),
           },
+          isDeleted: { $ne: true },
         },
       },
       { $group: { _id: "$orgId", count: { $sum: 1 } } },
@@ -431,14 +448,22 @@ export class AnalyticsRepo implements IAnalyticsRepo {
         $match: {
           projectId,
           type: "EPIC",
+          isDeleted: { $ne: true },
         },
       },
       { $addFields: { epicIdStr: { $toString: "$_id" } } },
       {
         $lookup: {
           from: "tasks",
-          localField: "epicIdStr",
-          foreignField: "epicId",
+          let: { epicIdStr: "$epicIdStr" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$epicId", "$$epicIdStr"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "stories",
         },
       },
@@ -487,13 +512,20 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     // For health report, we still need to check tasks for overdue status because overdue is time-dependent.
     // However, we can optimize the lookup to only fetch what we need.
     return await ProjectModel.aggregate([
-      { $match: { orgId, status: "ACTIVE" } },
+      { $match: { orgId, status: "ACTIVE", isDeleted: { $ne: true } } },
       { $addFields: { projectIdStr: { $toString: "$_id" } } },
       {
         $lookup: {
           from: "tasks",
-          localField: "projectIdStr",
-          foreignField: "projectId",
+          let: { projectIdStr: "$projectIdStr" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$projectId", "$$projectIdStr"] },
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "projectTasks",
         },
       },
@@ -536,7 +568,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
 
   async getMemberWorkloadReport(orgId: string): Promise<MemberWorkloadItem[]> {
     return await TaskModel.aggregate([
-      { $match: { orgId, status: { $ne: "DONE" } } },
+      { $match: { orgId, status: { $ne: "DONE" }, isDeleted: { $ne: true } } },
       {
         $group: {
           _id: "$assignedTo",
