@@ -72,7 +72,7 @@ function setupMiddleware(app: express.Application): void {
 
   app.use(
     cors({
-      origin: config.frontend.url,
+      origin: config.security.corsOrigin,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -241,7 +241,12 @@ async function startServer(): Promise<void> {
 
     try {
       const socketServer = diContainer.get<SocketServer>(TYPES.SocketServer);
-      const io = socketServer.initialize(httpServer, [config.frontend.url]);
+      const io = socketServer.initialize(
+        httpServer,
+        Array.isArray(config.security.corsOrigin)
+          ? config.security.corsOrigin
+          : [config.security.corsOrigin],
+      );
 
       const socketService = diContainer.get<ISocketService>(
         TYPES.ISocketService,
