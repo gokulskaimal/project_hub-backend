@@ -176,7 +176,8 @@ export class GoogleSignInUseCase implements IGoogleSignInUseCase {
             "New Organization Registered",
             `A new Organization ${orgName} has been registered via Google SSO by ${email}`,
             "INFO",
-            "/admin/organizations",
+            newOrg.id, // Corrected from path string to orgId
+            "/admin/organizations", // Moved path to link parameter
           );
         }
       }

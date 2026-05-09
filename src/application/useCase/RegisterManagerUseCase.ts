@@ -110,6 +110,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
           `A new Organization ${organizationName} has been registered by ${email}`,
           "INFO",
           organization.id,
+          "/admin/organizations",
         );
       }
       this._socketService.emitToRole(UserRole.SUPER_ADMIN, "org:registered", {

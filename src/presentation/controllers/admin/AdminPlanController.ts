@@ -38,7 +38,7 @@ export class AdminPlanController {
     }
     if (
       !planData.data.name ||
-      !planData.data.price ||
+      planData.data.price === undefined ||
       !planData.data.currency ||
       !planData.data.type
     ) {
