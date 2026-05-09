@@ -99,7 +99,7 @@ function setupMiddleware(app: express.Application): void {
     express.urlencoded({ extended: true, limit })(req, res, next);
   });
 
-  app.use(cookieParser());
+  app.use(cookieParser(config.security.cookieSecret));
 
   app.use((req, res, next) => {
     const start = Date.now();
