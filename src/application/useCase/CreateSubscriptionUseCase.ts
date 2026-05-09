@@ -39,7 +39,10 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
     let order: RazorpayOrder;
 
     // Handle Free Plans or Mock logic
-    if (plan.razorpayPlanId.startsWith("plan_free_")) {
+    if (
+      plan.price === 0 ||
+      (plan.razorpayPlanId && plan.razorpayPlanId.startsWith("plan_free_"))
+    ) {
       order = {
         id: `order_free_${Date.now()}`,
         amount: 0,
