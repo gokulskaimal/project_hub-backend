@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  # 1. Redis (Still needed for caching)
+  redis:
+    image: redis:7.2-alpine
+    container_name: project_hub_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - project_hub_network
+
+  # 2. Backend Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: project_hub_server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # These use the service names defined in this file
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    networks:
+      - project_hub_network
+
+volumes:
+  redis_data:
+
+networks:
+  project_hub_network:
+    driver: bridge
