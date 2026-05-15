@@ -40,5 +40,5 @@ jobs:
           script: |
             cd ~/project_hub/server
             git pull origin main
-            docker-compose up --build -d server redis
+            docker compose up --build -d server redis
             docker image prune -f
