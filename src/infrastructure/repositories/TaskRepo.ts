@@ -59,6 +59,8 @@ export class TaskRepo
           return {
             id: commentId?.toString(),
             userId: comment.userId,
+            userName: comment.userName as string | undefined,
+            userAvatar: comment.userAvatar as string | undefined,
             text: comment.text,
             createdAt: comment.createdAt,
           };

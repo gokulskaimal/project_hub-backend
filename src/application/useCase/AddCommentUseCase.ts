@@ -1,15 +1,17 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ITaskRepo } from "../interface/repositories/ITaskRepo";
+import { IUserRepo } from "../interface/repositories/IUserRepo";
 import { IAddCommentUseCase } from "../interface/useCases/IAddCommentUseCase";
 import { ISendMessageUseCase } from "../interface/useCases/ISendMessageUseCase";
-import { Task } from "../../domain/entities/Task";
+import { Task, TaskComment } from "../../domain/entities/Task";
 import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class AddCommentUseCase implements IAddCommentUseCase {
   constructor(
     @inject(TYPES.ITaskRepo) private _taskRepo: ITaskRepo,
+    @inject(TYPES.IUserRepo) private _userRepo: IUserRepo,
     @inject(TYPES.ISendMessageUseCase)
     private _sendMessageUC: ISendMessageUseCase,
   ) {}
@@ -20,8 +22,22 @@ export class AddCommentUseCase implements IAddCommentUseCase {
       throw new EntityNotFoundError("Task not found");
     }
 
-    const comment = {
+    const user = await this._userRepo.findById(userId);
+    let userName = "TEAM MEMBER";
+    if (user) {
+      if (user.firstName || user.lastName) {
+        userName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+      } else if (user.name) {
+        userName = user.name;
+      } else {
+        userName = user.email.split("@")[0];
+      }
+    }
+
+    const comment: TaskComment = {
       userId,
+      userName,
+      userAvatar: user?.avatar || undefined,
       text,
       createdAt: new Date(),
     };
