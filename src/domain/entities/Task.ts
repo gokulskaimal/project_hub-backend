@@ -8,6 +8,8 @@ export interface TimeLog {
 export interface TaskComment {
   id?: string;
   userId: string;
+  userName?: string;
+  userAvatar?: string;
   text: string;
   createdAt: Date;
   isDeleted?: boolean;

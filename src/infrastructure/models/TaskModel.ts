@@ -19,6 +19,8 @@ const AttachmentSchema = new Schema({
 
 const TaskCommentSchema = new Schema({
   userId: { type: String, required: true },
+  userName: { type: String },
+  userAvatar: { type: String },
   text: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
