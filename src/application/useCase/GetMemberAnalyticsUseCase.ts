@@ -21,7 +21,8 @@ export class GetMemberAnalyticsUseCase implements IGetMemberAnalyticsUseCase {
     ]);
 
     return {
-      taskDistribution: statusDistribution,
+      performance: [],
+      tasks: statusDistribution,
       velocity: velocity,
     };
   }

@@ -72,13 +72,13 @@ export interface IAnalyticsRepo {
 
   // Task & Performance Stats
   getTaskStatusDistribution(
-    orgId: string,
+    orgId?: string,
     userId?: string,
     timeFrame?: TimeFrame,
   ): Promise<StatusDistributionItem[]>;
 
   getMonthlyVelocity(
-    orgId: string,
+    orgId?: string,
     userId?: string,
     timeFrame?: TimeFrame,
   ): Promise<MonthlyVelocityItem[]>;

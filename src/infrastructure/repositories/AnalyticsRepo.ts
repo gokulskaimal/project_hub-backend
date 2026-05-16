@@ -148,11 +148,12 @@ export class AnalyticsRepo implements IAnalyticsRepo {
   }
 
   async getTaskStatusDistribution(
-    orgId: string,
+    orgId?: string,
     userId?: string,
     timeFrame?: TimeFrame,
   ): Promise<StatusDistributionItem[]> {
-    const match: Record<string, unknown> = { orgId, isDeleted: { $ne: true } };
+    const match: Record<string, unknown> = { isDeleted: { $ne: true } };
+    if (orgId) match.orgId = orgId;
     if (userId) match.assignedTo = userId;
 
     if (timeFrame) {
@@ -169,7 +170,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
   }
 
   async getMonthlyVelocity(
-    orgId: string,
+    orgId?: string,
     userId?: string,
     timeFrame?: TimeFrame,
   ): Promise<MonthlyVelocityItem[]> {
