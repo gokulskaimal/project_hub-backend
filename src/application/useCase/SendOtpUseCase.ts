@@ -1,3 +1,4 @@
+import { AppConfig } from "../../config/AppConfig";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { ISendOtpUseCase } from "../interface/useCases/ISendOtpUseCase";
@@ -22,6 +23,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
     @inject(TYPES.ICacheService) private readonly _cache: ICacheService,
     @inject(TYPES.IAuthValidationService)
     private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.AppConfig) private _config: AppConfig,
   ) {}
 
   /**
@@ -47,7 +49,9 @@ export class SendOtpUseCase implements ISendOtpUseCase {
       }
 
       const otp = this._otpService.generateOtp(6); // 6-digit OTP
-      const expiresAt = this._otpService.generateExpiry(1); // 1 minute from now
+      const expiresAt = this._otpService.generateExpiry(
+        this._config.otp.expiryMinutes,
+      );
 
       await this._otpService.ensureUserWithOtp(email, otp, expiresAt);
 

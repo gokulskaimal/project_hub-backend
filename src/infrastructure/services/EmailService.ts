@@ -177,10 +177,11 @@ export class EmailService implements IEmailService {
     otp: string,
     purpose: string = "verification",
   ): Promise<void> {
+    const expiryMinutes = this.config.otp.expiryMinutes;
     const variables = {
       OTP: otp,
       PURPOSE: purpose,
-      EXPIRY_TIME: "10 minutes",
+      EXPIRY_TIME: `${expiryMinutes} minutes`,
     };
 
     const html = this.renderTemplate("otp.html", variables);
@@ -203,7 +204,7 @@ export class EmailService implements IEmailService {
     await this.sendEmail({
       to: email,
       subject: `Your OTP Code - Project Hub`,
-      text: `Your OTP code for ${purpose} is: ${otp}\n\nThis code expires in 10 minutes.`,
+      text: `Your OTP code for ${purpose} is: ${otp}\n\nThis code expires in ${expiryMinutes} minutes.`,
       html: html ?? undefined,
     });
   }

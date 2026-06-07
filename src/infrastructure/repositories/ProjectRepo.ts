@@ -69,6 +69,7 @@ export class ProjectRepo
       status?: string;
       priority?: string;
       searchTerm?: string;
+      tags?: string[];
     },
   ): Promise<{ projects: Project[]; total: number }> {
     const query: Record<string, unknown> = { isDeleted: { $ne: true } };
@@ -82,6 +83,10 @@ export class ProjectRepo
         { name: { $regex: filters.searchTerm, $options: "i" } },
         { description: { $regex: filters.searchTerm, $options: "i" } },
       ];
+    }
+
+    if (filters?.tags && filters.tags.length > 0) {
+      query.tags = { $in: filters.tags };
     }
 
     const [docs, total] = await Promise.all([

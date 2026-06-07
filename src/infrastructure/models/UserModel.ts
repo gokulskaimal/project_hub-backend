@@ -21,7 +21,7 @@ export interface IUserDoc extends Document {
   resetPasswordExpires?: Date;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
-  status?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING_VERIFICATION";
+  status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";
   lastLoginAt?: Date;
   isDeleted?: boolean;
   deletedAt?: Date | null;
@@ -49,7 +49,7 @@ const UserSchema = new mongoose.Schema<IUserDoc>(
     emailVerificationExpires: { type: Date },
     status: {
       type: String,
-      enum: ["ACTIVE", "INACTIVE", "BLOCKED", "PENDING_VERIFICATION"],
+      enum: ["ACTIVE", "INACTIVE", "SUSPENDED", "PENDING_VERIFICATION"],
       default: "PENDING_VERIFICATION",
     },
     lastLoginAt: { type: Date },

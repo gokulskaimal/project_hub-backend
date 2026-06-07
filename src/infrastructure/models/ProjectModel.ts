@@ -10,8 +10,8 @@ const ProjectSchema = new Schema<IProjectDoc>(
     description: { type: String },
     status: {
       type: String,
-      enum: ["ACTIVE", "ARCHIVED", "COMPLETED"],
-      default: "ACTIVE",
+      enum: ["ACTIVE", "ARCHIVED", "COMPLETED", "PLANNING", "ON_HOLD"],
+      default: "PLANNING",
     },
     startDate: { type: Date },
     endDate: { type: Date },

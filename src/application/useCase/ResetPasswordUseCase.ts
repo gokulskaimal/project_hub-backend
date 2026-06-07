@@ -47,7 +47,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
     try {
       // Business Rule: Find user by email
       const user = await this._userRepo.findByEmail(email);
-      if (!user) {
+      if (!user || user.status !== "ACTIVE" || !user.password) {
         // Don't reveal if email exists - security best practice
         return { message: "If the email exists, a reset link has been sent" };
       }

@@ -65,20 +65,22 @@ export class RegistrationController {
   });
 
   verifyOtp = asyncHandler(async (req: Request, res: Response) => {
-    const { email, otp } = req.body;
+    const { email, otp, signupToken } = req.body;
     this._logger.info("Verifying OTP", { email });
     const result = await this._verifyOtpUC.execute(email, otp);
     ResponseHandler.success(res, result, COMMON_MESSAGES.OTP_VERIFIED);
   });
 
   completeSignup = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, signupToken } = req.body;
     this._logger.info("Completing signup", { email, firstName, lastName });
     const result = await this._completeSignupUC.execute(
       email,
       password,
       firstName,
       lastName,
+      {}, // additionalData
+      signupToken,
     );
     ResponseHandler.success(res, result, COMMON_MESSAGES.SIGNUP_COMPLETE);
   });

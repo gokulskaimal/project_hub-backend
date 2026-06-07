@@ -21,12 +21,7 @@ export interface User {
   otpExpiry?: Date;
   emailVerified: boolean;
   emailVerifiedAt?: Date;
-  status:
-    | "ACTIVE"
-    | "INACTIVE"
-    | "SUSPENDED"
-    | "PENDING_VERIFICATION"
-    | "PENDING_APPROVAL";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   emailVerificationToken?: string;
