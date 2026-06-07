@@ -8,7 +8,10 @@ import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
 import { ISubscriptionRepo } from "../../application/interface/repositories/ISubscriptionRepo";
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { ICreateSubscriptionUseCase } from "../interface/useCases/ICreateSubscriptionUseCase";
-import { EntityNotFoundError } from "../../domain/errors/CommonErrors";
+import {
+  EntityNotFoundError,
+  ConflictError,
+} from "../../domain/errors/CommonErrors";
 import { Subscription } from "../../domain/entities/Subscription";
 
 @injectable()
@@ -63,6 +66,16 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
     if (userId !== "super_admin") {
       const existing = await this._subscriptionRepo.findByUserId(userId);
 
+      if (
+        existing &&
+        existing.status === "active" &&
+        existing.planId === planId
+      ) {
+        throw new ConflictError(
+          "You already have an active subscription for this plan.",
+        );
+      }
+
       const subData = {
         userId: userId,
         planId: planId,
@@ -75,7 +88,13 @@ export class CreateSubscriptionUseCase implements ICreateSubscriptionUseCase {
       };
 
       if (existing) {
-        await this._subscriptionRepo.update(existing.id, subData);
+        if (existing.status !== "active") {
+          await this._subscriptionRepo.update(existing.id, subData);
+        } else {
+          // For active upgrades/downgrades, create a new pending subscription.
+          // When verified, the active one will be naturally ignored or can be deactivated.
+          await this._subscriptionRepo.create(subData);
+        }
       } else {
         await this._subscriptionRepo.create(subData);
       }

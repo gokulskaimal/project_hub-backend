@@ -10,14 +10,21 @@ export class AuthValidationService implements IAuthValidationService {
       throw new ValidationError("Invalid email format");
   }
 
+  // Replace the validatePassword method (around line 13):
   validatePassword(password: string): void {
-    if (!password || password.length < 8)
+    const trimmed = password?.trim();
+    if (!trimmed || trimmed.length < 8)
       throw new ValidationError("Password must be at least 8 characters");
-    if (!/[A-Z]/.test(password) || !/\d/.test(password)) {
-      throw new ValidationError(
-        "Password must contain an uppercase letter and a number",
-      );
-    }
+    if (trimmed.length > 128)
+      throw new ValidationError("Password must be less than 128 characters");
+    if (!/[a-z]/.test(trimmed))
+      throw new ValidationError("Password must contain a lowercase letter");
+    if (!/[A-Z]/.test(trimmed))
+      throw new ValidationError("Password must contain an uppercase letter");
+    if (!/\d/.test(trimmed))
+      throw new ValidationError("Password must contain a number");
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(trimmed))
+      throw new ValidationError("Password must contain a special character");
   }
 
   validateOrgName(name: string): void {
@@ -25,13 +32,22 @@ export class AuthValidationService implements IAuthValidationService {
       throw new ValidationError("Org name too short");
     if (!/^[a-zA-Z0-9\s\-_.&]+$/.test(name))
       throw new ValidationError("Invalid characters in Org name");
+    if (!/[a-zA-Z0-9]/.test(name))
+      throw new ValidationError(
+        "Org name must contain at least one letter or number",
+      );
   }
 
   validateName(firstName: string, lastName: string): void {
     if (!firstName || firstName.length < 2)
       throw new ValidationError("First name too short");
+    if (!/[a-zA-Z]/.test(firstName))
+      throw new ValidationError("First name must contain at least one letter");
+
     if (!lastName || lastName.length < 2)
       throw new ValidationError("Last name too short");
+    if (!/[a-zA-Z]/.test(lastName))
+      throw new ValidationError("Last name must contain at least one letter");
   }
 
   validateProjectName(name: string): void {
@@ -39,6 +55,10 @@ export class AuthValidationService implements IAuthValidationService {
       throw new ValidationError("Project name too short (min 3 chars)");
     if (name.length > 50)
       throw new ValidationError("Project name too long (max 50 chars)");
+    if (!/[a-zA-Z0-9]/.test(name))
+      throw new ValidationError(
+        "Project name must contain at least one letter or number",
+      );
   }
 
   validateSprintDates(

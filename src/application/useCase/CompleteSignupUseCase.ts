@@ -43,12 +43,25 @@ export class CompleteSignupUseCase implements ICompleteSignupUseCase {
     firstName: string,
     lastName: string,
     additionalData: Record<string, unknown> = {},
+    signupToken?: string,
   ): Promise<{
     user: Partial<User>;
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
   }> {
     this._logger.info("Completing user signup", { email, firstName, lastName });
     try {
+      if (!signupToken) {
+        throw new ConflictError(
+          "security token missing. Please verify your email again",
+        );
+      }
+      const decoded = this._jwtService.verifySignupToken(signupToken);
+
+      if (!decoded || decoded.purpose !== "signup" || decoded.email !== email) {
+        throw new ConflictError(
+          "Invalid or expired signup session. Try signing up again",
+        );
+      }
       await this.validateSignupData({ email, password, firstName, lastName });
 
       const user = await this._userRepo.findByEmail(email);

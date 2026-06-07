@@ -128,6 +128,10 @@ export class UserProfileUseCase implements IUserProfileUseCase {
           (filteredUpdateData.firstName as string) || existingUser.firstName;
         const lastName =
           (filteredUpdateData.lastName as string) || existingUser.lastName;
+        this._authValidationService.validateName(
+          firstName ?? "",
+          lastName ?? "",
+        );
         filteredUpdateData.name = `${firstName} ${lastName}`.trim();
       }
 

@@ -41,8 +41,16 @@ export class SubscriptionRepo
   }
 
   async findByUserId(userId: string): Promise<Subscription | null> {
-    const doc = await this.model.findOne({ userId, isDeleted: { $ne: true } });
-    return doc ? this.toDomain(doc) : null;
+    const docs = await this.model
+      .find({ userId, isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 });
+    if (docs.length === 0) return null;
+
+    // Prioritize active subscriptions
+    const activeDoc = docs.find((d) => d.status === "active");
+    if (activeDoc) return this.toDomain(activeDoc);
+
+    return this.toDomain(docs[0]);
   }
 
   async findByRazorpaySubscriptionId(

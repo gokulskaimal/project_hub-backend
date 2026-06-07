@@ -322,9 +322,9 @@ export const ProjectUpdateSchema = z
 
 // User Validation
 export const UserUpdateProfileSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  name: z.string().optional(),
+  firstName: z.string().trim().min(2, "First name too short").optional(),
+  lastName: z.string().trim().min(2, "Last name too short").optional(),
+  name: z.string().trim().min(2).optional(),
   contactNumber: z.string().optional(),
   address: z.string().optional(),
   bio: z.string().optional(),

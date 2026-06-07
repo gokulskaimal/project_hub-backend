@@ -290,4 +290,32 @@ export class JwtService implements IJwtService {
       return false;
     }
   }
+
+  generateSignupToken(payload: JwtPayload, expiresIn?: string): string {
+    try {
+      const options = {
+        expiresIn: expiresIn || "30m",
+        issuer: this._issuer,
+        audience: this._audience,
+      };
+      return this.jwtProvider.sign(payload, this._resetTokenSecret, options);
+    } catch (error) {
+      throw new Error(
+        `Failed to generate signup token : ${(error as Error).message}`,
+      );
+    }
+  }
+  verifySignupToken(token: string): JwtPayload | null {
+    const options = { issuer: this._issuer, audience: this._audience };
+    try {
+      const payload = this.jwtProvider.verify(
+        token,
+        this._resetTokenSecret,
+        options,
+      ) as JwtPayload | null;
+      return payload ?? null;
+    } catch {
+      return null;
+    }
+  }
 }

@@ -7,6 +7,8 @@ import { ILogger } from "../../application/interface/services/ILogger";
 import { ICacheService } from "../../application/interface/services/ICacheService";
 import { IAuthValidationService } from "../../application/interface/services/IAuthValidationService";
 import { InvalidCredentialsError } from "../../domain/errors/AuthErrors";
+import { IJwtService } from "../interface/services/IJwtService";
+import { ValidationError } from "../../domain/errors/CommonErrors";
 
 @injectable()
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
@@ -17,6 +19,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
     @inject(TYPES.ICacheService) private readonly _cache: ICacheService,
     @inject(TYPES.IAuthValidationService)
     private readonly _authValidationService: IAuthValidationService,
+    @inject(TYPES.IJwtService) private readonly _jwtService: IJwtService,
   ) {}
 
   public async execute(
@@ -26,6 +29,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
     valid: boolean;
     message: string;
     verified: boolean;
+    signupToken: string;
   }> {
     this._logger.info("Verifying OTP", { email });
 
@@ -49,7 +53,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
             ? `Invalid OTP. ${attemptsRemaining} attempts remaining.`
             : "Invalid OTP. Too many attempts. Please request a new OTP.";
 
-        throw new InvalidCredentialsError(message);
+        throw new ValidationError(message);
       }
 
       const user = await this._userRepo.findByEmail(email);
@@ -59,6 +63,11 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
       await this._otpService.clearOtp(email);
       await this._cache.del(`otp:verify:${email}`);
 
+      const signupToken = await this._jwtService.generateSignupToken({
+        id: user.id,
+        email: user.email,
+        purpose: "signup",
+      });
       this._logger.info("OTP verified successfully", {
         email,
         userId: user.id,
@@ -68,6 +77,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
         valid: true,
         message: "OTP verified successfully",
         verified: true,
+        signupToken: signupToken,
       };
     } catch (error) {
       this._logger.error("OTP verification failed", error as Error, { email });

@@ -9,6 +9,7 @@ export interface ICompleteSignupUseCase {
     firstName: string,
     lastName: string,
     additionalData?: Record<string, unknown>,
+    signupToken?: string,
   ): Promise<{
     user: Partial<User>;
     tokens: {

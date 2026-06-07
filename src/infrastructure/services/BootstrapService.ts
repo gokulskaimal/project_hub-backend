@@ -5,6 +5,8 @@ import { IHashService } from "../../application/interface/services/IHashService"
 import { IUserRepo } from "../../application/interface/repositories/IUserRepo";
 import { TYPES } from "../container/types";
 import { IBootstrapService } from "../../application/interface/services/IBootstrapService";
+import { IPlanRepo } from "../../application/interface/repositories/IPlanRepo";
+import { Plan } from "../../domain/entities/Plan";
 import { UserRole } from "../../domain/enums/UserRole";
 import { User } from "../../domain/entities/User";
 import { AppConfig } from "../../config/AppConfig";
@@ -27,6 +29,7 @@ export class BootstrapService implements IBootstrapService {
     private readonly _chatSubscriber: IEventSubscriber,
     @inject(TYPES.MeetingEventSubscriber)
     private readonly _meetingSubscriber: IEventSubscriber,
+    @inject(TYPES.IPlanRepo) private readonly _planRepo: IPlanRepo,
   ) {}
 
   public async run(): Promise<void> {
@@ -80,6 +83,30 @@ export class BootstrapService implements IBootstrapService {
           status: "ACTIVE",
         });
         this._logger.info("Super admin privileges restored");
+      }
+
+      // Check for Free Plan and seed if missing (including inactive ones so we don't override admin choices)
+      const allPlans = await this._planRepo.findAll();
+      const hasFreePlan = allPlans.some((p) => p.price === 0);
+
+      if (!hasFreePlan) {
+        await this._planRepo.create({
+          name: "Free Plan",
+          description: "Essential features for small teams",
+          price: 0,
+          billingCycle: "monthly",
+          isActive: true,
+          limits: {
+            projects: 1,
+            members: 5,
+            storage: 1024,
+          },
+          features: ["Basic Task Management", "Up to 5 Members", "1 Project"],
+          razorpayPlanId: "free_tier",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as unknown as Plan);
+        this._logger.info("Free Plan seeded successfully");
       }
     } catch (err) {
       this._logger.error("Failed to bootstrap super admin", err as Error);

@@ -66,4 +66,7 @@ export interface IJwtService {
   revokeRefreshToken: (token: string) => Promise<void> | void;
   revokeAllForUser: (userId: string) => Promise<void> | void;
   isTokenRevoked: (token: string) => Promise<boolean> | boolean;
+
+  generateSignupToken(payload: JwtPayload, expiresIn?: string): string;
+  verifySignupToken(token: string): JwtPayload | null;
 }

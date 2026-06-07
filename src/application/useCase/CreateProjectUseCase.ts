@@ -98,7 +98,7 @@ export class CreateProjectUseCase implements ICreateProjectUseCase {
       description: data.description,
       startDate: data.startDate,
       endDate: data.endDate,
-      status: "ACTIVE",
+      status: data.status || "PLANNING",
       priority: data.priority,
       tags: data.tags,
       teamMemberIds: data.teamMemberIds,

@@ -9,6 +9,7 @@ export interface IVerifyOtpUseCase {
     valid: boolean;
     message: string;
     verified: boolean;
+    signupToken?: string;
   }>;
 
   /**

@@ -14,7 +14,8 @@ export interface Subscription {
     | "past_due"
     | "trialing"
     | "unpaid"
-    | "halted";
+    | "halted"
+    | "expired";
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   cancelAtPeriodEnd: boolean;

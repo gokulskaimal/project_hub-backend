@@ -59,6 +59,19 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
             maxManagers: plan.limits.projects,
           });
 
+          // Cancel any previous active subscriptions for this user
+          const existingSubs = await this._subscriptionRepo.findAll({
+            userId: localSub.userId,
+            status: "active",
+          });
+          for (const sub of existingSubs) {
+            if (sub.id !== localSub.id) {
+              await this._subscriptionRepo.update(sub.id, {
+                status: "canceled",
+              });
+            }
+          }
+
           await this._subscriptionRepo.update(localSub.id, {
             status: "active",
           });

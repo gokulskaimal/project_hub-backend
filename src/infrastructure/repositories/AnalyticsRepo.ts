@@ -64,7 +64,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
 
     facet.statusCounts.forEach((s: { _id: string; count: number }) => {
       if (s._id === "ACTIVE") stats.active = s.count;
-      if (s._id === "INACTIVE" || s._id === "BLOCKED")
+      if (s._id === "INACTIVE" || s._id === "SUSPENDED")
         stats.inactive += s.count;
       if (s._id === "PENDING_VERIFICATION") stats.pending = s.count;
     });
@@ -140,7 +140,7 @@ export class AnalyticsRepo implements IAnalyticsRepo {
     };
     facet.statusCounts.forEach((s: { _id: string; count: number }) => {
       if (s._id === "ACTIVE") stats.active = s.count;
-      if (["INACTIVE", "BLOCKED", "PENDING_VERIFICATION"].includes(s._id)) {
+      if (["INACTIVE", "SUSPENDED", "PENDING_VERIFICATION"].includes(s._id)) {
         stats.inactive += s.count;
       }
     });

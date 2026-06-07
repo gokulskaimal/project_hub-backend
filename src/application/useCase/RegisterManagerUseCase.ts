@@ -1,3 +1,4 @@
+import { AppConfig } from "../../config/AppConfig";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../infrastructure/container/types";
 import { UserRole } from "../../domain/enums/UserRole";
@@ -27,6 +28,7 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
     private readonly _authValidationService: IAuthValidationService,
     @inject(TYPES.ICreateNotificationUseCase)
     private readonly _createNotificationUseCase: ICreateNotificationUseCase,
+    @inject(TYPES.AppConfig) private _config: AppConfig,
   ) {}
 
   public async execute(
@@ -75,7 +77,9 @@ export class RegisterManagerUseCase implements IRegisterManagerUseCase {
       const invitationToken = this._generateInvitationToken();
 
       const otp = this._otpService.generateOtp(6);
-      const expiry = this._otpService.generateExpiry(1);
+      const expiry = this._otpService.generateExpiry(
+        this._config.otp.expiryMinutes,
+      );
 
       const userData = {
         email,

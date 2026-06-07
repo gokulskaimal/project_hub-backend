@@ -3,7 +3,7 @@ export interface Project {
   orgId: string;
   name: string;
   description?: string;
-  status: "ACTIVE" | "ARCHIVED" | "COMPLETED";
+  status: "ACTIVE" | "ARCHIVED" | "COMPLETED" | "PLANNING" | "ON_HOLD";
   startDate?: Date;
   endDate: Date;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
